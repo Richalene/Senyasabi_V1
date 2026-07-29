@@ -1,0 +1,1 @@
+"""Senyasabi package initialization."""
