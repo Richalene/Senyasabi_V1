@@ -1,5 +1,20 @@
 [project]
-name = "PySide Widgets Project"
+name = "senyasabi"
+version = "0.1.0"
+description = "SenyaSabi - ASL learning app with minigames"
+requires-python = ">=3.10"
+dependencies = [
+    "PySide6>=6.5.0",
+]
 
 [tool.pyside6-project]
-files = ["mainwindow.py", "form.ui"]
+files = [
+    "../main.py",
+    "ui/mainwindow.ui",
+    "ui/menuwindow.ui",
+    "controllers/mainwindow.py",
+    "games/sign_sprint/sign_sprint.ui",
+    "games/fingerspell_quest/fingerspell_quest.ui",
+    "games/expression_in_motion/expression_in_motion.ui",
+    "games/sign_detective/sign_detective.ui",
+]
