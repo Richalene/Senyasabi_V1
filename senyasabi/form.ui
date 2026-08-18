@@ -26,7 +26,7 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>resources/img/menu.png</pixmap>
+    <pixmap>resources/img/bgempty.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
@@ -94,6 +94,22 @@
    </property>
    <property name="text">
     <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="alphabetBtn">
+   <property name="geometry">
+    <rect>
+     <x>580</x>
+     <y>140</y>
+     <width>321</width>
+     <height>151</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(85, 85, 0);</string>
+   </property>
+   <property name="text">
+    <string>FSL Alphabet</string>
    </property>
   </widget>
  </widget>

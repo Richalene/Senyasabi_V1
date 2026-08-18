@@ -26,7 +26,7 @@ class Ui_main(object):
         self.bg = QLabel(main)
         self.bg.setObjectName(u"bg")
         self.bg.setGeometry(QRect(0, 0, 1311, 761))
-        self.bg.setPixmap(QPixmap(u"resources/img/menu.png"))
+        self.bg.setPixmap(QPixmap(u"resources/img/bgempty.png"))
         self.bg.setScaledContents(True)
         self.signSprint = QPushButton(main)
         self.signSprint.setObjectName(u"signSprint")
@@ -44,6 +44,10 @@ class Ui_main(object):
         self.fingerspellQuest.setObjectName(u"fingerspellQuest")
         self.fingerspellQuest.setGeometry(QRect(940, 360, 321, 151))
         self.fingerspellQuest.setStyleSheet(u"background:transparent;")
+        self.alphabetBtn = QPushButton(main)
+        self.alphabetBtn.setObjectName(u"alphabetBtn")
+        self.alphabetBtn.setGeometry(QRect(580, 140, 321, 151))
+        self.alphabetBtn.setStyleSheet(u"background-color: rgb(85, 85, 0);")
 
         self.retranslateUi(main)
 
@@ -57,5 +61,6 @@ class Ui_main(object):
         self.EIP.setText("")
         self.signDetective.setText("")
         self.fingerspellQuest.setText("")
+        self.alphabetBtn.setText(QCoreApplication.translate("main", u"FSL Alphabet", None))
     # retranslateUi
 
