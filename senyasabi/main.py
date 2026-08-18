@@ -1,25 +1,23 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-
+# This Python file uses the following encoding: utf-8
 import sys
 from pathlib import Path
+from PySide6.QtGui import QPixmap
 
-from PySide6.QtWidgets import QApplication
+from PySide6.QtWidgets import QApplication, QWidget
+from ui_form import Ui_main
 
-from controllers.mainwindow import MainWindow
+class main(QWidget):
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_main()
+        self.ui.setupUi(self)
 
-
-def main():
-    # Create QApplication
-    app = QApplication(sys.argv)
-    
-    # Create and show main window
-    window = MainWindow()
-    window.show()
-    
-    # Run application event loop
-    sys.exit(app.exec())
-
+        image_path = Path(__file__).resolve().parent / "resources" / "img" / "menu.png"
+        self.ui.bg.setPixmap(QPixmap(str(image_path)))
+        self.ui.bg.setScaledContents(True)
 
 if __name__ == "__main__":
-    main()
+    app = QApplication(sys.argv)
+    widget = main()
+    widget.show()
+    sys.exit(app.exec())
