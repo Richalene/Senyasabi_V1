@@ -9,7 +9,7 @@
   <property name="styleSheet">
    <string notr="true">
 QWidget#LessonSelect {
-    background-color: #082B08;
+    background-color: #C2D076;
 }
 QLabel#titleLabel {
     color: #F5E5CF;
