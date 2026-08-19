@@ -16,7 +16,7 @@
   <property name="styleSheet">
    <string notr="true">
 QWidget#AlphabetLesson {
-    background-color: #0f1117;
+    background-color: #C2D076;
 }
 QLabel#lessonTitle {
     color: #e8f4f8;

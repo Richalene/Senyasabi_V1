@@ -1,0 +1,108 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LessonSelect</class>
+ <widget class="QWidget" name="LessonSelect">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>1306</width><height>753</height></rect>
+  </property>
+  <property name="windowTitle"><string>Choose a Lesson</string></property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#LessonSelect {
+    background-color: #082B08;
+}
+QLabel#titleLabel {
+    color: #F5E5CF;
+    font-size: 32px;
+    font-weight: 800;
+}
+QLabel#subtitleLabel {
+    color: #C2D076;
+    font-size: 14px;
+    letter-spacing: 1px;
+}
+QPushButton#backBtn {
+    background-color: transparent;
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #704833;
+    border-radius: 8px;
+    padding: 8px 18px;
+}
+QPushButton#backBtn:hover {
+    color: #F5E5CF;
+    border-color: #C2D076;
+}
+QPushButton#lesson1Btn, QPushButton#lesson2Btn, QPushButton#lesson3Btn,
+QPushButton#lesson4Btn, QPushButton#lesson5Btn {
+    background-color: #0f3a0f;
+    color: #F5E5CF;
+    font-size: 18px;
+    font-weight: 700;
+    border: 2px solid #704833;
+    border-radius: 16px;
+    padding: 0px;
+}
+QPushButton#lesson1Btn:hover { background-color: #123f12; border-color: #C2D076; }
+QPushButton#lesson2Btn:hover { background-color: #123f12; border-color: #C2D076; }
+QPushButton#lesson3Btn:hover { background-color: #123f12; border-color: #C2D076; }
+QPushButton#lesson4Btn:hover { background-color: #123f12; border-color: #C2D076; }
+QPushButton#lesson5Btn:hover { background-color: #123f12; border-color: #C2D076; }
+   </string>
+  </property>
+
+  <widget class="QPushButton" name="backBtn">
+   <property name="geometry"><rect><x>40</x><y>32</y><width>160</width><height>36</height></rect></property>
+   <property name="text"><string>← Back</string></property>
+  </widget>
+
+  <widget class="QLabel" name="titleLabel">
+   <property name="geometry"><rect><x>0</x><y>110</y><width>1306</width><height>50</height></rect></property>
+   <property name="alignment"><set>Qt::AlignHCenter|Qt::AlignVCenter</set></property>
+   <property name="text"><string>Choose a Lesson</string></property>
+  </widget>
+
+  <widget class="QLabel" name="subtitleLabel">
+   <property name="geometry"><rect><x>0</x><y>166</y><width>1306</width><height>28</height></rect></property>
+   <property name="alignment"><set>Qt::AlignHCenter|Qt::AlignVCenter</set></property>
+   <property name="text"><string>Each lesson covers a group of letters</string></property>
+  </widget>
+
+  <!-- 5 lesson cards in a row -->
+  <widget class="QPushButton" name="lesson1Btn">
+   <property name="geometry"><rect><x>63</x><y>240</y><width>210</width><height>300</height></rect></property>
+   <property name="text"><string></string></property>
+   <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+  </widget>
+
+  <widget class="QPushButton" name="lesson2Btn">
+   <property name="geometry"><rect><x>313</x><y>240</y><width>210</width><height>300</height></rect></property>
+   <property name="text"><string></string></property>
+   <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+  </widget>
+
+  <widget class="QPushButton" name="lesson3Btn">
+   <property name="geometry"><rect><x>563</x><y>240</y><width>210</width><height>300</height></rect></property>
+   <property name="text"><string></string></property>
+   <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+  </widget>
+
+  <widget class="QPushButton" name="lesson4Btn">
+   <property name="geometry"><rect><x>813</x><y>240</y><width>210</width><height>300</height></rect></property>
+   <property name="text"><string></string></property>
+   <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+  </widget>
+
+  <widget class="QPushButton" name="lesson5Btn">
+   <property name="geometry"><rect><x>1063</x><y>240</y><width>210</width><height>300</height></rect></property>
+   <property name="text"><string></string></property>
+   <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+  </widget>
+
+  <!-- Card labels overlay (painted by Python, these are placeholders) -->
+
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

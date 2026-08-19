@@ -3,4 +3,28 @@ name = "PySide Widgets Project"
 requires-python = ">=3.12.13"
 
 [tool.pyside6-project]
-files = ["main.py", "form.ui"]
+files = [
+	"main.py",
+	"form.ui",
+	"backend/__init__.py",
+	"backend/config.py",
+	"backend/content_data.py",
+	"backend/recognition_engine.py",
+	"backend/session_state.py",
+	"lessons/__init__.py",
+	"lessons/alphabet_lesson.py",
+	"lessons/alphabet_lesson.ui",
+	"lessons/alphabet_menu.py",
+	"lessons/alphabet_menu.ui",
+	"lessons/lesson_select.py",
+	"lessons/lesson_select.ui",
+	"lessons/spell_category.ui",
+	"lessons/spell_lesson.py",
+	"lessons/spell_lesson.ui",
+	"lessons/spell_select.py",
+	"lessons/spell_word.ui",
+	"lessons/word_lesson.py",
+	"lessons/word_lesson.ui",
+	"lessons/word_menu.py",
+	"lessons/word_menu.ui",
+]

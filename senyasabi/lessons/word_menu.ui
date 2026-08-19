@@ -1,0 +1,88 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WordMenu</class>
+ <widget class="QWidget" name="WordMenu">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>1306</width><height>753</height></rect>
+  </property>
+  <property name="windowTitle"><string>Word Lessons</string></property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#WordMenu {
+    background-color: #C2D076;
+}
+QLabel#titleLabel {
+    color: #F5E5CF;
+    font-size: 32px;
+    font-weight: 800;
+    background: transparent;
+}
+QLabel#subtitleLabel {
+    color: #C2D076;
+    font-size: 14px;
+    letter-spacing: 1px;
+    background: transparent;
+}
+QLabel#divider {
+    background-color: #704833;
+}
+QPushButton#backBtn {
+    background-color: transparent;
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #704833;
+    border-radius: 8px;
+    padding: 8px 18px;
+}
+QPushButton#backBtn:hover {
+    color: #F5E5CF;
+    border-color: #C2D076;
+}
+QScrollArea#scrollArea {
+    border: none;
+    background: transparent;
+}
+QWidget#scrollContents {
+    background: transparent;
+}
+   </string>
+  </property>
+
+  <widget class="QPushButton" name="backBtn">
+   <property name="geometry"><rect><x>40</x><y>32</y><width>160</width><height>36</height></rect></property>
+   <property name="text"><string>← Back to Menu</string></property>
+  </widget>
+
+  <widget class="QLabel" name="titleLabel">
+   <property name="geometry"><rect><x>0</x><y>100</y><width>1306</width><height>48</height></rect></property>
+   <property name="alignment"><set>Qt::AlignHCenter|Qt::AlignVCenter</set></property>
+   <property name="text"><string>Word Lessons</string></property>
+  </widget>
+
+  <widget class="QLabel" name="subtitleLabel">
+   <property name="geometry"><rect><x>0</x><y>154</y><width>1306</width><height>26</height></rect></property>
+   <property name="alignment"><set>Qt::AlignHCenter|Qt::AlignVCenter</set></property>
+   <property name="text"><string>Choose a category to practice</string></property>
+  </widget>
+
+  <widget class="QLabel" name="divider">
+   <property name="geometry"><rect><x>0</x><y>192</y><width>1306</width><height>1</height></rect></property>
+   <property name="text"><string></string></property>
+  </widget>
+
+  <widget class="QScrollArea" name="scrollArea">
+   <property name="geometry"><rect><x>0</x><y>200</y><width>1306</width><height>540</height></rect></property>
+   <property name="widgetResizable"><bool>true</bool></property>
+   <property name="horizontalScrollBarPolicy"><enum>Qt::ScrollBarAlwaysOff</enum></property>
+   <widget class="QWidget" name="scrollContents">
+    <property name="geometry">
+     <rect><x>0</x><y>0</y><width>1306</width><height>540</height></rect>
+    </property>
+   </widget>
+  </widget>
+
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

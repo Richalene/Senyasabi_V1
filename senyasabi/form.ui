@@ -112,6 +112,22 @@
     <string>FSL Alphabet</string>
    </property>
   </widget>
+  <widget class="QPushButton" name="wordLessonsBtn">
+   <property name="geometry">
+    <rect>
+     <x>950</x>
+     <y>140</y>
+     <width>321</width>
+     <height>151</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: rgb(0, 85, 85);</string>
+   </property>
+   <property name="text">
+    <string>Word Lessons</string>
+   </property>
+  </widget>
  </widget>
  <resources/>
  <connections/>

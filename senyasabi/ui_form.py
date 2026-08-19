@@ -48,6 +48,11 @@ class Ui_main(object):
         self.alphabetBtn.setObjectName(u"alphabetBtn")
         self.alphabetBtn.setGeometry(QRect(580, 140, 321, 151))
         self.alphabetBtn.setStyleSheet(u"background-color: rgb(85, 85, 0);")
+        self.wordLessonsBtn = QPushButton(main)
+        self.wordLessonsBtn.setObjectName(u"wordLessonsBtn")
+        self.wordLessonsBtn.setGeometry(QRect(950, 140, 321, 151))
+        self.wordLessonsBtn.setStyleSheet(u"background-color: rgb(0, 85, 85);")
+        self.wordLessonsBtn.setText(u"Word Lessons")
 
         self.retranslateUi(main)
 
@@ -62,5 +67,6 @@ class Ui_main(object):
         self.signDetective.setText("")
         self.fingerspellQuest.setText("")
         self.alphabetBtn.setText(QCoreApplication.translate("main", u"FSL Alphabet", None))
+        self.wordLessonsBtn.setText(QCoreApplication.translate("main", u"Word Lessons", None))
     # retranslateUi
 

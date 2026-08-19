@@ -1,0 +1,342 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>WordLesson</class>
+ <widget class="QWidget" name="WordLesson">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1306</width>
+    <height>753</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Word Lesson</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#WordLesson {
+    background-color: #C2D076;
+}
+QLabel#lessonTitle {
+    color: #F5E5CF;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 2px;
+}
+QLabel#progressLabel {
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 1px;
+}
+QLabel#scoreLabel {
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+}
+QLabel#divider {
+    background-color: #704833;
+}
+QLabel#wordDisplay {
+    color: #F5E5CF;
+    font-size: 32px;
+    font-weight: 800;
+}
+QLabel#wordSubtitle {
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+    letter-spacing: 3px;
+}
+QLabel#refImageLabel {
+    background-color: #0f3a0f;
+    border: 2px solid #704833;
+    border-radius: 16px;
+    color: #8a9a6a;
+    font-size: 14px;
+}
+QLabel#cameraLabel {
+    background-color: #0c320c;
+    border: 2px solid #704833;
+    border-radius: 16px;
+    color: #8a9a6a;
+    font-size: 14px;
+}
+QLabel#feedbackLabel {
+    font-size: 18px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border-radius: 10px;
+    padding: 8px 20px;
+}
+QLabel#holdBarBg {
+    background-color: #0f3a0f;
+    border-radius: 5px;
+}
+QLabel#holdBarFill {
+    background-color: #C2D076;
+    border-radius: 5px;
+}
+QLabel#predictionLabel {
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+}
+QLabel#camStatusDot {
+    border-radius: 5px;
+}
+QPushButton#skipBtn {
+    background-color: #C2D076;
+    color: #082B08;
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 1px;
+    border: none;
+    border-radius: 10px;
+    padding: 10px 28px;
+}
+QPushButton#skipBtn:hover {
+    background-color: #d8e2a8;
+}
+QPushButton#backBtn {
+    background-color: transparent;
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #704833;
+    border-radius: 8px;
+    padding: 8px 18px;
+}
+QPushButton#backBtn:hover {
+    color: #F5E5CF;
+    border-color: #C2D076;
+}
+   </string>
+  </property>
+  <widget class="QLabel" name="lessonTitle">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>24</y>
+     <width>600</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>WORD LESSON — GREETING</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="progressLabel">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>56</y>
+     <width>300</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Word 1 of 10</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="scoreLabel">
+   <property name="geometry">
+    <rect>
+     <x>1100</x>
+     <y>24</y>
+     <width>166</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Score: 0 / 10</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignRight|Qt::AlignmentFlag::AlignTrailing|Qt::AlignmentFlag::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="backBtn">
+   <property name="geometry">
+    <rect>
+     <x>1100</x>
+     <y>56</y>
+     <width>166</width>
+     <height>32</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>← Back</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="divider">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>96</y>
+     <width>1306</width>
+     <height>1</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: #704833;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="wordDisplay">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>630</y>
+     <width>540</width>
+     <height>60</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>GOOD MORNING</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignLeading|Qt::AlignmentFlag::AlignLeft|Qt::AlignmentFlag::AlignVCenter</set>
+   </property>
+   <property name="wordWrap">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="wordSubtitle">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>610</y>
+     <width>300</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>SIGN THIS WORD</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="refImageLabel">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>170</y>
+     <width>500</width>
+     <height>420</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>📹  Video coming soon</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="cameraLabel">
+   <property name="geometry">
+    <rect>
+     <x>610</x>
+     <y>170</y>
+     <width>626</width>
+     <height>470</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Camera starting...</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="camStatusDot">
+   <property name="geometry">
+    <rect>
+     <x>624</x>
+     <y>119</y>
+     <width>10</width>
+     <height>10</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: #e05252; border-radius: 5px;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="holdBarBg">
+   <property name="geometry">
+    <rect>
+     <x>610</x>
+     <y>660</y>
+     <width>626</width>
+     <height>10</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="holdBarFill">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>598</y>
+     <width>0</width>
+     <height>10</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="feedbackLabel">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>620</y>
+     <width>626</width>
+     <height>46</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color:transparent; background-color:transparent;</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="predictionLabel">
+   <property name="geometry">
+    <rect>
+     <x>620</x>
+     <y>680</y>
+     <width>400</width>
+     <height>44</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Waiting for hand...</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="skipBtn">
+   <property name="geometry">
+    <rect>
+     <x>1060</x>
+     <y>680</y>
+     <width>186</width>
+     <height>44</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Skip →</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

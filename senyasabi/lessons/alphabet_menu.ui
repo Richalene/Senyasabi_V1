@@ -1,0 +1,265 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>AlphabetMenu</class>
+ <widget class="QWidget" name="AlphabetMenu">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1306</width>
+    <height>753</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>FSL Alphabet</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#AlphabetMenu {
+    background-color: #C2D076;
+}
+QLabel#titleLabel {
+    color: #F5E5CF;
+    font-size: 36px;
+    font-weight: 800;
+}
+QLabel#subtitleLabel {
+    color: #C2D076;
+    font-size: 15px;
+    font-weight: 400;
+    letter-spacing: 1px;
+}
+QLabel#divider {
+    background-color: #704833;
+}
+QPushButton#learnBtn {
+    background-color: #0f3a0f;
+    color: #F5E5CF;
+    font-size: 20px;
+    font-weight: 700;
+    border: 2px solid #704833;
+    border-radius: 20px;
+    text-align: left;
+    padding: 32px 40px;
+}
+QPushButton#learnBtn:hover {
+    background-color: #123f12;
+    border-color: #C2D076;
+}
+QPushButton#spellBtn {
+    background-color: #0f3a0f;
+    color: #F5E5CF;
+    font-size: 20px;
+    font-weight: 700;
+    border: 2px solid #704833;
+    border-radius: 20px;
+    text-align: left;
+    padding: 32px 40px;
+}
+QPushButton#spellBtn:hover {
+    background-color: #123f12;
+    border-color: #704833;
+}
+QPushButton#backBtn {
+    background-color: transparent;
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 500;
+    border: 1px solid #704833;
+    border-radius: 8px;
+    padding: 8px 18px;
+}
+QPushButton#backBtn:hover {
+    color: #F5E5CF;
+    border-color: #C2D076;
+}
+QLabel#learnIcon {
+    color: #C2D076;
+    font-size: 48px;
+}
+QLabel#spellIcon {
+    color: #704833;
+    font-size: 48px;
+}
+QLabel#learnDesc {
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 400;
+}
+QLabel#spellDesc {
+    color: #C2D076;
+    font-size: 13px;
+    font-weight: 400;
+}
+QLabel#learnTag {
+    color: #C2D076;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+QLabel#spellTag {
+    color: #704833;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 2px;
+}
+   </string>
+  </property>
+  <widget class="QPushButton" name="backBtn">
+   <property name="geometry">
+    <rect>
+     <x>40</x>
+     <y>32</y>
+     <width>140</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>← Back to Menu</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="subtitleLabel">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>182</y>
+     <width>1306</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Choose a mode to get started</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QLabel" name="divider">
+   <property name="geometry">
+    <rect>
+     <x>453</x>
+     <y>228</y>
+     <width>400</width>
+     <height>1</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="learnBtn">
+   <property name="geometry">
+    <rect>
+     <x>183</x>
+     <y>270</y>
+     <width>420</width>
+     <height>280</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="learnTag">
+   <property name="geometry">
+    <rect>
+     <x>223</x>
+     <y>390</y>
+     <width>340</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: #C2D076; font-size: 11px; font-weight: 700; letter-spacing: 2px; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>LEARN MODE</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="learnTitle">
+   <property name="geometry">
+    <rect>
+     <x>223</x>
+     <y>416</y>
+     <width>340</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: #F5E5CF; font-size: 22px; font-weight: 700; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>Alphabet Lessons</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="spellBtn">
+   <property name="geometry">
+    <rect>
+     <x>703</x>
+     <y>270</y>
+     <width>420</width>
+     <height>280</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QLabel" name="spellTag">
+   <property name="geometry">
+    <rect>
+     <x>743</x>
+     <y>390</y>
+     <width>340</width>
+     <height>22</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: #704833; font-size: 11px; font-weight: 700; letter-spacing: 2px; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>SPELL MODE</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="spellTitle">
+   <property name="geometry">
+    <rect>
+     <x>743</x>
+     <y>416</y>
+     <width>340</width>
+     <height>36</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: #F5E5CF; font-size: 22px; font-weight: 700; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>Spell Words</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="spellDesc">
+   <property name="geometry">
+    <rect>
+     <x>743</x>
+     <y>456</y>
+     <width>340</width>
+     <height>60</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">color: #C2D076; font-size: 13px; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>Fingerspell words letter by letter</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
