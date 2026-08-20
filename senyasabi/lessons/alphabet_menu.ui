@@ -114,6 +114,9 @@ QLabel#spellTag {
      <height>36</height>
     </rect>
    </property>
+   <property name="styleSheet">
+    <string notr="true">color: rgb(0, 0, 0);</string>
+   </property>
    <property name="text">
     <string>← Back to Menu</string>
    </property>
