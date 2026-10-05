@@ -19,7 +19,7 @@ from PySide6.QtWidgets import (
 _HERE        = Path(__file__).resolve().parent
 _ROOT        = _HERE.parent
 _LABELS_PATH = _ROOT / "resources" / "data" / "105labels.json"
-_UI_FILE     = _HERE / "word_menu.ui"
+_UI_FILE     = _ROOT / "ui" / "designer" / "word_menu.ui"
 
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))

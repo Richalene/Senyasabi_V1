@@ -152,6 +152,7 @@ class SignRecognitionEngine:
         self.mode = mode
         self.predictor = self._build_predictor(mode)
         self._cap: Optional[cv2.VideoCapture] = None
+        self._closed = False
 
     @staticmethod
     def _build_predictor(mode: str) -> SignPredictor:
@@ -173,18 +174,37 @@ class SignRecognitionEngine:
         self.mode = mode
 
     def open_camera(self) -> bool:
-        self._cap = cv2.VideoCapture(self.cam_index)
-        return self._cap.isOpened()
+        if self._cap is not None:
+            try:
+                if self._cap.isOpened():
+                    return True
+            except cv2.error:
+                pass
+            self.close_camera()
+        try:
+            self._cap = cv2.VideoCapture(self.cam_index)
+            if self._cap.isOpened():
+                return True
+        except cv2.error:
+            pass
+        if self._cap is not None:
+            self.close_camera()
+        return False
 
     def close_camera(self):
-        if self._cap is not None:
-            self._cap.release()
-            self._cap = None
+        capture = self._cap
+        self._cap = None
+        if capture is not None:
+            capture.release()
 
     def read_frame(self) -> Optional[FrameResult]:
         if self._cap is None:
-            raise RuntimeError("Camera not open — call open_camera() first.")
-        ok, frame = self._cap.read()
+            return None
+        try:
+            ok, frame = self._cap.read()
+        except cv2.error:
+            self.close_camera()
+            return None
         if not ok:
             return None
         frame = cv2.flip(frame, 1)
@@ -199,5 +219,8 @@ class SignRecognitionEngine:
         )
 
     def close(self):
+        if self._closed:
+            return
         self.close_camera()
         self.extractor.close()
+        self._closed = True

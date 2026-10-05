@@ -3,7 +3,7 @@ SenyaSabi recognition backend.
 
 Pure Python / OpenCV / MediaPipe / TensorFlow — no Qt.
 Import from here in your Qt Creator (PySide6) project and wire the results
-into whatever widgets you designed with `main.py` / `ui_form.py`.
+into whatever widgets you designed with `main.py` / `ui/ui_form.py`.
 """
 from .recognition_engine import (
     SignRecognitionEngine,

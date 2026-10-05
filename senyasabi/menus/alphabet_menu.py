@@ -18,7 +18,7 @@ _ROOT = _HERE.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-_UI_FILE = _HERE / "alphabet_menu.ui"
+_UI_FILE = _ROOT / "ui" / "designer" / "alphabet_menu.ui"
 
 # Lesson definitions (shared across the alphabet module)
 LESSON_LETTERS: dict[int, list[str]] = {
