@@ -1,5 +1,7 @@
 # -*- coding: utf-8 -*-
 
+from pathlib import Path
+
 ################################################################################
 ## Form generated from reading UI file 'form.ui'
 ##
@@ -26,7 +28,8 @@ class Ui_main(object):
         self.bg = QLabel(main)
         self.bg.setObjectName(u"bg")
         self.bg.setGeometry(QRect(0, 0, 1311, 761))
-        self.bg.setPixmap(QPixmap(u"resources/img/bgempty.png"))
+        image_path = Path(__file__).resolve().parents[2] / "resources" / "img" / "bgempty.png"
+        self.bg.setPixmap(QPixmap(str(image_path)))
         self.bg.setScaledContents(True)
         self.signSprint = QPushButton(main)
         self.signSprint.setObjectName(u"signSprint")
@@ -69,4 +72,3 @@ class Ui_main(object):
         self.alphabetBtn.setText(QCoreApplication.translate("main", u"FSL Alphabet", None))
         self.wordLessonsBtn.setText(QCoreApplication.translate("main", u"Word Lessons", None))
     # retranslateUi
-

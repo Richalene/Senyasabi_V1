@@ -1,4 +1,3 @@
-# This Python file uses the following encoding: utf-8
 import sys
 from pathlib import Path
 
@@ -184,7 +183,4 @@ class MainWindow(QWidget):
 
 
 if __name__ == "__main__":
-    app = QApplication(sys.argv)
-    widget = MainWindow()
-    widget.show()
-    sys.exit(app.exec())
+    sys.exit(main())

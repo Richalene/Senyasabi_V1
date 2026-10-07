@@ -16,9 +16,9 @@ _ROOT = _HERE.parent
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from lessons.alphabet_menu import LESSON_LETTERS
+from menus.alphabet_menu import LESSON_LETTERS
 
-_UI_FILE = _HERE / "lesson_select.ui"
+_UI_FILE = _ROOT / "ui" / "designer" / "lesson_select.ui"
 
 _CARD_STYLE = """
     color: #ffffff;

@@ -25,7 +25,7 @@ if str(_ROOT) not in sys.path:
 from backend.recognition_engine import SignRecognitionEngine
 from backend.session_state import CameraPracticeSession, Event, SessionState
 
-_UI_FILE = _HERE / "word_lesson.ui"
+_UI_FILE = _ROOT / "ui" / "designer" / "word_lesson.ui"
 
 _CLR_CORRECT = ("color:#0f1117; background-color:#5ecf8a;"
                 "border-radius:10px; padding:8px 20px; font-size:18px; font-weight:700;")
@@ -101,6 +101,7 @@ class WordLessonWidget(QWidget):
         self._engine  = SignRecognitionEngine(mode="words")
         cam_ok        = self._engine.open_camera()
         self._set_cam_dot(cam_ok)
+        self._resources_closed = False
 
         self._session = CameraPracticeSession(targets=self._words)
 
@@ -112,6 +113,8 @@ class WordLessonWidget(QWidget):
 
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
+        self._feedback_action = None
+        self._feedback_timer.timeout.connect(self._on_feedback_timeout)
 
         # ── initial render ───────────────────────────────────────────────
         self._refresh_ui()
@@ -171,7 +174,7 @@ class WordLessonWidget(QWidget):
         self._pred_lbl.setText("Waiting for hand...")
 
     def _show_completion(self):
-        self._timer.stop()
+        self._cleanup_resources()
         session = self._session
         pct     = session.score_percent()
 
@@ -198,6 +201,8 @@ class WordLessonWidget(QWidget):
     # ── camera tick ───────────────────────────────────────────────────────
 
     def _on_tick(self):
+        if self._engine is None:
+            return
         result = self._engine.read_frame()
         if result is None:
             return
@@ -230,21 +235,33 @@ class WordLessonWidget(QWidget):
         elif event == Event.CORRECT:
             self._set_hold_bar(1.0)
             self._show_feedback(correct=True)
-            self._feedback_timer.singleShot(1200, self._advance)
+            self._feedback_action = "advance"
+            self._feedback_timer.start(1200)
 
         elif event == Event.WRONG:
             self._set_hold_bar(0.0)
             self._show_feedback(correct=False)
-            self._feedback_timer.singleShot(
-                900,
-                lambda: (self._session.reset_waiting(), self._clear_feedback())
-            )
+            self._feedback_action = "reset"
+            self._feedback_timer.start(900)
         else:
             self._set_hold_bar(self._session.hold_progress)
 
     # ── transitions ───────────────────────────────────────────────────────
 
+    def _on_feedback_timeout(self):
+        if self._resources_closed:
+            return
+        action = self._feedback_action
+        self._feedback_action = None
+        if action == "advance":
+            self._advance()
+        elif action == "reset":
+            self._session.reset_waiting()
+            self._clear_feedback()
+
     def _advance(self):
+        if self._resources_closed:
+            return
         self._session.advance()
         self._refresh_ui()
 
@@ -255,16 +272,24 @@ class WordLessonWidget(QWidget):
         self._refresh_ui()
 
     def _on_back(self):
-        self._timer.stop()
-        self._engine.close()
-        self.lesson_finished.emit()
         self.close()
+
+    def _cleanup_resources(self):
+        if self._resources_closed:
+            return
+        self._resources_closed = True
+        self._timer.stop()
+        self._feedback_timer.stop()
+        self._feedback_action = None
+        if self._engine is not None:
+            self._engine.close()
+            self._engine = None
+        self._set_cam_dot(False)
 
     # ── Qt lifecycle ──────────────────────────────────────────────────────
 
     def closeEvent(self, event):
-        self._timer.stop()
-        self._engine.close()
+        self._cleanup_resources()
         self.lesson_finished.emit()
         event.accept()
 

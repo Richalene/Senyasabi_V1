@@ -23,8 +23,8 @@ if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
 _LABELS_PATH      = _ROOT / "resources" / "data" / "105labels.json"
-_CAT_UI_FILE      = _HERE / "spell_category.ui"
-_WORD_UI_FILE     = _HERE / "spell_word.ui"
+_CAT_UI_FILE      = _ROOT / "ui" / "designer" / "spell_category.ui"
+_WORD_UI_FILE     = _ROOT / "ui" / "designer" / "spell_word.ui"
 
 # ── colours ───────────────────────────────────────────────────────────────────
 _BG        = "#0f1117"

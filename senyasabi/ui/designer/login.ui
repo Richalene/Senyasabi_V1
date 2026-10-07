@@ -1,0 +1,78 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>LoginPage</class>
+ <widget class="QWidget" name="LoginPage">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>720</width><height>560</height></rect>
+  </property>
+  <property name="windowTitle">
+   <string>SenyaSabi — Sign In</string>
+  </property>
+  <layout class="QVBoxLayout" name="pageLayout">
+   <property name="leftMargin"><number>180</number></property>
+   <property name="topMargin"><number>64</number></property>
+   <property name="rightMargin"><number>180</number></property>
+   <property name="bottomMargin"><number>64</number></property>
+   <item>
+    <widget class="QLabel" name="titleLabel">
+     <property name="text"><string>Welcome to SenyaSabi</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="subtitleLabel">
+     <property name="text"><string>Sign in to continue</string></property>
+     <property name="alignment"><set>Qt::AlignCenter</set></property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="topSpacer">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>24</height></size></property>
+    </spacer>
+   </item>
+   <item>
+    <widget class="QLabel" name="emailLabel">
+     <property name="text"><string>Email</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="emailInput">
+     <property name="placeholderText"><string>Enter your email address</string></property>
+     <property name="clearButtonEnabled"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLabel" name="passwordLabel">
+     <property name="text"><string>Password</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="passwordInput">
+     <property name="echoMode"><enum>QLineEdit::Password</enum></property>
+     <property name="placeholderText"><string>Enter your password</string></property>
+     <property name="clearButtonEnabled"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="continueButton">
+     <property name="text"><string>Continue to home</string></property>
+     <property name="default"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QPushButton" name="registerButton">
+     <property name="text"><string>Create an account</string></property>
+    </widget>
+   </item>
+   <item>
+    <spacer name="bottomSpacer">
+     <property name="orientation"><enum>Qt::Vertical</enum></property>
+     <property name="sizeHint" stdset="0"><size><width>20</width><height>24</height></size></property>
+    </spacer>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

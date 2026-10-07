@@ -61,7 +61,7 @@ LESSON_LETTERS: dict[int, List[str]] = {
     5: list("YZ"),
 }
 
-_UI_FILE = _HERE / "alphabet_lesson.ui"
+_UI_FILE = _ROOT / "ui" / "designer" / "alphabet_lesson.ui"
 _VRM_DIR = _ROOT / "resources" / "VRM_SIGNS"
 
 # ── colour constants ──────────────────────────────────────────────────────
@@ -153,6 +153,7 @@ class AlphabetLessonWidget(QWidget):
         self._engine = SignRecognitionEngine(mode="alphabet")
         cam_ok = self._engine.open_camera()
         self._set_cam_dot(cam_ok)
+        self._resources_closed = False
 
         # ── backend: session state ────────────────────────────────────────
         self._session = CameraPracticeSession(targets=self._letters)
@@ -166,6 +167,8 @@ class AlphabetLessonWidget(QWidget):
         # ── feedback auto-clear timer ─────────────────────────────────────
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
+        self._feedback_action = None
+        self._feedback_timer.timeout.connect(self._on_feedback_timeout)
 
         # ── initial render ────────────────────────────────────────────────
         self._refresh_ui()
@@ -244,7 +247,7 @@ class AlphabetLessonWidget(QWidget):
 
     def _show_completion(self):
         """Replace the lesson view with a simple completion summary."""
-        self._timer.stop()
+        self._cleanup_resources()
         session  = self._session
         pct      = session.score_percent()
 
@@ -273,6 +276,8 @@ class AlphabetLessonWidget(QWidget):
     # ── camera tick ───────────────────────────────────────────────────────
 
     def _on_tick(self):
+        if self._engine is None:
+            return
         result = self._engine.read_frame()
         if result is None:
             return
@@ -312,18 +317,14 @@ class AlphabetLessonWidget(QWidget):
         elif event == Event.CORRECT:
             self._set_hold_bar(1.0)
             self._show_feedback(correct=True)
-            # advance after 1.2 s
-            self._feedback_timer.singleShot(1200, self._advance)
+            self._feedback_action = "advance"
+            self._feedback_timer.start(1200)
 
         elif event == Event.WRONG:
             self._set_hold_bar(0.0)
             self._show_feedback(correct=False)
-            # reset waiting after 900 ms
-            self._feedback_timer.singleShot(
-                900,
-                lambda: (self._session.reset_waiting(),
-                         self._clear_feedback())
-            )
+            self._feedback_action = "reset"
+            self._feedback_timer.start(900)
 
         else:
             # NONE — correct sign not sustained yet, reset bar
@@ -331,7 +332,20 @@ class AlphabetLessonWidget(QWidget):
 
     # ── transitions ───────────────────────────────────────────────────────
 
+    def _on_feedback_timeout(self):
+        if self._resources_closed:
+            return
+        action = self._feedback_action
+        self._feedback_action = None
+        if action == "advance":
+            self._advance()
+        elif action == "reset":
+            self._session.reset_waiting()
+            self._clear_feedback()
+
     def _advance(self):
+        if self._resources_closed:
+            return
         self._session.advance()
         self._refresh_ui()
 
@@ -349,16 +363,24 @@ class AlphabetLessonWidget(QWidget):
 
     def _on_back(self):
         """Return to the main menu."""
-        self._timer.stop()
-        self._engine.close()
-        self.lesson_finished.emit()
         self.close()
 
     # ── Qt lifecycle ──────────────────────────────────────────────────────
 
-    def closeEvent(self, event):
+    def _cleanup_resources(self):
+        if self._resources_closed:
+            return
+        self._resources_closed = True
         self._timer.stop()
-        self._engine.close()
+        self._feedback_timer.stop()
+        self._feedback_action = None
+        if self._engine is not None:
+            self._engine.close()
+            self._engine = None
+        self._set_cam_dot(False)
+
+    def closeEvent(self, event):
+        self._cleanup_resources()
         self.lesson_finished.emit()
         event.accept()
 
