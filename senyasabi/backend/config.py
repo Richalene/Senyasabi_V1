@@ -14,6 +14,8 @@ from pathlib import Path
 BACKEND_DIR   = Path(__file__).resolve().parent           # .../senyasabi/backend
 BASE_DIR      = BACKEND_DIR.parent                         # .../senyasabi
 DATA_DIR      = BASE_DIR / 'resources' / 'data'
+DATABASE_PATH = DATA_DIR / "senyasabi.db"
+DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 VRM_SIGNS_DIR = BASE_DIR / 'resources' / 'VRM_SIGNS'
 LESSONS_PATH  = DATA_DIR / 'lessons.json'
 

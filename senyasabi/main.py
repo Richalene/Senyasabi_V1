@@ -7,10 +7,14 @@ from PySide6.QtWidgets import QApplication, QWidget
 
 from ui_form import Ui_main
 
+from backend.database.session import SessionLocal
 
 class MainWindow(QWidget):
     def __init__(self, parent=None):
         super().__init__(parent)
+
+        self.current_user_id = None
+
         self.ui = Ui_main()
         self.ui.setupUi(self)
 
@@ -154,6 +158,29 @@ class MainWindow(QWidget):
             self._word_lesson.close()
         if hasattr(self, "_word_menu"):
             self._word_menu.show()
+
+    """
+    Database notes from your local Caineiac:
+
+    Create sessions for specific operations eg 
+    a session at lesson start and close it when the lesson ends 
+        def create_new_user(self, username: str):
+            with SessionLocal() as db:
+                user = create_user(db, username)
+                self.current_user_id = user.id
+
+    
+    Pass a database-session factory into widgets like:
+        self._learn_window = AlphabetLessonWidget(
+            letters=LESSON_LETTERS[lesson_number],
+            lesson_number=lesson_number,
+            user_id=self.current_user_id,
+            db_session_factory=SessionLocal,  <----
+        )
+    Then in the widget, start the persistence session when the lesson opens, 
+    record an attempt, then finish the session.
+
+    """
 
 
 if __name__ == "__main__":
