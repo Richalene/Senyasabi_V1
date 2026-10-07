@@ -33,12 +33,12 @@
    </item>
    <item>
     <widget class="QLabel" name="emailLabel">
-     <property name="text"><string>Email</string></property>
+     <property name="text"><string>Username or email</string></property>
     </widget>
    </item>
    <item>
     <widget class="QLineEdit" name="emailInput">
-     <property name="placeholderText"><string>Enter your email address</string></property>
+     <property name="placeholderText"><string>Enter your username or email</string></property>
      <property name="clearButtonEnabled"><bool>true</bool></property>
     </widget>
    </item>

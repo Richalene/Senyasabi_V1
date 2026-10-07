@@ -3,7 +3,7 @@
  <class>RegisterPage</class>
  <widget class="QWidget" name="RegisterPage">
   <property name="geometry">
-   <rect><x>0</x><y>0</y><width>720</width><height>640</height></rect>
+   <rect><x>0</x><y>0</y><width>720</width><height>740</height></rect>
   </property>
   <property name="windowTitle">
    <string>SenyaSabi — Create Account</string>
@@ -32,8 +32,19 @@
     </spacer>
    </item>
    <item>
+    <widget class="QLabel" name="usernameLabel">
+     <property name="text"><string>Username</string></property>
+    </widget>
+   </item>
+   <item>
+    <widget class="QLineEdit" name="usernameInput">
+     <property name="placeholderText"><string>Choose a username</string></property>
+     <property name="clearButtonEnabled"><bool>true</bool></property>
+    </widget>
+   </item>
+   <item>
     <widget class="QLabel" name="nameLabel">
-     <property name="text"><string>Name</string></property>
+     <property name="text"><string>Display name (optional)</string></property>
     </widget>
    </item>
    <item>

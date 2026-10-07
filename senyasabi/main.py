@@ -8,7 +8,7 @@ from screens.app_controller import AppController
 def main() -> int:
     app = QApplication(sys.argv)
     controller = AppController()
-    controller.show_login()
+    controller.show_welcome()
     return app.exec()
 
 
