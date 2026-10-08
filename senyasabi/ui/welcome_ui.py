@@ -27,7 +27,7 @@ class Ui_Welcome(object):
         Welcome.setMaximumSize(QSize(1440, 900))
         self.imgBackground = QLabel(Welcome)
         self.imgBackground.setObjectName(u"imgBackground")
-        self.imgBackground.setGeometry(QRect(0, 0, 1440, 900))
+        self.imgBackground.setGeometry(QRect(0, -10, 1521, 900))
         self.imgBackground.setStyleSheet(u"")
         self.imgBackground.setFrameShape(QFrame.Shape.NoFrame)
         self.imgBackground.setPixmap(QPixmap(u"../resources/img/welcome.png"))
@@ -35,14 +35,15 @@ class Ui_Welcome(object):
         self.imgBackground.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.btnContinue = QPushButton(Welcome)
         self.btnContinue.setObjectName(u"btnContinue")
-        self.btnContinue.setGeometry(QRect(680, 690, 111, 111))
-        icon = QIcon()
-        icon.addFile(u"../resources/img/ui/nextbtn.png", QSize(), QIcon.Mode.Normal, QIcon.State.Off)
-        self.btnContinue.setIcon(icon)
-        self.btnContinue.setIconSize(QSize(111, 111))
+        self.btnContinue.setGeometry(QRect(700, 690, 71, 100))
         self.btnContinue.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btnContinue.setStyleSheet(u"QPushButton { background: transparent; border: none; color: transparent; } QPushButton:hover { background: rgba(255,255,255,24); border: 1px solid rgba(112,72,51,80); border-radius: 12px; }")
+        self.btnContinue.setStyleSheet(u"QPushButton { background: transparent; border: none; color: transparent; } ")
         self.btnContinue.setFlat(True)
+        self.nextButton = QLabel(Welcome)
+        self.nextButton.setObjectName(u"nextButton")
+        self.nextButton.setGeometry(QRect(680, 690, 111, 111))
+        self.nextButton.setPixmap(QPixmap(u"../resources/img/ui/nextbtn.png"))
+        self.nextButton.setScaledContents(True)
 
         self.retranslateUi(Welcome)
 
@@ -56,5 +57,6 @@ class Ui_Welcome(object):
         self.btnContinue.setAccessibleName(QCoreApplication.translate("Welcome", u"Continue", None))
 #endif // QT_CONFIG(accessibility)
         self.btnContinue.setText("")
+        self.nextButton.setText("")
     # retranslateUi
 

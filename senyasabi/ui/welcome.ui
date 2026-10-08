@@ -29,8 +29,8 @@
    <property name="geometry">
     <rect>
      <x>0</x>
-     <y>0</y>
-     <width>1440</width>
+     <y>-10</y>
+     <width>1521</width>
      <height>900</height>
     </rect>
    </property>
@@ -55,14 +55,12 @@
   </widget>
   <widget class="QPushButton" name="btnContinue">
    <property name="geometry">
-    <rect><x>680</x><y>690</y><width>111</width><height>111</height></rect>
-   </property>
-   <property name="icon">
-    <iconset>
-     <normaloff>../resources/img/ui/nextbtn.png</normaloff>../resources/img/ui/nextbtn.png</iconset>
-   </property>
-   <property name="iconSize">
-    <size><width>111</width><height>111</height></size>
+    <rect>
+     <x>700</x>
+     <y>690</y>
+     <width>71</width>
+     <height>100</height>
+    </rect>
    </property>
    <property name="cursor">
     <cursorShape>PointingHandCursor</cursorShape>
@@ -71,12 +69,31 @@
     <string>Continue</string>
    </property>
    <property name="styleSheet">
-    <string notr="true">QPushButton { background: transparent; border: none; color: transparent; } QPushButton:hover { background: rgba(255,255,255,24); border: 1px solid rgba(112,72,51,80); border-radius: 12px; }</string>
+    <string notr="true">QPushButton { background: transparent; border: none; color: transparent; } </string>
    </property>
    <property name="text">
     <string/>
    </property>
    <property name="flat">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="nextButton">
+   <property name="geometry">
+    <rect>
+     <x>680</x>
+     <y>690</y>
+     <width>111</width>
+     <height>111</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>../resources/img/ui/nextbtn.png</pixmap>
+   </property>
+   <property name="scaledContents">
     <bool>true</bool>
    </property>
   </widget>
