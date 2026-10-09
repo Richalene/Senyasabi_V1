@@ -11,7 +11,6 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageTk
 
-# ── CONFIG ────────────────────────────────────────────────────────────────────
 BASE_DIR      = Path(__file__).resolve().parent
 OUTPUT_DIR    = BASE_DIR / 'output'
 IMG_DIR       = BASE_DIR / 'img'
@@ -27,7 +26,6 @@ CONFIDENCE_THRESHOLD = 0.70
 HOLD_FRAMES          = 18
 CAM_INDEX            = 0
 
-# ── Palette ───────────────────────────────────────────────────────────────────
 BG          = "#e8f0c8"
 BG_RGB      = tuple(int(BG.lstrip('#')[i:i+2], 16) for i in (0, 2, 4))
 PANEL_LEFT  = "#f0c842"
@@ -47,7 +45,6 @@ CARD_BG     = "#faffdc"
 MENU_BTN    = "#f0c842"
 MENU_BTN_H  = "#e0b030"
 
-# ── Load model ────────────────────────────────────────────────────────────────
 print("Loading model…")
 model       = tf.keras.models.load_model(MODEL_PATH)
 class_names = json.loads(CLASSES_PATH.read_text())
@@ -55,13 +52,11 @@ scaler      = pickle.loads(SCALER_PATH.read_bytes())
 LESSONS     = json.loads(LESSONS_PATH.read_text(encoding="utf-8"))
 print(f"Loaded — {len(class_names)} classes")
 
-# ── MediaPipe ─────────────────────────────────────────────────────────────────
 mp_hands   = mp.solutions.hands
 mp_drawing = mp.solutions.drawing_utils
 hands = mp_hands.Hands(static_image_mode=False, max_num_hands=1,
                        min_detection_confidence=0.5, min_tracking_confidence=0.5)
 
-# ── Core helpers ──────────────────────────────────────────────────────────────
 def extract_landmarks(frame):
     rgb    = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
     result = hands.process(rgb)
@@ -95,7 +90,6 @@ def load_vrm_image(label, size=(480, 480)):
 def placeholder_vrm(size=(480,480)):
     return ImageTk.PhotoImage(Image.new("RGBA", size, (240, 200, 66, 255)))
 
-# ── Shared header ─────────────────────────────────────────────────────────────
 def build_header(parent, left_extra=None):
     hdr = tk.Frame(parent, bg=HEADER_BG, height=52)
     hdr.pack(fill="x"); hdr.pack_propagate(False)
@@ -162,7 +156,6 @@ def build_taskbar(parent, app, active=None):
         def _cl(e, c=cmd): c()
         for w in [f] + f.winfo_children():
             w.bind("<Enter>", _en); w.bind("<Leave>", _le); w.bind("<Button-1>", _cl)
-    # Quit
     qf = tk.Frame(bar, bg=TB, cursor="hand2", padx=16, pady=4)
     qf.pack(side="right", fill="y")
     tk.Label(qf, text="✕",    bg=TB, fg=RED_BAD, font=("Helvetica",15)).pack()
@@ -179,9 +172,6 @@ def build_taskbar(parent, app, active=None):
     return bar
 
 
-# ══════════════════════════════════════════════════════════════════════════════
-# MAIN MENU
-# ══════════════════════════════════════════════════════════════════════════════
 class MainMenu(tk.Frame):
     def __init__(self, root, app):
         super().__init__(root)
@@ -192,7 +182,6 @@ class MainMenu(tk.Frame):
         build_taskbar(self, app, active=None)
 
     def _build(self):
-        # Background image
         try:
             bg_img = Image.open(MAINBG_PATH)
             sw = self.app.root.winfo_screenwidth()
@@ -207,7 +196,6 @@ class MainMenu(tk.Frame):
             container = self
             self.config(bg=BG)
 
-        # Title card
         title_f = tk.Frame(container, bg="#faffdc", bd=0)
         title_f.place(relx=0.1, rely=0.12)
         tk.Label(title_f, text="SenyaSabi", bg="#faffdc", fg=TEXT_DARK,
@@ -217,7 +205,6 @@ class MainMenu(tk.Frame):
         tk.Label(title_f, text="",
                  bg="#faffdc", fg=TEXT_MID, font=("Helvetica", 13)).pack(anchor="w", padx=24, pady=(0,18))
 
-        # Buttons
         btn_f = tk.Frame(container, bg="#f5f8e0")
         btn_f.place(relx=0.08, rely=0.45)
 
@@ -231,9 +218,6 @@ class MainMenu(tk.Frame):
         for i, ((txt, cmd), col) in enumerate(zip(entries, colors)):
             menu_btn(btn_f, txt, cmd, w=300, h=62, bg=col, fg=WHITE).pack(pady=8)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ALPHABET SUBMENU
-# ══════════════════════════════════════════════════════════════════════════════
 class AlphabetMenu(tk.Frame):
     def __init__(self, root, app):
         super().__init__(root, bg=BG)
@@ -255,9 +239,6 @@ class AlphabetMenu(tk.Frame):
         menu_btn(body, "📖  Normal Lesson  (A → Z)", lambda: self.app.go_lesson("lesson"), w=320, h=62).pack(pady=10)
         menu_btn(body, "🔀  Shuffle",                lambda: self.app.go_lesson("shuffle"), w=320, h=62).pack(pady=10)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# FINGERSPELLING SUBMENU
-# ══════════════════════════════════════════════════════════════════════════════
 class FingerSpellingMenu(tk.Frame):
     def __init__(self, root, app):
         super().__init__(root, bg=BG)
@@ -286,9 +267,6 @@ class FingerSpellingMenu(tk.Frame):
         for (txt,cmd), col in zip(entries, colors):
             menu_btn(body, txt, cmd, w=300, h=62, bg=col, fg=WHITE).pack(pady=8)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# CATEGORIES SCREEN
-# ══════════════════════════════════════════════════════════════════════════════
 class CategoriesScreen(tk.Frame):
     """Shows category buttons only. Click one to open WordsScreen."""
     def __init__(self, root, app, mode="sign"):
@@ -356,7 +334,6 @@ class WordsScreen(tk.Frame):
                      font=("Helvetica",11,"bold")).pack(side="left", padx=4)
         build_header(self, le)
 
-        # Shuffle button row
         top = tk.Frame(self, bg=BG); top.pack(fill="x", padx=30, pady=(16,4))
         tk.Label(top, text=self._cat, bg=BG, fg=TEXT_DARK,
                  font=("Helvetica",20,"bold")).pack(side="left")
@@ -398,9 +375,6 @@ class WordsScreen(tk.Frame):
             for ww in (chip, lbl, cnt):
                 ww.bind("<Enter>",_en); ww.bind("<Leave>",_le); ww.bind("<Button-1>",_cl)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# TYPE IT — show VRM sign one at a time, user presses the key
-# ══════════════════════════════════════════════════════════════════════════════
 class TypeItScreen(tk.Frame):
     VRM_W, VRM_H = 480, 480
     STATE_WAITING  = "waiting"
@@ -436,21 +410,17 @@ class TypeItScreen(tk.Frame):
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True, padx=30, pady=20)
 
-        # Left: VRM
         left = tk.Frame(body, bg=BG); left.pack(side="left", fill="y")
         vrm_f = tk.Frame(left, bg=PANEL_LEFT, width=self.VRM_W, height=self.VRM_H)
         vrm_f.pack(); vrm_f.pack_propagate(False)
         self.vrm_lbl = tk.Label(vrm_f, bg=PANEL_LEFT, image=self._ph)
         self.vrm_lbl.pack(expand=True)
 
-        # Right: word tiles + input area
         right = tk.Frame(body, bg=BG); right.pack(side="left", fill="both", expand=True, padx=30)
 
-        # Word tiles row
         self._tiles_f = tk.Frame(right, bg=BG)
         self._tiles_f.pack(pady=(0,20))
 
-        # Feedback label
         self._fb_var = tk.StringVar(value="")
         self._fb_lbl = tk.Label(right, textvariable=self._fb_var, bg=BG,
                                 font=("Helvetica",22,"bold"), fg=GREEN_GOOD)
@@ -459,12 +429,10 @@ class TypeItScreen(tk.Frame):
         tk.Label(right, text="Press the correct letter key", bg=BG,
                  fg=TEXT_MID, font=("Helvetica",13)).pack(pady=(0,10))
 
-        # Status
         self._status_var = tk.StringVar(value="")
         tk.Label(right, textvariable=self._status_var, bg=BG,
                  fg=TEXT_MID, font=("Helvetica",11)).pack()
 
-        # Post-done buttons (hidden)
         self._post_f = tk.Frame(right, bg=BG)
         for txt, cmd in [("↺ Try Again", self._restart), ("← Back", self._go_back)]:
             tk.Button(self._post_f, text=txt, font=("Helvetica",12,"bold"),
@@ -544,9 +512,6 @@ class TypeItScreen(tk.Frame):
             self._vrm_cache[label] = load_vrm_image(label,(self.VRM_W,self.VRM_H)) or self._ph
         return self._vrm_cache[label]
 
-# ══════════════════════════════════════════════════════════════════════════════
-# SIGN IT / WORD LESSON  (camera-based word spelling)
-# ══════════════════════════════════════════════════════════════════════════════
 class SignItScreen(tk.Frame):
     CAM_W, CAM_H = 1000, 1200
     VRM_W, VRM_H = 480, 480
@@ -569,7 +534,6 @@ class SignItScreen(tk.Frame):
         self._paused  = False
         self._vrm_cache = {}
         self._ph      = placeholder_vrm((self.VRM_W, self.VRM_H))
-        # For queue-based modes (shuffle / mega)
         self._queue   = queue
         self._q_idx   = q_idx
         self.pack(fill="both", expand=True)
@@ -594,7 +558,6 @@ class SignItScreen(tk.Frame):
         body = tk.Frame(self, bg=BG)
         body.pack(fill="both", expand=True, padx=16, pady=(12,4))
 
-        # Left: VRM
         lw = tk.Frame(body, bg=BG); lw.pack(side="left", fill="y")
         vf = tk.Frame(lw, bg=PANEL_LEFT, width=self.VRM_W, height=self.VRM_H)
         vf.pack(); vf.pack_propagate(False)
@@ -602,7 +565,6 @@ class SignItScreen(tk.Frame):
         self.vrm_lbl.pack(expand=True)
         self._word_f = tk.Frame(lw, bg=BG); self._word_f.pack(pady=(8,0))
 
-        # Centre buttons
         mid = tk.Frame(body, bg=BG, width=60); mid.pack(side="left", fill="y", padx=8)
         mid.pack_propagate(False); tk.Frame(mid, bg=BG).pack(expand=True)
         for icon,cmd,bg,fg in [("→",self._skip,BTN_BG,TEXT_DARK),
@@ -616,7 +578,6 @@ class SignItScreen(tk.Frame):
             b.pack(pady=5)
         tk.Frame(mid, bg=BG).pack(expand=True)
 
-        # Right: camera
         right = tk.Frame(body, bg=PANEL_RIGHT, width=self.CAM_W, height=self.CAM_H)
         right.pack(side="left", fill="both", expand=True); right.pack_propagate(False)
         self.cam_lbl = tk.Label(right, bg=PANEL_RIGHT)
@@ -652,7 +613,6 @@ class SignItScreen(tk.Frame):
         tk.Label(pov,textvariable=self.conf_var,font=("Helvetica",12),
                  fg=TEXT_DARK,bg=PANEL_RIGHT).pack(side="left",padx=4,pady=(16,0))
 
-        # Status bar
         bar = tk.Frame(self, bg=HEADER_BG, height=32); bar.pack(fill="x",side="bottom")
         bar.pack_propagate(False)
         self._dots_f = tk.Frame(bar, bg=HEADER_BG); self._dots_f.pack(side="left",padx=12,pady=10)
@@ -812,9 +772,6 @@ class SignItScreen(tk.Frame):
         self.cam_lbl.imgtk=imgtk; self.cam_lbl.configure(image=imgtk)
         self.master.after(15,self._update)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# ALPHABET LESSON SCREEN
-# ══════════════════════════════════════════════════════════════════════════════
 class AlphabetScreen(tk.Frame):
     CAM_W,CAM_H = 1000,1200; VRM_W,VRM_H = 480,480; BTN_SIZE=44
     STATE_WAITING="waiting"; STATE_FEEDBACK="feedback"; STATE_COMPLETE="complete"
@@ -983,9 +940,6 @@ class AlphabetScreen(tk.Frame):
         self.cam_lbl.imgtk=imgtk; self.cam_lbl.configure(image=imgtk)
         self.master.after(15,self._upd)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# RECOGNIZER — camera only, no VRM, just detects sign
-# ══════════════════════════════════════════════════════════════════════════════
 class RecognizerScreen(tk.Frame):
     CAM_W,CAM_H=1000,1200
     def __init__(self,root,app):
@@ -1000,7 +954,6 @@ class RecognizerScreen(tk.Frame):
         build_header(self,le)
         body=tk.Frame(self,bg=BG); body.pack(fill="both",expand=True)
         self.cam_lbl=tk.Label(body,bg=BG); self.cam_lbl.pack(expand=True)
-        # Big letter overlay
         self.pred_var=tk.StringVar(value="—")
         self.conf_var=tk.StringVar(value="")
         ov=tk.Frame(body,bg=BG); ov.place(relx=0.02,rely=0.82)
@@ -1038,9 +991,6 @@ class RecognizerScreen(tk.Frame):
         self.cam_lbl.imgtk=imgtk; self.cam_lbl.configure(image=imgtk)
         self.master.after(15,self._upd)
 
-# ══════════════════════════════════════════════════════════════════════════════
-# APP CONTROLLER
-# ══════════════════════════════════════════════════════════════════════════════
 class App:
     def __init__(self):
         self.root=tk.Tk()
@@ -1083,7 +1033,6 @@ class App:
     def go_word_lesson(self,category,word,mode="sign"):
         self._clear()
         if mode=="shuffle":
-            # all words from all categories, random order
             all_words=[(cat,w) for cat,words in LESSONS.items() for w in words]
             random.shuffle(all_words)
             cat,w=all_words[0]
@@ -1099,14 +1048,12 @@ class App:
 
     def go_megashuffle(self):
         self._clear()
-        # Mix everything: alphabet letters as single-letter "words" + all lesson words
         all_items=[(None,l) for l in class_names]
         for cat,words in LESSONS.items():
             for w in words: all_items.append((cat,w))
         random.shuffle(all_items)
         cat,item=all_items[0]
         if cat is None:
-            # It's a letter — use AlphabetScreen in shuffle mode starting at that letter
             AlphabetScreen(self.root,self,"single",start_at=item)
         else:
             SignItScreen(self.root,self,cat,item,all_items,0)

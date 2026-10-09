@@ -2,7 +2,7 @@ from pathlib import Path
 
 from PySide6.QtCore import Signal
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget
+from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
 
 
 _UI_FILE = Path(__file__).resolve().parents[2] / "ui" / "designer" / "login.ui"
@@ -24,6 +24,10 @@ class LoginScreen(QWidget):
 
         self.email_input: QLineEdit = self._ui.findChild(QLineEdit, "emailInput")
         self.password_input: QLineEdit = self._ui.findChild(QLineEdit, "passwordInput")
+        self.error_label = QLabel(self._ui)
+        self.error_label.setWordWrap(True)
+        self._ui.layout().insertWidget(8, self.error_label)
+        self.password_input.returnPressed.connect(self.continue_requested)
         self._ui.findChild(QPushButton, "continueButton").clicked.connect(
             self.continue_requested
         )

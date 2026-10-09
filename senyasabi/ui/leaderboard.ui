@@ -1,0 +1,271 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Leaderboard</class>
+ <widget class="QWidget" name="Leaderboard">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1276</width>
+    <height>800</height>
+   </rect>
+  </property>
+  <property name="minimumSize">
+   <size>
+    <width>800</width>
+    <height>520</height>
+   </size>
+  </property>
+  <property name="windowTitle">
+   <string>Leaderboards — SenyaSabi</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#Leaderboard { background-color: #C2D076; }
+QFrame#titlePanel, QFrame#streakPanel, QFrame#leaderboardPanel {
+    background-color: #F5E5CF;
+    border: 2px solid #704833;
+    border-radius: 18px;
+}
+QLabel { color: #0f3a0f; }
+QLabel#titleLabel { font-size: 28px; font-weight: 800; }
+QLabel#lblCurrentStreak { font-size: 19px; font-weight: 800; }
+QLabel#columnHeader { color: #704833; font-size: 13px; font-weight: 700; }
+QLabel.imagePlaceholder {
+    background-color: #C2D076;
+    border: 2px dashed #704833;
+    border-radius: 28px;
+    color: #704833;
+    font-size: 20px;
+}
+QFrame#currentUserRow {
+    background-color: #E3EAAE;
+    border: 2px solid #704833;
+    border-radius: 12px;
+}
+QPushButton {
+    background-color: #0f3a0f;
+    color: #F5E5CF;
+    border: 1px solid #704833;
+    border-radius: 10px;
+    padding: 6px 12px;
+    font-weight: 700;
+}
+QPushButton:hover { background-color: #123f12; }
+QPushButton#btnMenu { min-width: 36px; min-height: 32px; font-size: 18px; padding: 0; }
+QPushButton#btnBack { background-color: transparent; color: #0f3a0f; }
+   </string>
+  </property>
+  <widget class="QFrame" name="leaderboardPanel">
+   <property name="enabled">
+    <bool>true</bool>
+   </property>
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>170</y>
+     <width>1181</width>
+     <height>601</height>
+    </rect>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Shape::NoFrame</enum>
+   </property>
+   <layout class="QVBoxLayout" name="leaderboardPanelLayout">
+    <property name="spacing">
+     <number>10</number>
+    </property>
+    <property name="leftMargin">
+     <number>22</number>
+    </property>
+    <property name="topMargin">
+     <number>18</number>
+    </property>
+    <property name="rightMargin">
+     <number>22</number>
+    </property>
+    <property name="bottomMargin">
+     <number>18</number>
+    </property>
+    <item>
+     <layout class="QHBoxLayout" name="columnsLayout">
+      <property name="leftMargin">
+       <number>14</number>
+      </property>
+      <property name="rightMargin">
+       <number>14</number>
+      </property>
+      <item>
+       <widget class="QLabel" name="rankHeader">
+        <property name="minimumSize">
+         <size>
+          <width>80</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #704833; font-size: 13px; font-weight: 700;</string>
+        </property>
+        <property name="text">
+         <string>RANK</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="usernameHeader">
+        <property name="styleSheet">
+         <string notr="true">color: #704833; font-size: 13px; font-weight: 700;</string>
+        </property>
+        <property name="text">
+         <string>USERNAME</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="columnsSpacer">
+        <property name="orientation">
+         <enum>Qt::Orientation::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+      <item>
+       <widget class="QLabel" name="streakHeader">
+        <property name="minimumSize">
+         <size>
+          <width>130</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #704833; font-size: 13px; font-weight: 700;</string>
+        </property>
+        <property name="text">
+         <string>STREAK</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLabel" name="badgesHeader">
+        <property name="minimumSize">
+         <size>
+          <width>130</width>
+          <height>26</height>
+         </size>
+        </property>
+        <property name="styleSheet">
+         <string notr="true">color: #704833; font-size: 13px; font-weight: 700;</string>
+        </property>
+        <property name="text">
+         <string>BADGES</string>
+        </property>
+       </widget>
+      </item>
+     </layout>
+    </item>
+    <item>
+     <widget class="QScrollArea" name="scrollLeaderboard">
+      <property name="frameShape">
+       <enum>QFrame::Shape::NoFrame</enum>
+      </property>
+      <property name="widgetResizable">
+       <bool>true</bool>
+      </property>
+      <widget class="QWidget" name="leaderboardContainer">
+       <property name="geometry">
+        <rect>
+         <x>0</x>
+         <y>0</y>
+         <width>1133</width>
+         <height>523</height>
+        </rect>
+       </property>
+       <layout class="QVBoxLayout" name="leaderboardLayout">
+        <property name="spacing">
+         <number>10</number>
+        </property>
+        <property name="leftMargin">
+         <number>4</number>
+        </property>
+        <property name="topMargin">
+         <number>4</number>
+        </property>
+        <property name="rightMargin">
+         <number>4</number>
+        </property>
+        <property name="bottomMargin">
+         <number>4</number>
+        </property>
+       </layout>
+      </widget>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QLabel" name="lblCurrentStreak">
+   <property name="geometry">
+    <rect>
+     <x>1090</x>
+     <y>60</y>
+     <width>50</width>
+     <height>26</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string> Days</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="titleLabel">
+   <property name="geometry">
+    <rect>
+     <x>50</x>
+     <y>50</y>
+     <width>189</width>
+     <height>37</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Leaderboards</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignVCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnBack">
+   <property name="geometry">
+    <rect>
+     <x>1130</x>
+     <y>130</y>
+     <width>68</width>
+     <height>30</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>← Back</string>
+   </property>
+  </widget>
+  <widget class="QWidget" name="">
+   <layout class="QHBoxLayout" name="backLayout"/>
+  </widget>
+  <widget class="QPushButton" name="btnMenu">
+   <property name="geometry">
+    <rect>
+     <x>1170</x>
+     <y>60</y>
+     <width>38</width>
+     <height>34</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>☰</string>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

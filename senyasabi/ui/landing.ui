@@ -1,0 +1,94 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Landing</class>
+ <widget class="QWidget" name="Landing">
+  <property name="geometry">
+   <rect><x>0</x><y>0</y><width>1440</width><height>900</height></rect>
+  </property>
+  <property name="minimumSize">
+   <size><width>1440</width><height>900</height></size>
+  </property>
+  <property name="maximumSize">
+   <size><width>1440</width><height>900</height></size>
+  </property>
+  <property name="windowTitle">
+   <string>SenyaSabi</string>
+  </property>
+  <widget class="QLabel" name="imgBackground">
+   <property name="geometry">
+    <rect><x>0</x><y>0</y><width>1440</width><height>900</height></rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">background-color: #C2D076; border: 2px dashed #704833; color: #704833; font-size: 18px;</string>
+   </property>
+   <property name="text">
+    <string>Full-window Figma background image placeholder</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLogin">
+   <property name="geometry">
+    <rect><x>1190</x><y>30</y><width>190</width><height>64</height></rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton { background: transparent; border: none; color: transparent; } QPushButton:hover { background: rgba(255,255,255,24); border: 1px solid rgba(112,72,51,80); border-radius: 10px; }</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="accessibleName">
+    <string>Log in</string>
+   </property>
+   <property name="flat">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnGetStarted">
+   <property name="geometry">
+    <rect><x>500</x><y>635</y><width>440</width><height>100</height></rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton { background: transparent; border: none; color: transparent; } QPushButton:hover { background: rgba(255,255,255,24); border: 1px solid rgba(112,72,51,80); border-radius: 14px; }</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="accessibleName">
+    <string>Get Started Today</string>
+   </property>
+   <property name="flat">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLearnMore">
+   <property name="geometry">
+    <rect><x>520</x><y>748</y><width>400</width><height>72</height></rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">QPushButton { background: transparent; border: none; color: transparent; } QPushButton:hover { background: rgba(255,255,255,24); border: 1px solid rgba(112,72,51,80); border-radius: 12px; }</string>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="accessibleName">
+    <string>Learn More</string>
+   </property>
+   <property name="flat">
+    <bool>true</bool>
+   </property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -6,6 +6,76 @@ from PySide6.QtGui import QCloseEvent, QPixmap
 from PySide6.QtWidgets import QApplication, QWidget
 
 from ui.generated.ui_form import Ui_main
+from ui.dashboard_ui import Ui_Dashboard
+from backend import auth_service, dashboard_service
+
+
+class StatisticsDashboardWindow(QWidget):
+    """Statistics view; all dashboard data comes through dashboard_service."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.ui = Ui_Dashboard()
+        self.ui.setupUi(self)
+        self._menu = None
+        self._leaderboard = None
+        self.ui.btnBack.clicked.connect(self._open_menu)
+        self.ui.btnMenu.clicked.connect(self._open_menu)
+        self.ui.btnLeaderboard.clicked.connect(self._open_leaderboard)
+        self.refresh_stats()
+
+    def refresh_stats(self):
+        user = auth_service.get_current_user()
+        data = dashboard_service.get_dashboard_stats(user["user_id"] if user else None)
+        stats = data["user_statistics"]
+        self.ui.lblCurrentStreak.setText(f'{data["streaks"]["current_streak"]} Days')
+        self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
+        self.ui.lblTotalQuizScore.setText(str(stats["total_quiz_score"]))
+        self.ui.lblModuleCount.setText(str(len(data["module_progress"])))
+        badges = data["user_badges"]
+        latest = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
+        self.ui.lblLatestBadge.setText(str(latest["badge_id"]) if latest else "No badges yet")
+        self.ui.lblMinigamesCompleted.setText(str(stats["minigames_completed"]))
+        rank = data["leaderboard"]["rank_position"]
+        self.ui.lblLeaderboardRank.setText(f"#{rank}" if rank else "Unranked")
+
+    def showEvent(self, event):
+        self.refresh_stats()
+        super().showEvent(event)
+
+    def _open_menu(self):
+        if auth_service.get_current_user() is None:
+            return
+        if self._menu is None:
+            self._menu = DashboardWindow()
+        self._menu.show()
+        self.hide()
+
+    def _open_leaderboard(self):
+        if auth_service.get_current_user() is None:
+            return
+        if self._leaderboard is None:
+            from screens.dashboard.leaderboard import LeaderboardWindow
+            self._leaderboard = LeaderboardWindow()
+            self._leaderboard.back_requested.connect(self._back_from_leaderboard)
+            self._leaderboard.menu_requested.connect(self._menu_from_leaderboard)
+        self._leaderboard.show()
+        self.hide()
+
+    def _back_from_leaderboard(self):
+        self._leaderboard.hide()
+        self.show()
+
+    def _menu_from_leaderboard(self):
+        self._leaderboard.hide()
+        self._open_menu()
+
+    def closeEvent(self, event):
+        if self._leaderboard is not None:
+            self._leaderboard.close()
+        if self._menu is not None:
+            self._menu.close()
+        super().closeEvent(event)
 
 
 class DashboardWindow(QWidget):
@@ -219,6 +289,6 @@ class DashboardWindow(QWidget):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    widget = MainWindow()
+    widget = DashboardWindow()
     widget.show()
     sys.exit(app.exec())

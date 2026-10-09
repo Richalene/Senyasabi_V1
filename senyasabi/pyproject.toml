@@ -32,6 +32,7 @@ files = [
 	"backend/content_data.py",
 	"backend/recognition_engine.py",
 	"backend/session_state.py",
+	"backend/auth_service.py",
 	"database/__init__.py",
 	"menus/__init__.py",
 	"menus/alphabet_menu.py",
