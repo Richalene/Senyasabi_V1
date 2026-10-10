@@ -84,3 +84,5 @@ CMakeLists.txt.user*
 /.qtcreator/
 
 .venv/
+.env
+_test_cache

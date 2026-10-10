@@ -1,6 +1,11 @@
+3==0.0.0
 absl-py==2.5.0
+argon2-cffi==23.1.0
+argon2-cffi-bindings==26.1.0
 astunparse==1.6.3
 attrs==26.1.0
+boto3==1.43.110
+botocore==1.43.110
 certifi==2026.7.22
 cffi==2.1.1
 charset-normalizer==3.5.1
@@ -15,8 +20,10 @@ h5py==3.16.0
 idna==3.19
 jax==0.5.3
 jaxlib==0.5.3
+jmespath==1.1.0
 joblib==1.5.3
 keras==3.15.1
+keyring>=25.0.0
 kiwisolver==1.5.0
 libclang==18.1.1
 Markdown==3.10.3
@@ -36,6 +43,9 @@ optree==0.19.1
 packaging==26.3
 pillow==12.3.0
 protobuf==4.25.3
+psycopg==3.3.6
+psycopg-binary==3.3.6
+psycopg2==2.9.13
 pycparser==3.0
 Pygments==2.21.0
 pyparsing==3.3.2
@@ -43,8 +53,10 @@ PySide6==6.11.2
 PySide6_Addons==6.11.2
 PySide6_Essentials==6.11.2
 python-dateutil==2.9.0.post0
+python-dotenv==1.2.4
 requests==2.34.2
 rich==15.0.0
+s3transfer==0.19.2
 scikit-learn==1.9.0
 scipy==1.17.1
 sentencepiece==0.2.2
@@ -52,6 +64,7 @@ setuptools==84.0.0
 shiboken6==6.11.2
 six==1.17.0
 sounddevice==0.5.6
+SQLAlchemy==2.0.54
 tensorboard==2.18.0
 tensorboard-data-server==0.7.2
 tensorflow==2.18.0
@@ -62,4 +75,3 @@ urllib3==2.7.0
 Werkzeug==3.1.8
 wheel==0.48.0
 wrapt==2.3.0
-SQLAlchemy>=2.0

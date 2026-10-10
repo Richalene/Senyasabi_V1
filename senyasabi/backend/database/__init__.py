@@ -1,6 +1,7 @@
 from .engine import engine
 from .models import *
 from .session import Base, SessionLocal
+from .init_db import initialize_database, rebuild_database, get_schema_version
 
 
 def initialize_database() -> None:

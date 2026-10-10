@@ -19,6 +19,20 @@ DATABASE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 VRM_SIGNS_DIR = BASE_DIR / 'resources' / 'VRM_SIGNS'
 LESSONS_PATH  = DATA_DIR / 'lessons.json'
 
+# ---- Database Configuration --------------------------------------------
+# SQLite is the primary local database for Phase 1
+# PostgreSQL will be added in Phase 2 for cloud sync
+POSTGRESQL_URL = None  # Set to postgresql+psycopg2://user:pass@host/db for Phase 2
+
+# ---- Sync Configuration (for Phase 2) ----------------------------------
+SYNC_BATCH_SIZE = 10
+SYNC_MAX_RETRIES = 3
+SYNC_RETRY_DELAY_SECONDS = 5
+
+# ---- Offline Authentication Configuration ------------------------------
+OFFLINE_AUTH_MAX_FAILED_ATTEMPTS = 5
+OFFLINE_AUTH_LOCKOUT_MINUTES = 15
+
 # ---- Alphabet model ---------------------------------------------------
 ALPHABET_MODEL_PATH  = DATA_DIR / 'alphabet.keras'
 ALPHABET_LABELS_PATH = None                                 # TODO: set if you have a labels file for this model

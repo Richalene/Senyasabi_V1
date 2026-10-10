@@ -19,6 +19,7 @@ from .session_state import (
     SessionState,
     Event,
 )
+from .database import initialize_database, rebuild_database, get_schema_version
 
 __all__ = [
     "SignRecognitionEngine",
@@ -31,4 +32,7 @@ __all__ = [
     "KeyPressSpellingSession",
     "SessionState",
     "Event",
+    "initialize_database",
+    "rebuild_database",
+    "get_schema_version",
 ]

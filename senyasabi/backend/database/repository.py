@@ -1,159 +1,29 @@
-from datetime import datetime
-
-from sqlalchemy import func, select
+from datetime import datetime, timezone
+from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 
-from .models import *
-
-"""
---------------------- EXAMPLES ---------------------
-these are sample operations for my reference
-
-def create_user(db: Session, username: str) -> User:
-    username = username.strip()
-
-    if not username:
-        raise ValueError("Username cannot be empty")
-
-    user = User(username=username)
-    db.add(user)
-    db.commit()
-    db.refresh(user)
-
-    return user
-
-def get_user(db: Session, user_id: int) -> User | None:
-    return db.get(User, user_id)
-
-def get_user_by_username(
-    db: Session,
-    username: str,
-) -> User | None:
-    statement = select(User).where(User.username == username)
-    return db.scalar(statement)
-
-def update_username(
-    db: Session,
-    user_id: int,
-    new_username: str,
-) -> User | None:
-    user = db.get(User, user_id)
-
-    if user is None:
-        return None
-
-    new_username = new_username.strip()
-
-    if not new_username:
-        raise ValueError("Username cannot be empty")
-
-    user.username = new_username
-    db.commit()
-    db.refresh(user)
-
-    return user
-
-def delete_user(db: Session, user_id: int) -> bool:
-    user = db.get(User, user_id)
-
-    if user is None:
-        return False
-
-    db.delete(user)
-    db.commit()
-    return True
-
-def start_lesson_session(
-    db: Session,
-    user_id: int,
-    mode: str,
-    total: int,
-    lesson_name: str | None = None,
-    category: str | None = None,
-) -> LessonSession:
-    lesson_session = LessonSession(
-        user_id=user_id,
-        mode=mode,
-        total=total,
-        lesson_name=lesson_name,
-        category=category,
-    )
-
-    db.add(lesson_session)
-    db.commit()
-    db.refresh(lesson_session)
-
-    return lesson_session
-
-def record_attempt(
-    db: Session,
-    session_id: int,
-    target: str,
-    predicted: str | None,
-    confidence: float | None,
-    result: str,
-) -> LessonAttempt:
-    attempt = LessonAttempt(
-        session_id=session_id,
-        target=target,
-        predicted=predicted,
-        confidence=confidence,
-        result=result,
-    )
-
-    db.add(attempt)
-    db.commit()
-    db.refresh(attempt)
-
-    return attempt
-
-def finish_lesson_session(
-    db: Session,
-    session_id: int,
-    score: int,
-    total: int,
-) -> LessonSession | None:
-    lesson_session = db.get(LessonSession, session_id)
-
-    if lesson_session is None:
-        return None
-
-    lesson_session.score = score
-    lesson_session.total = total
-    lesson_session.completed_at = datetime.utcnow()
-
-    db.commit()
-    db.refresh(lesson_session)
-
-    return lesson_session
-
-def complete_lesson(
-    db: Session,
-    session_id: int,
-    score: int,
-    total: int,
-) -> LessonSession | None:
-    lesson_session = db.get(LessonSession, session_id)
-
-    if lesson_session is None:
-        return None
-
-    try:
-        lesson_session.score = score
-        lesson_session.total = total
-        lesson_session.completed_at = datetime.utcnow()
-
-        # Add any related progress updates here.
-
-        db.commit()
-        db.refresh(lesson_session)
-        return lesson_session
-
-    except Exception:
-        db.rollback()
-        raise
-        
-"""
+from .models import (
+    User,
+    ContentVersion,
+    MediaFile,
+    MediaCache,
+    Module,
+    Lesson,
+    Sign,
+    Quiz,
+    Minigame,
+    MinigameSign,
+    Badge,
+    UserBadges,
+    LessonProgress,
+    UserStatistics,
+    Streak,
+    LeaderboardCache,
+    QuizAttempt,
+    MinigameAttempt,
+    OfflineAuth,
+    SyncQueue,
+)
 
 # ══════════════════════════════════════════════════════════════════════
 # users
@@ -162,21 +32,15 @@ def complete_lesson(
 def create_user(
     db: Session,
     username: str,
-    email: str,
-    password_hash: str,
     display_name: str | None = None,
 ) -> User:
-    if not username.strip():
+    username = username.strip()
+
+    if not username:
         raise ValueError("Username is required")
-    if not email.strip():
-        raise ValueError("Email is required")
-    if not password_hash:
-        raise ValueError("Password is required")
 
     user = User(
         username=username,
-        email=email,
-        password_hash=password_hash,
         display_name=display_name,
     )
 
@@ -196,16 +60,10 @@ def get_user_by_username(db: Session, username: str) -> User | None:
     return db.scalar(statement)
 
 
-def get_user_by_email(db: Session, email: str) -> User | None:
-    statement = select(User).where(User.email == email)
-    return db.scalar(statement)
-
-
 def update_user_profile(
     db: Session,
     user_id: int,
     display_name: str | None = None,
-    email: str | None = None,
 ) -> User | None:
     user = db.get(User, user_id)
 
@@ -214,51 +72,7 @@ def update_user_profile(
 
     if display_name is not None:
         user.display_name = display_name
-    if email is not None:
-        user.email = email
-
-    db.commit()
-    db.refresh(user)
-
-    return user
-
-
-def update_user_password(
-    db: Session,
-    user_id: int,
-    new_password_hash: str,
-) -> User | None:
-    user = db.get(User, user_id)
-    
-    if user is None:
-        return None
-
-    new_password_hash = new_password_hash.strip()
-
-    if not new_password_hash:
-        raise ValueError("Password cannot be empty")
-
-    user.password_hash = new_password_hash
-    db.commit()
-    db.refresh(user)
-    
-    return user
-
-
-def update_user_settings(
-    db: Session,
-    user_id: int,
-    notifications_enabled: bool | None = None,
-    dark_mode: bool | None = None,
-) -> User | None:
-    user = db.get(User, user_id)
-
-    if user is None:
-        return None
-    if notifications_enabled is not None:
-        user.notifications_enabled = notifications_enabled
-    if dark_mode is not None:
-        user.dark_mode = dark_mode
+    user.updated_at = datetime.now()
 
     db.commit()
     db.refresh(user)
@@ -283,6 +97,7 @@ def delete_user(db: Session, user_id: int) -> bool:
 
 def create_content_version(
     db: Session,
+    version_number: int,
     changelog: str | None = None,
     is_published: bool = False,
 ) -> ContentVersion:
@@ -290,6 +105,7 @@ def create_content_version(
         changelog = changelog.strip()
 
     content_version = ContentVersion(
+        version_number=version_number,
         changelog=changelog,
         is_published=is_published,
     )
@@ -303,22 +119,31 @@ def create_content_version(
 
 def get_content_version(
     db: Session,
-    version_id: int,
+    content_version_id: int,
 ) -> ContentVersion | None:
-    return db.get(ContentVersion, version_id)
+    return db.get(ContentVersion, content_version_id)
+
+
+def get_content_version_by_number(
+    db: Session,
+    version_number: int,
+) -> ContentVersion | None:
+    statement = select(ContentVersion).where(ContentVersion.version_number == version_number)
+    return db.scalar(statement)
 
 
 def update_content_version(
     db: Session,
-    version_id: int,
+    content_version_id: int,
     **fields,
 ) -> ContentVersion | None:
-    content_version = db.get(ContentVersion, version_id)
+    content_version = db.get(ContentVersion, content_version_id)
 
     if content_version is None:
         return None
 
     allowed_fields = {
+        "version_number",
         "changelog",
         "is_published",
     }
@@ -339,9 +164,9 @@ def update_content_version(
 
 def delete_content_version(
     db: Session,
-    version_id: int,
+    content_version_id: int,
 ) -> bool:
-    content_version = db.get(ContentVersion, version_id)
+    content_version = db.get(ContentVersion, content_version_id)
 
     if content_version is None:
         return False
@@ -357,36 +182,36 @@ def delete_content_version(
 
 def create_media_file(
     db: Session,
+    media_id: int,
     file_name: str,
-    storage_path: str,
+    object_key: str,
     media_type: str,
-    width: int | None = None,
-    height: int | None = None,
-    duration_seconds: float | None = None,
+    content_version: int,
     file_size: int | None = None,
+    checksum: str | None = None,
 ) -> MediaFile:
     file_name = file_name.strip()
-    storage_path = storage_path.strip()
+    object_key = object_key.strip()
     media_type = media_type.strip()
 
     if not file_name:
-        raise ValueError("File name cannot be empty")
-    if not storage_path:
-        raise ValueError("Storage path cannot be empty")
+        raise ValueError("File name is required")
+    if not object_key:
+        raise ValueError("Object key is required")
     if media_type not in ("Image", "Video"):
         raise ValueError("media_type must be 'Image' or 'Video'")
 
     media_file = MediaFile(
+        media_id=media_id,
         file_name=file_name,
-        storage_path=storage_path,
+        object_key=object_key,
         media_type=media_type,
-        width=width,
-        height=height,
-        duration_seconds=duration_seconds,
+        content_version=content_version,
         file_size=file_size,
+        checksum=checksum,
     )
 
-    db.add(media_file)
+    db.merge(media_file)
     db.commit()
     db.refresh(media_file)
 
@@ -412,12 +237,8 @@ def update_media_file(
 
     allowed_fields = {
         "file_name",
-        "storage_path",
-        "local_cache_path",
+        "object_key",
         "media_type",
-        "width",
-        "height",
-        "duration_seconds",
         "file_size",
         "content_version",
     }
@@ -450,18 +271,67 @@ def delete_media_file(
     return True
 
 # ══════════════════════════════════════════════════════════════════════
+# media_cache
+# ══════════════════════════════════════════════════════════════════════
+
+def create_media_cache(
+    db: Session,
+    media_id: int,
+    local_path: str | None,
+    content_version: int,
+    checksum: str | None = None,
+) -> MediaCache:
+    media_cache = MediaCache(
+        media_id=media_id,
+        local_path=local_path,
+        content_version=content_version,
+        checksum=checksum,
+    )
+
+    db.add(media_cache)
+    db.commit()
+    db.refresh(media_cache)
+
+    return media_cache
+
+
+def get_media_cache(
+    db: Session,
+    media_id: int,
+) -> MediaCache | None:
+    return db.get(MediaCache, media_id)
+
+
+def delete_media_cache(
+    db: Session,
+    media_id: int,
+) -> bool:
+    media_cache = db.get(MediaCache, media_id)
+    if media_cache is None:
+        return False
+
+    db.delete(media_cache)
+    db.commit()
+    return True
+
+# ══════════════════════════════════════════════════════════════════════
 # modules
 # ══════════════════════════════════════════════════════════════════════
 
 def create_module(
     db: Session,
+    module_id: int,
+    module_code: str,
     title: str,
     content_version: int,
     module_order: int,
     description: str | None = None,
 ) -> Module:
+    module_code = module_code.strip()
     title = title.strip()
 
+    if not module_code:
+        raise ValueError("Module code cannot be empty")
     if not title:
         raise ValueError("Title cannot be empty")
     if not module_order:
@@ -472,13 +342,15 @@ def create_module(
         description = description.strip()
 
     module = Module(
+        module_id=module_id,
+        module_code=module_code,
         title=title,
         description=description,
         module_order=module_order,
         content_version=content_version,
     )
 
-    db.add(module)
+    db.merge(module)
     db.commit()
     db.refresh(module)
 
@@ -515,6 +387,7 @@ def update_module(
         return None
 
     allowed_fields = {
+        "module_code",
         "title",
         "description",
         "module_order",
@@ -578,14 +451,19 @@ def delete_module(
 
 def create_lesson(
     db: Session,
+    lesson_id: int,
+    lesson_code: str,
     title: str,
     content_version: int,
     parent_module: int,
     lesson_order: int,
     description: str | None = None,
 ) -> Lesson:
+    lesson_code = lesson_code.strip()
     title = title.strip()
 
+    if not lesson_code:
+        raise ValueError("Lesson code cannot be empty")
     if not title:
         raise ValueError("title cannot be empty")
     if not parent_module:
@@ -598,6 +476,8 @@ def create_lesson(
         description = description.strip()
 
     lesson = Lesson(
+        lesson_id=lesson_id,
+        lesson_code=lesson_code,
         title=title,
         description=description,
         parent_module=parent_module,
@@ -605,7 +485,7 @@ def create_lesson(
         content_version=content_version,
     )
 
-    db.add(lesson)
+    db.merge(lesson)
     db.commit()
     db.refresh(lesson)
 
@@ -642,10 +522,11 @@ def update_lesson(
         return None
 
     allowed_fields = {
+        "lesson_code",
         "title",
         "description",
         "lesson_order",
-        "parent_module,"
+        "parent_module",
         "is_active",
         "content_version",
     }
@@ -704,28 +585,35 @@ def delete_lesson(
 
 def create_sign(
     db: Session,
+    sign_id: int,
     lesson_id: int,
     media_id: int,
-    sign_translation: str,
+    label: str,
+    recognition_label: str,
     content_version: int,
 ) -> Sign:
-    sign_translation = sign_translation.strip()
+    label = label.strip()
+    recognition_label = recognition_label.strip()
 
-    if not sign_translation:
-        raise ValueError("Sign translation cannot be empty")
+    if not label:
+        raise ValueError("Label cannot be empty")
+    if not recognition_label:
+        raise ValueError("Recognition label cannot be empty")
 
     existing = db.query(Sign).filter(Sign.media_id == media_id).first()
-    if existing is not None:
+    if existing is not None and existing.sign_id != sign_id:
         raise ValueError(f"media_id {media_id} is already linked to another sign")
 
     sign = Sign(
+        sign_id=sign_id,
         lesson_id=lesson_id,
         media_id=media_id,
-        sign_translation=sign_translation,
+        label=label,
+        recognition_label=recognition_label,
         content_version=content_version,
     )
 
-    db.add(sign)
+    db.merge(sign)
     db.commit()
     db.refresh(sign)
 
@@ -764,7 +652,8 @@ def update_sign(
     allowed_fields = {
         "lesson_id",
         "media_id",
-        "sign_translation",
+        "label",
+        "recognition_label",
         "content_version",
     }
 
@@ -772,10 +661,15 @@ def update_sign(
         if key not in allowed_fields:
             raise ValueError(f"Cannot update field: {key}")
 
-        if key == "sign_translation":
+        if key == "label":
             value = value.strip()
             if not value:
-                raise ValueError("Sign translation cannot be empty")
+                raise ValueError("Label cannot be empty")
+
+        if key == "recognition_label":
+            value = value.strip()
+            if not value:
+                raise ValueError("Recognition label cannot be empty")
 
         if key == "media_id":
             existing = (
@@ -814,6 +708,7 @@ def delete_sign(
 
 def create_quiz(
     db: Session,
+    quiz_id: int,
     module_id: int,
     content_version: int,
     title: str | None = None,
@@ -830,6 +725,7 @@ def create_quiz(
         raise ValueError("time_limit_seconds must be positive")
 
     quiz = Quiz(
+        quiz_id=quiz_id,
         module_id=module_id,
         title=title,
         passing_score=passing_score,
@@ -837,7 +733,7 @@ def create_quiz(
         content_version=content_version,
     )
 
-    db.add(quiz)
+    db.merge(quiz)
     db.commit()
     db.refresh(quiz)
 
@@ -909,11 +805,13 @@ def delete_quiz(
 
 def create_minigame(
     db: Session,
-    lesson_id: int,
+    minigame_id: int,
+    module_id: int,
     content_version: int,
     game_name: str | None = None,
     game_type: str | None = None,
     description: str | None = None,
+    config: str = "{}",
 ) -> Minigame:
     if game_name is not None:
         game_name = game_name.strip()
@@ -929,14 +827,16 @@ def create_minigame(
             description = None
 
     minigame = Minigame(
-        lesson_id=lesson_id,
+        minigame_id=minigame_id,
+        module_id=module_id,
         game_name=game_name,
         game_type=game_type,
         description=description,
+        config=config,
         content_version=content_version,
     )
 
-    db.add(minigame)
+    db.merge(minigame)
     db.commit()
     db.refresh(minigame)
 
@@ -952,13 +852,13 @@ def get_minigame(
 
 def list_minigames(
     db: Session,
-    lesson_id: int | None = None,
+    module_id: int | None = None,
     game_type: str | None = None,
 ) -> list[Minigame]:
     query = db.query(Minigame).filter(Minigame.is_deleted == False)
 
-    if lesson_id is not None:
-        query = query.filter(Minigame.lesson_id == lesson_id)
+    if module_id is not None:
+        query = query.filter(Minigame.module_id == module_id)
     if game_type is not None:
         query = query.filter(Minigame.game_type == game_type)
     return query.all()
@@ -975,10 +875,11 @@ def update_minigame(
         return None
 
     allowed_fields = {
-        "lesson_id",
+        "module_id",
         "game_name",
         "game_type",
         "description",
+        "config",
         "content_version",
     }
 
@@ -1012,11 +913,52 @@ def delete_minigame(
     return True
 
 # ══════════════════════════════════════════════════════════════════════
+# minigame_signs
+# ════════════════════════════════════════════════════════════════════
+
+def add_minigame_sign(
+    db: Session,
+    minigame_id: int,
+    sign_id: int,
+) -> MinigameSign:
+    minigame_sign = MinigameSign(
+        minigame_id=minigame_id,
+        sign_id=sign_id,
+    )
+    db.add(minigame_sign)
+    db.commit()
+    db.refresh(minigame_sign)
+    return minigame_sign
+
+
+def remove_minigame_sign(
+    db: Session,
+    minigame_id: int,
+    sign_id: int,
+) -> bool:
+    minigame_sign = db.get(MinigameSign, (minigame_id, sign_id))
+    if minigame_sign is None:
+        return False
+
+    db.delete(minigame_sign)
+    db.commit()
+    return True
+
+
+def list_minigame_signs(
+    db: Session,
+    minigame_id: int,
+) -> list[MinigameSign]:
+    statement = select(MinigameSign).where(MinigameSign.minigame_id == minigame_id)
+    return list(db.scalars(statement))
+
+# ══════════════════════════════════════════════════════════════════════
 # badge
 # ══════════════════════════════════════════════════════════════════════
 
 def create_badge(
     db: Session,
+    badge_id: int,
     badge_name: str,
     description: str | None = None,
 ) -> Badge:
@@ -1031,11 +973,12 @@ def create_badge(
             description = None
 
     badge = Badge(
+        badge_id=badge_id,
         badge_name=badge_name,
         description=description,
     )
 
-    db.add(badge)
+    db.merge(badge)
     db.commit()
     db.refresh(badge)
 
@@ -1166,5 +1109,521 @@ def revoke_badge(
     return True
 
 # ══════════════════════════════════════════════════════════════════════
-# module_progress
+# lesson_progress
 # ══════════════════════════════════════════════════════════════════════
+
+def get_lesson_progress(
+    db: Session,
+    user_id: int,
+    lesson_id: int,
+) -> LessonProgress | None:
+    return db.get(LessonProgress, (user_id, lesson_id))
+
+
+def create_or_update_lesson_progress(
+    db: Session,
+    user_id: int,
+    lesson_id: int,
+    completion_percentage: float = 0.0,
+    status: str = "Not Started",
+    last_accessed: datetime | None = None,
+    completed_at: datetime | None = None,
+    time_spent_seconds: int = 0,
+) -> LessonProgress:
+    progress = get_lesson_progress(db, user_id, lesson_id)
+
+    if progress is None:
+        progress = LessonProgress(
+            user_id=user_id,
+            lesson_id=lesson_id,
+            completion_percentage=completion_percentage,
+            status=status,
+            last_accessed=last_accessed,
+            completed_at=completed_at,
+            time_spent_seconds=time_spent_seconds,
+        )
+        db.add(progress)
+    else:
+        progress.completion_percentage = completion_percentage
+        progress.status = status
+        if last_accessed is not None:
+            progress.last_accessed = last_accessed
+        if completed_at is not None:
+            progress.completed_at = completed_at
+        progress.time_spent_seconds += time_spent_seconds
+        progress.updated_at = datetime.now()
+
+    db.commit()
+    db.refresh(progress)
+    return progress
+
+
+def list_lesson_progress(
+    db: Session,
+    user_id: int,
+) -> list[LessonProgress]:
+    statement = select(LessonProgress).where(LessonProgress.user_id == user_id)
+    return list(db.scalars(statement))
+
+# ══════════════════════════════════════════════════════════════════════
+# user_statistics
+# ══════════════════════════════════════════════════════════════════════
+
+def get_user_statistics(
+    db: Session,
+    user_id: int,
+) -> UserStatistics | None:
+    return db.get(UserStatistics, user_id)
+
+
+def rebuild_user_statistics(
+    db: Session,
+    user_id: int | None = None,
+) -> None:
+    """
+    Rebuild user statistics from the live view.
+    This should be called if the cached statistics drift from reality.
+    """
+    if user_id is not None:
+        query = text("""
+            INSERT INTO user_statistics (
+                user_id, lessons_completed, quizzes_completed, minigames_completed,
+                total_quiz_score, total_minigame_score, average_accuracy,
+                total_time_spent_seconds, updated_at)
+            SELECT user_id, lessons_completed, quizzes_completed, minigames_completed,
+                   total_quiz_score, total_minigame_score, average_accuracy,
+                   total_time_spent_seconds, CURRENT_TIMESTAMP
+            FROM v_user_statistics_live
+            WHERE user_id = :user_id
+            ON CONFLICT (user_id) DO UPDATE SET
+                lessons_completed = excluded.lessons_completed,
+                quizzes_completed = excluded.quizzes_completed,
+                minigames_completed = excluded.minigames_completed,
+                total_quiz_score = excluded.total_quiz_score,
+                total_minigame_score = excluded.total_minigame_score,
+                average_accuracy = excluded.average_accuracy,
+                total_time_spent_seconds = excluded.total_time_spent_seconds,
+                updated_at = CURRENT_TIMESTAMP
+        """)
+        db.execute(query, {"user_id": user_id})
+    else:
+        query = text("""
+            INSERT INTO user_statistics (
+                user_id, lessons_completed, quizzes_completed, minigames_completed,
+                total_quiz_score, total_minigame_score, average_accuracy,
+                total_time_spent_seconds, updated_at)
+            SELECT user_id, lessons_completed, quizzes_completed, minigames_completed,
+                   total_quiz_score, total_minigame_score, average_accuracy,
+                   total_time_spent_seconds, CURRENT_TIMESTAMP
+            FROM v_user_statistics_live
+            ON CONFLICT (user_id) DO UPDATE SET
+                lessons_completed = excluded.lessons_completed,
+                quizzes_completed = excluded.quizzes_completed,
+                minigames_completed = excluded.minigames_completed,
+                total_quiz_score = excluded.total_quiz_score,
+                total_minigame_score = excluded.total_minigame_score,
+                average_accuracy = excluded.average_accuracy,
+                total_time_spent_seconds = excluded.total_time_spent_seconds,
+                updated_at = CURRENT_TIMESTAMP
+        """)
+        db.execute(query)
+
+    db.commit()
+
+# ══════════════════════════════════════════════════════════════════════
+# streaks
+# ══════════════════════════════════════════════════════════════════════
+
+def get_streak(
+    db: Session,
+    user_id: int,
+) -> Streak | None:
+    return db.get(Streak, user_id)
+
+
+def create_or_update_streak(
+    db: Session,
+    user_id: int,
+    current_streak: int | None = None,
+    longest_streak: int | None = None,
+    last_activity_date: date | None = None,
+) -> Streak:
+    streak = get_streak(db, user_id)
+
+    if streak is None:
+        streak = Streak(
+            user_id=user_id,
+            current_streak=current_streak,
+            longest_streak=longest_streak,
+            last_activity_date=last_activity_date,
+        )
+        db.add(streak)
+    else:
+        if current_streak is not None:
+            streak.current_streak = current_streak
+        if longest_streak is not None:
+            streak.longest_streak = longest_streak
+        if last_activity_date is not None:
+            streak.last_activity_date = last_activity_date
+
+    db.commit()
+    db.refresh(streak)
+    return streak
+
+# ══════════════════════════════════════════════════════════════════════
+# leaderboard_cache
+# ══════════════════════════════════════════════════════════════════════
+
+def get_leaderboard_cache(
+    db: Session,
+    board_code: str = "all_time",
+    user_id: int | None = None,
+) -> LeaderboardCache | None:
+    if user_id is not None:
+        return db.get(LeaderboardCache, (board_code, user_id))
+    return None
+
+
+def create_or_update_leaderboard_cache(
+    db: Session,
+    board_code: str,
+    user_id: int,
+    display_name: str,
+    total_score: int,
+    rank_position: int,
+    current_streak: int = 0,
+    badge_count: int = 0,
+) -> LeaderboardCache:
+    cache = get_leaderboard_cache(db, board_code, user_id)
+
+    if cache is None:
+        cache = LeaderboardCache(
+            board_code=board_code,
+            user_id=user_id,
+            display_name=display_name,
+            total_score=total_score,
+            rank_position=rank_position,
+            current_streak=current_streak,
+            badge_count=badge_count,
+            fetched_at=datetime.now(),
+        )
+        db.add(cache)
+    else:
+        cache.display_name = display_name
+        cache.total_score = total_score
+        cache.rank_position = rank_position
+        cache.current_streak = current_streak
+        cache.badge_count = badge_count
+        cache.fetched_at = datetime.now()
+
+    db.commit()
+    db.refresh(cache)
+    return cache
+
+
+def list_leaderboard_cache(
+    db: Session,
+    board_code: str = "all_time",
+    limit: int = 100,
+) -> list[LeaderboardCache]:
+    statement = (
+        select(LeaderboardCache)
+        .where(LeaderboardCache.board_code == board_code)
+        .order_by(LeaderboardCache.rank_position)
+        .limit(limit)
+    )
+    return list(db.scalars(statement))
+
+# ══════════════════════════════════════════════════════════════════════
+# quiz_attempts
+# ══════════════════════════════════════════════════════════════════════
+
+def upsert_quiz_attempt(
+    db: Session,
+    user_id: int,
+    attempt_id: str,
+    quiz_id: int,
+    started_at: datetime | None = None,
+    completed_at: datetime | None = None,
+    score: int | None = None,
+    max_score: int | None = None,
+    percentage: float | None = None,
+    passed: bool | None = None,
+) -> QuizAttempt:
+    attempt = db.get(QuizAttempt, attempt_id)
+
+    if attempt is None:
+        attempt = QuizAttempt(
+            attempt_id=attempt_id,
+            user_id=user_id,
+            quiz_id=quiz_id,
+            started_at=started_at,
+            completed_at=completed_at,
+            score=score,
+            max_score=max_score,
+            percentage=percentage,
+            passed=passed,
+        )
+        db.add(attempt)
+    else:
+        if started_at is not None:
+            attempt.started_at = started_at
+        if completed_at is not None:
+            attempt.completed_at = completed_at
+        if score is not None:
+            attempt.score = score
+        if max_score is not None:
+            attempt.max_score = max_score
+        if percentage is not None:
+            attempt.percentage = percentage
+        if passed is not None:
+            attempt.passed = passed
+
+    db.commit()
+    db.refresh(attempt)
+    return attempt
+
+# ══════════════════════════════════════════════════════════════════════
+# minigame_attempts
+# ══════════════════════════════════════════════════════════════════════
+
+def upsert_minigame_attempt(
+    db: Session,
+    user_id: int,
+    game_attempt_id: str,
+    minigame_id: int,
+    started_at: datetime | None = None,
+    completed_at: datetime | None = None,
+    score: int | None = None,
+    duration_seconds: int | None = None,
+    accuracy: float | None = None,
+) -> MinigameAttempt:
+    attempt = db.get(MinigameAttempt, game_attempt_id)
+
+    if attempt is None:
+        attempt = MinigameAttempt(
+            game_attempt_id=game_attempt_id,
+            user_id=user_id,
+            minigame_id=minigame_id,
+            started_at=started_at,
+            completed_at=completed_at,
+            score=score,
+            duration_seconds=duration_seconds,
+            accuracy=accuracy,
+        )
+        db.add(attempt)
+    else:
+        if started_at is not None:
+            attempt.started_at = started_at
+        if completed_at is not None:
+            attempt.completed_at = completed_at
+        if score is not None:
+            attempt.score = score
+        if duration_seconds is not None:
+            attempt.duration_seconds = duration_seconds
+        if accuracy is not None:
+            attempt.accuracy = accuracy
+
+    db.commit()
+    db.refresh(attempt)
+    return attempt
+
+# ══════════════════════════════════════════════════════════════════════
+# offline_auth
+# ══════════════════════════════════════════════════════════════════════
+
+def create_offline_auth(
+    db: Session,
+    user_id: int,
+    username: str,
+    password_verifier: str,
+) -> OfflineAuth:
+    username = username.strip()
+    if not username:
+        raise ValueError("Username cannot be empty")
+    if not password_verifier:
+        raise ValueError("Password verifier cannot be empty")
+
+    offline_auth = OfflineAuth(
+        user_id=user_id,
+        username=username,
+        password_verifier=password_verifier,
+        last_online_login=datetime.now(),
+    )
+    db.add(offline_auth)
+    db.commit()
+    db.refresh(offline_auth)
+    return offline_auth
+
+
+def get_offline_auth(
+    db: Session,
+    user_id: int,
+) -> OfflineAuth | None:
+    return db.get(OfflineAuth, user_id)
+
+
+def get_offline_auth_by_username(
+    db: Session,
+    username: str,
+) -> OfflineAuth | None:
+    statement = select(OfflineAuth).where(OfflineAuth.username == username)
+    return db.scalar(statement)
+
+
+def update_offline_auth(
+    db: Session,
+    user_id: int,
+    password_verifier: str | None = None,
+    last_online_login: datetime | None = None,
+) -> OfflineAuth | None:
+    offline_auth = get_offline_auth(db, user_id)
+    if offline_auth is None:
+        return None
+
+    if password_verifier is not None:
+        offline_auth.password_verifier = password_verifier
+    if last_online_login is not None:
+        offline_auth.last_online_login = last_online_login
+
+    db.commit()
+    db.refresh(offline_auth)
+    return offline_auth
+
+
+def record_failed_login_attempt(
+    db: Session,
+    username: str,
+) -> OfflineAuth | None:
+    offline_auth = get_offline_auth_by_username(db, username)
+    if offline_auth is None:
+        return None
+
+    offline_auth.failed_attempts += 1
+    db.commit()
+    db.refresh(offline_auth)
+    return offline_auth
+
+
+def reset_failed_login_attempts(
+    db: Session,
+    user_id: int,
+) -> OfflineAuth | None:
+    offline_auth = get_offline_auth(db, user_id)
+    if offline_auth is None:
+        return None
+
+    offline_auth.failed_attempts = 0
+    offline_auth.locked_until = None
+    db.commit()
+    db.refresh(offline_auth)
+    return offline_auth
+
+
+def lock_offline_auth(
+    db: Session,
+    user_id: int,
+    lock_until: datetime,
+) -> OfflineAuth | None:
+    offline_auth = get_offline_auth(db, user_id)
+    if offline_auth is None:
+        return None
+
+    offline_auth.locked_until = lock_until
+    db.commit()
+    db.refresh(offline_auth)
+    return offline_auth
+
+# ══════════════════════════════════════════════════════════════════════
+# sync_queue
+# ══════════════════════════════════════════════════════════════════════
+
+def enqueue_sync(
+    db: Session,
+    sync_id: str,
+    user_id: int,
+    entity_type: str,
+    entity_id: str,
+    payload: str,
+    operation: str = "upsert",
+) -> SyncQueue:
+    if entity_type not in ("quiz_attempt", "minigame_attempt", "lesson_completion"):
+        raise ValueError(f"Invalid entity_type: {entity_type}")
+    if operation not in ("upsert", "delete"):
+        raise ValueError(f"Invalid operation: {operation}")
+
+    sync_queue = SyncQueue(
+        sync_id=sync_id,
+        user_id=user_id,
+        entity_type=entity_type,
+        entity_id=entity_id,
+        operation=operation,
+        payload=payload,
+    )
+    db.add(sync_queue)
+    db.commit()
+    db.refresh(sync_queue)
+    return sync_queue
+
+
+def dequeue_pending_sync(
+    db: Session,
+    limit: int = 10,
+) -> list[SyncQueue]:
+    statement = (
+        select(SyncQueue)
+        .where(SyncQueue.synced_at == None)
+        .order_by(SyncQueue.created_at)
+        .limit(limit)
+    )
+    return list(db.scalars(statement))
+
+
+def mark_synced(
+    db: Session,
+    sync_id: str,
+) -> bool:
+    sync_item = db.get(SyncQueue, sync_id)
+    if sync_item is None:
+        return False
+
+    sync_item.synced_at = datetime.now()
+    sync_item.retry_count = 0
+    sync_item.last_error = None
+    db.commit()
+    return True
+
+
+def mark_sync_failed(
+    db: Session,
+    sync_id: str,
+    error_message: str,
+) -> bool:
+    sync_item = db.get(SyncQueue, sync_id)
+    if sync_item is None:
+        return False
+
+    sync_item.retry_count += 1
+    sync_item.last_attempted_at = datetime.now()
+    sync_item.last_error = error_message
+    db.commit()
+    return True
+
+
+def get_sync_queue_stats(
+    db: Session,
+    user_id: int | None = None,
+) -> dict:
+    query = select(SyncQueue)
+    if user_id is not None:
+        query = query.where(SyncQueue.user_id == user_id)
+
+    all_items = list(db.scalars(query))
+    pending = [i for i in all_items if i.synced_at is None]
+    failed = [i for i in pending if i.retry_count > 0]
+
+    return {
+        "total": len(all_items),
+        "pending": len(pending),
+        "failed": len(failed),
+    }
