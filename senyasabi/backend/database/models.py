@@ -1,6 +1,6 @@
-from datetime import datetime, date
+from datetime import datetime, date, timezone
 import enum
-from uuid import UUID, uuid4
+import uuid
 
 from sqlalchemy import (
     String,
@@ -14,52 +14,56 @@ from sqlalchemy import (
     UniqueConstraint,
     Date,
     Index,
+    Uuid
 )
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
 
 from .session import Base
 
+def utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
 
 class User(Base):
     __tablename__ = "users"
 
-    user_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)  # Autoincrement for offline, server-assigned when synced
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)  
     username: Mapped[str] = mapped_column(
         String(50),
         nullable=False,
         index=True,
     )
+    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
     display_name: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     offline_auth: Mapped["OfflineAuth | None"] = relationship(back_populates="user", uselist=False)
     lesson_progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user")
     minigame_attempts: Mapped[list["MinigameAttempt"]] = relationship(back_populates="user")
     user_badges: Mapped[list["UserBadges"]] = relationship(back_populates="user")
-
-
+    
 class OfflineAuth(Base):
     __tablename__ = "offline_auth"
 
-    user_id: Mapped[int] = mapped_column(
-        ForeignKey("users.user_id"),
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
+        ForeignKey("users.user_id", ondelete="CASCADE"),
         primary_key=True,
     )
-    username: Mapped[str] = mapped_column(String(50), nullable=False, unique=True)
     password_verifier: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
+        DateTime(timezone=True),
+        default=utcnow,
         nullable=False,
     )
-    last_online_login: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    last_online_login: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
     failed_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    locked_until: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="offline_auth")
 
@@ -70,8 +74,8 @@ class ContentVersion(Base):
     content_version_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
     released_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
+        DateTime(timezone=True),
+        default=utcnow,
         nullable=False,
     )
     changelog: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -112,12 +116,12 @@ class MediaFile(Base):
     media_type: Mapped[str] = mapped_column(Text, nullable=False)
     file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
     checksum: Mapped[str | None] = mapped_column(Text, nullable=True)
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -137,14 +141,14 @@ class MediaCache(Base):
         primary_key=True,
     )
     local_path: Mapped[str | None] = mapped_column(String(500), nullable=True)
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
     )
     cached_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
+        DateTime(timezone=True),
+        default=utcnow,
         nullable=False,
     )
     checksum: Mapped[str | None] = mapped_column(Text, nullable=True)
@@ -166,13 +170,13 @@ class Module(Base):
         default=True,
         nullable=False,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
     )
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
@@ -202,13 +206,13 @@ class Lesson(Base):
         default=True,
         nullable=False,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
     )
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
@@ -237,13 +241,13 @@ class Sign(Base):
     )
     label: Mapped[str] = mapped_column(String(100), nullable=False)
     recognition_label: Mapped[str] = mapped_column(String(100), nullable=False)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
     )
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
@@ -270,13 +274,13 @@ class Quiz(Base):
         nullable=False,
     )
     time_limit_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
     )
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
@@ -300,13 +304,13 @@ class Minigame(Base):
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     config: Mapped[str] = mapped_column(Text, nullable=False)  # JSON stored as TEXT
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
         nullable=False,
     )
-    content_version: Mapped[int] = mapped_column(
+    content_version_id: Mapped[int] = mapped_column(
         ForeignKey("content_versions.content_version_id"),
         nullable=False,
         index=True,
@@ -352,9 +356,9 @@ class Badge(Base):
 class UserBadges(Base):
     __tablename__ = "user_badges"
 
-    user_id: Mapped[int] = mapped_column(Integer, ForeignKey("users.user_id"), primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.user_id"), primary_key=True)
     badge_id: Mapped[int] = mapped_column(Integer, ForeignKey("badges.badge_id"), primary_key=True)
-    unlocked_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.now, nullable=False)
+    unlocked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="user_badges")
     badge: Mapped["Badge"] = relationship(back_populates="user_badges")
@@ -369,7 +373,8 @@ class LessonProgress(Base):
         ),
     )
 
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
         ForeignKey("users.user_id"),
         nullable=False,
         primary_key=True,
@@ -385,12 +390,12 @@ class LessonProgress(Base):
         default="Not Started",
         nullable=False,
     )
-    last_accessed: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_accessed: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     time_spent_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
+        DateTime(timezone=True),
+        default=utcnow,
         nullable=False,
     )
 
@@ -401,7 +406,8 @@ class LessonProgress(Base):
 class UserStatistics(Base):
     __tablename__ = "user_statistics"
 
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
         ForeignKey("users.user_id"),
         primary_key=True,
     )
@@ -413,8 +419,8 @@ class UserStatistics(Base):
     average_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
     total_time_spent_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     updated_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
+        DateTime(timezone=True),
+        default=utcnow,
         nullable=False,
     )
 
@@ -426,7 +432,8 @@ class Streak(Base):
     )
 
     streak_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
         ForeignKey("users.user_id"),
         nullable=False,
         unique=True,
@@ -443,7 +450,8 @@ class LeaderboardCache(Base):
     )
 
     board_code: Mapped[str] = mapped_column(String(50), primary_key=True, default="all_time")
-    user_id: Mapped[int] = mapped_column(
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
         ForeignKey("users.user_id"),
         primary_key=True,
     )
@@ -452,7 +460,7 @@ class LeaderboardCache(Base):
     rank_position: Mapped[int] = mapped_column(Integer, nullable=False)
     current_streak: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     badge_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    fetched_at: Mapped[datetime] = mapped_column(DateTime, nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
 
 
 class QuizAttempt(Base):
@@ -463,8 +471,9 @@ class QuizAttempt(Base):
         Index("idx_quiz_attempts_user_quiz", "user_id", "quiz_id"),
     )
 
-    attempt_id: Mapped[str] = mapped_column(String(36), primary_key=True)  # UUID as string
-    user_id: Mapped[int] = mapped_column(
+    attempt_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
         ForeignKey("users.user_id"),
         nullable=False,
     )
@@ -472,12 +481,14 @@ class QuizAttempt(Base):
         ForeignKey("quizzes.quiz_id"),
         nullable=False,
     )
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
     passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
+    camera_correct: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    camera_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="quiz_attempts")
     quiz: Mapped["Quiz"] = relationship(back_populates="attempts")
@@ -491,8 +502,9 @@ class MinigameAttempt(Base):
         Index("idx_minigame_attempts_user_minigame", "user_id", "minigame_id"),
     )
 
-    game_attempt_id: Mapped[str] = mapped_column(String(36), primary_key=True)  # UUID as string
-    user_id: Mapped[int] = mapped_column(
+    game_attempt_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True) 
+    user_id: Mapped[uuid.UUID] = mapped_column(
+        Uuid,
         ForeignKey("users.user_id"),
         nullable=False,
     )
@@ -500,8 +512,8 @@ class MinigameAttempt(Base):
         ForeignKey("minigames.minigame_id"),
         nullable=False,
     )
-    started_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -528,18 +540,19 @@ class SyncQueue(Base):
         ),
     )
 
-    sync_id: Mapped[str] = mapped_column(String(36), primary_key=True)  # UUID as string
-    user_id: Mapped[int] = mapped_column(Integer, nullable=False)
+    sync_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)  
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, nullable=False)
     entity_type: Mapped[str] = mapped_column(String(50), nullable=False)
-    entity_id: Mapped[str] = mapped_column(String(36), nullable=False)  # Server-assigned UUID
+    entity_id: Mapped[str] = mapped_column(String(64), nullable=False)  # Server-assigned UUID
     operation: Mapped[str] = mapped_column(String(20), nullable=False, default="upsert")
     payload: Mapped[str] = mapped_column(Text, nullable=False)  # JSON with full entity data
     created_at: Mapped[datetime] = mapped_column(
-        DateTime,
-        default=datetime.now,
+        DateTime(timezone=True),
+        default=utcnow,
         nullable=False,
     )
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    last_attempted_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    last_attempted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    synced_at: Mapped[datetime | None] = mapped_column(DateTime, nullable=True)
+    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+

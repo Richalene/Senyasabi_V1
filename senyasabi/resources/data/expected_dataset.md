@@ -3,14 +3,13 @@ These are the datasets we need to compile for the prototype version of SenyaSabi
 
 Lessons should ideally be broken up into smaller parts that can be done in ~5 mins. I've grouped these up in a way that I think wouldn't be too overwhelming to learn. 
 
-## Lesson 1: The Manual Alphabet
+## Module 1: The Manual Alphabet
 A, B, C, D, E, F
-G, H, I, Y, K, L
+G, H, I, J, K, L
 M, N, O, P, Q, R
-S, T, U, V, W, X
-J, Z    ~note: separate cuz these signs need hand movement~
+S, T, U, V, W, X, Y, Z  
 
-## Lesson 2: Numbers
+## Module 2: Numbers
 ### One to Five
 1, 2, 3, 4, 5
 ### Six to Ten
@@ -25,7 +24,7 @@ J, Z    ~note: separate cuz these signs need hand movement~
 100, 200, 300, 400, 500, 600, 700, 800, 900, 1000[^1]
 
 
-## Lesson 3: Family Members
+## Module 3: Family Members
 ### Family Overview
 family, parents, husband, wife
 ### Immediate Family
@@ -37,7 +36,7 @@ grandfather, grandmother, uncle, auntie
 ### Same / Younger Generation
 cousin, nephew, niece
 
-## Lesson 4: Basic Communication 
+## Module 4: Basic Communication 
 ### Daily Greetings & Farewells
 Good morning, Good afternoon, Good evening, Good night, Goodbye
 ### Holidays & Celebrations
@@ -51,10 +50,10 @@ What is your name?, Nice to meet you, How are you?, I'm fine
 ### Personal Info Questions
 How old are you?, Where do you live?, Where do you study?
 
-## Lesson 5: Days of the Week
+## Module 5: Days of the Week
 Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
 
-## Lesson 6: Months of the Year
+## Module 6: Months of the Year
 ### January to April
 January, February, March, April
 ### May to August
@@ -62,7 +61,7 @@ May, June, July, August
 ### September to December
 September, October, November, December
 
-## Lesson 7: Action Words 
+## Module 7: Action Words 
 ### Daily Living
 cook, eat, drink, clean, pray, sleep
 ### Communication

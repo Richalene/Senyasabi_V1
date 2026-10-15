@@ -1,6 +1,9 @@
-from datetime import datetime, timezone
+from datetime import datetime, timezone, date
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
+import uuid
+import json
+from typing import Any, Literal
 
 from .models import (
     User,
@@ -24,6 +27,9 @@ from .models import (
     OfflineAuth,
     SyncQueue,
 )
+
+def normalize_email(email: str) -> str:
+    return email.strip().lower()
 
 # ══════════════════════════════════════════════════════════════════════
 # users
@@ -51,7 +57,7 @@ def create_user(
     return user
 
 
-def get_user_by_id(db: Session, user_id: int) -> User | None:
+def get_user_by_id(db: Session, user_id: uuid.UUID) -> User | None:
     return db.get(User, user_id)
 
 
@@ -62,7 +68,7 @@ def get_user_by_username(db: Session, username: str) -> User | None:
 
 def update_user_profile(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     display_name: str | None = None,
 ) -> User | None:
     user = db.get(User, user_id)
@@ -72,7 +78,7 @@ def update_user_profile(
 
     if display_name is not None:
         user.display_name = display_name
-    user.updated_at = datetime.now()
+    user.updated_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(user)
@@ -80,7 +86,7 @@ def update_user_profile(
     return user
 
 
-def delete_user(db: Session, user_id: int) -> bool:
+def delete_user(db: Session, user_id: uuid.UUID) -> bool:
     user = db.get(User, user_id)
 
     if user is None:
@@ -186,7 +192,7 @@ def create_media_file(
     file_name: str,
     object_key: str,
     media_type: str,
-    content_version: int,
+    content_version_id: int,
     file_size: int | None = None,
     checksum: str | None = None,
 ) -> MediaFile:
@@ -206,7 +212,7 @@ def create_media_file(
         file_name=file_name,
         object_key=object_key,
         media_type=media_type,
-        content_version=content_version,
+        content_version=content_version_id,
         file_size=file_size,
         checksum=checksum,
     )
@@ -278,13 +284,13 @@ def create_media_cache(
     db: Session,
     media_id: int,
     local_path: str | None,
-    content_version: int,
+    content_version_id: int,
     checksum: str | None = None,
 ) -> MediaCache:
     media_cache = MediaCache(
         media_id=media_id,
         local_path=local_path,
-        content_version=content_version,
+        content_version=content_version_id,
         checksum=checksum,
     )
 
@@ -323,7 +329,7 @@ def create_module(
     module_id: int,
     module_code: str,
     title: str,
-    content_version: int,
+    content_version_id: int,
     module_order: int,
     description: str | None = None,
 ) -> Module:
@@ -336,7 +342,7 @@ def create_module(
         raise ValueError("Title cannot be empty")
     if not module_order:
         raise ValueError("Module order cannot be empty")
-    if not content_version:
+    if not content_version_id:
         raise ValueError("Content version cannot be empty")
     if description is not None:
         description = description.strip()
@@ -347,7 +353,7 @@ def create_module(
         title=title,
         description=description,
         module_order=module_order,
-        content_version=content_version,
+        content_version=content_version_id,
     )
 
     db.merge(module)
@@ -454,7 +460,7 @@ def create_lesson(
     lesson_id: int,
     lesson_code: str,
     title: str,
-    content_version: int,
+    content_version_id: int,
     parent_module: int,
     lesson_order: int,
     description: str | None = None,
@@ -468,7 +474,7 @@ def create_lesson(
         raise ValueError("title cannot be empty")
     if not parent_module:
         raise ValueError("parent_module cannot be empty")
-    if not content_version:
+    if not content_version_id:
         raise ValueError("content_version cannot be empty")
     if not lesson_order:
         raise ValueError("lesson_order cannot be empty")
@@ -482,7 +488,7 @@ def create_lesson(
         description=description,
         parent_module=parent_module,
         lesson_order=lesson_order,
-        content_version=content_version,
+        content_version=content_version_id,
     )
 
     db.merge(lesson)
@@ -590,7 +596,7 @@ def create_sign(
     media_id: int,
     label: str,
     recognition_label: str,
-    content_version: int,
+    content_version_id: int,
 ) -> Sign:
     label = label.strip()
     recognition_label = recognition_label.strip()
@@ -610,7 +616,7 @@ def create_sign(
         media_id=media_id,
         label=label,
         recognition_label=recognition_label,
-        content_version=content_version,
+        content_version=content_version_id,
     )
 
     db.merge(sign)
@@ -710,7 +716,7 @@ def create_quiz(
     db: Session,
     quiz_id: int,
     module_id: int,
-    content_version: int,
+    content_version_id: int,
     title: str | None = None,
     passing_score: int = 70,
     time_limit_seconds: int | None = None,
@@ -730,7 +736,7 @@ def create_quiz(
         title=title,
         passing_score=passing_score,
         time_limit_seconds=time_limit_seconds,
-        content_version=content_version,
+        content_version=content_version_id,
     )
 
     db.merge(quiz)
@@ -807,7 +813,7 @@ def create_minigame(
     db: Session,
     minigame_id: int,
     module_id: int,
-    content_version: int,
+    content_version_id: int,
     game_name: str | None = None,
     game_type: str | None = None,
     description: str | None = None,
@@ -833,7 +839,7 @@ def create_minigame(
         game_type=game_type,
         description=description,
         config=config,
-        content_version=content_version,
+        content_version=content_version_id,
     )
 
     db.merge(minigame)
@@ -1055,7 +1061,7 @@ def delete_badge(
 
 def award_badge(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     badge_id: int,
 ) -> UserBadges:
     existing = db.get(UserBadges, (user_id, badge_id))
@@ -1076,7 +1082,7 @@ def award_badge(
 
 def get_user_badge(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     badge_id: int,
 ) -> UserBadges | None:
     return db.get(UserBadges, (user_id, badge_id))
@@ -1084,7 +1090,7 @@ def get_user_badge(
 
 def list_user_badges(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
 ) -> list[UserBadges]:
     return (
         db.query(UserBadges)
@@ -1095,7 +1101,7 @@ def list_user_badges(
 
 def revoke_badge(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     badge_id: int,
 ) -> bool:
     user_badge = db.get(UserBadges, (user_id, badge_id))
@@ -1114,7 +1120,7 @@ def revoke_badge(
 
 def get_lesson_progress(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     lesson_id: int,
 ) -> LessonProgress | None:
     return db.get(LessonProgress, (user_id, lesson_id))
@@ -1122,7 +1128,7 @@ def get_lesson_progress(
 
 def create_or_update_lesson_progress(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     lesson_id: int,
     completion_percentage: float = 0.0,
     status: str = "Not Started",
@@ -1151,16 +1157,16 @@ def create_or_update_lesson_progress(
         if completed_at is not None:
             progress.completed_at = completed_at
         progress.time_spent_seconds += time_spent_seconds
-        progress.updated_at = datetime.now()
+        progress.updated_at = datetime.now(timezone.utc)
 
-    db.commit()
+    db.flush()
     db.refresh(progress)
     return progress
 
 
 def list_lesson_progress(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
 ) -> list[LessonProgress]:
     statement = select(LessonProgress).where(LessonProgress.user_id == user_id)
     return list(db.scalars(statement))
@@ -1171,14 +1177,14 @@ def list_lesson_progress(
 
 def get_user_statistics(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
 ) -> UserStatistics | None:
     return db.get(UserStatistics, user_id)
 
 
 def rebuild_user_statistics(
     db: Session,
-    user_id: int | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> None:
     """
     Rebuild user statistics from the live view.
@@ -1234,16 +1240,13 @@ def rebuild_user_statistics(
 # streaks
 # ══════════════════════════════════════════════════════════════════════
 
-def get_streak(
-    db: Session,
-    user_id: int,
-) -> Streak | None:
-    return db.get(Streak, user_id)
+def get_streak(db: Session, user_id: uuid.UUID) -> Streak | None:
+    return db.scalar(select(Streak).where(Streak.user_id == user_id))
 
 
 def create_or_update_streak(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     current_streak: int | None = None,
     longest_streak: int | None = None,
     last_activity_date: date | None = None,
@@ -1277,7 +1280,7 @@ def create_or_update_streak(
 def get_leaderboard_cache(
     db: Session,
     board_code: str = "all_time",
-    user_id: int | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> LeaderboardCache | None:
     if user_id is not None:
         return db.get(LeaderboardCache, (board_code, user_id))
@@ -1287,7 +1290,7 @@ def get_leaderboard_cache(
 def create_or_update_leaderboard_cache(
     db: Session,
     board_code: str,
-    user_id: int,
+    user_id: uuid.UUID,
     display_name: str,
     total_score: int,
     rank_position: int,
@@ -1305,7 +1308,7 @@ def create_or_update_leaderboard_cache(
             rank_position=rank_position,
             current_streak=current_streak,
             badge_count=badge_count,
-            fetched_at=datetime.now(),
+            fetched_at=datetime.now(timezone.utc),
         )
         db.add(cache)
     else:
@@ -1314,7 +1317,7 @@ def create_or_update_leaderboard_cache(
         cache.rank_position = rank_position
         cache.current_streak = current_streak
         cache.badge_count = badge_count
-        cache.fetched_at = datetime.now()
+        cache.fetched_at = datetime.now(timezone.utc)
 
     db.commit()
     db.refresh(cache)
@@ -1339,58 +1342,41 @@ def list_leaderboard_cache(
 # ══════════════════════════════════════════════════════════════════════
 
 def upsert_quiz_attempt(
-    db: Session,
-    user_id: int,
-    attempt_id: str,
-    quiz_id: int,
-    started_at: datetime | None = None,
-    completed_at: datetime | None = None,
-    score: int | None = None,
-    max_score: int | None = None,
-    percentage: float | None = None,
-    passed: bool | None = None,
+    db, user_id, attempt_id, quiz_id,
+    started_at=None, completed_at=None, score=None, max_score=None,
+    percentage=None, passed=None,
+    camera_correct: int | None = None,
+    camera_total: int | None = None,
 ) -> QuizAttempt:
     attempt = db.get(QuizAttempt, attempt_id)
-
     if attempt is None:
         attempt = QuizAttempt(
-            attempt_id=attempt_id,
-            user_id=user_id,
-            quiz_id=quiz_id,
-            started_at=started_at,
-            completed_at=completed_at,
-            score=score,
-            max_score=max_score,
-            percentage=percentage,
-            passed=passed,
+            attempt_id=attempt_id, user_id=user_id, quiz_id=quiz_id,
+            started_at=started_at, completed_at=completed_at, score=score,
+            max_score=max_score, percentage=percentage, passed=passed,
+            camera_correct=camera_correct, camera_total=camera_total,
         )
         db.add(attempt)
     else:
-        if started_at is not None:
-            attempt.started_at = started_at
-        if completed_at is not None:
-            attempt.completed_at = completed_at
-        if score is not None:
-            attempt.score = score
-        if max_score is not None:
-            attempt.max_score = max_score
-        if percentage is not None:
-            attempt.percentage = percentage
-        if passed is not None:
-            attempt.passed = passed
-
-    db.commit()
+        if started_at is not None: attempt.started_at = started_at
+        if completed_at is not None: attempt.completed_at = completed_at
+        if score is not None: attempt.score = score
+        if max_score is not None: attempt.max_score = max_score
+        if percentage is not None: attempt.percentage = percentage
+        if passed is not None: attempt.passed = passed
+        if camera_correct is not None: attempt.camera_correct = camera_correct
+        if camera_total is not None: attempt.camera_total = camera_total
+    db.flush()
     db.refresh(attempt)
     return attempt
-
 # ══════════════════════════════════════════════════════════════════════
 # minigame_attempts
 # ══════════════════════════════════════════════════════════════════════
 
 def upsert_minigame_attempt(
     db: Session,
-    user_id: int,
-    game_attempt_id: str,
+    user_id: uuid.UUID,
+    game_attempt_id: uuid.UUID,
     minigame_id: int,
     started_at: datetime | None = None,
     completed_at: datetime | None = None,
@@ -1424,9 +1410,127 @@ def upsert_minigame_attempt(
         if accuracy is not None:
             attempt.accuracy = accuracy
 
-    db.commit()
+    db.flush()
     db.refresh(attempt)
     return attempt
+
+# ══════════════════════════════════════════════════════════════════════
+# dashboard queries
+# ══════════════════════════════════════════════════════════════════════
+
+def get_latest_badge(db: Session, user_id: uuid.UUID) -> tuple[Badge, UserBadges] | None:
+    row = db.execute(
+        select(Badge, UserBadges)
+        .join(UserBadges, UserBadges.badge_id == Badge.badge_id)
+        .where(UserBadges.user_id == user_id)
+        .order_by(UserBadges.unlocked_at.desc())
+        .limit(1)
+    ).first()
+    return (row[0], row[1]) if row else None
+
+
+def get_current_module(db: Session, user_id: uuid.UUID) -> Module | None:
+    """
+    1. Module of the most recently accessed 'In Progress' lesson.
+    2. Otherwise the first module (by order) that still has an incomplete lesson.
+    3. None if the user has completed everything (or there is no content).
+    """
+    in_progress = db.execute(
+        select(Module)
+        .join(Lesson, Lesson.parent_module == Module.module_id)
+        .join(LessonProgress, LessonProgress.lesson_id == Lesson.lesson_id)
+        .where(
+            LessonProgress.user_id == user_id,
+            LessonProgress.status == "In Progress",
+            Module.is_deleted.is_(False),
+            Module.is_active.is_(True),
+        )
+        .order_by(LessonProgress.last_accessed.desc().nulls_last())
+        .limit(1)
+    ).scalars().first()
+    if in_progress is not None:
+        return in_progress
+
+    completed_ids = set(db.scalars(
+        select(LessonProgress.lesson_id).where(
+            LessonProgress.user_id == user_id,
+            LessonProgress.status == "Completed",
+        )
+    ))
+    lessons = db.execute(
+        select(Lesson.lesson_id, Lesson.parent_module).where(
+            Lesson.is_deleted.is_(False), Lesson.is_active.is_(True)
+        )
+    ).all()
+    incomplete_modules = {m for lid, m in lessons if lid not in completed_ids}
+
+    for module in list_modules(db):  # already ordered by module_order
+        if module.module_id in incomplete_modules:
+            return module
+    return None
+
+
+def get_module_performance(db: Session, user_id: uuid.UUID) -> list[dict]:
+    """
+    One entry per active module (7 points for the radar chart):
+        score = 0.5 * Q + 0.5 * R      (all values 0-100)
+
+    Q = average percentage across the user's completed quiz attempts for the module.
+    R = camera recognition accuracy:
+          - pooled camera_correct / camera_total from quiz attempts, if any
+          - otherwise average accuracy of camera-type minigame attempts
+    A missing Q or R counts as 0, so unstarted modules sit at the center.
+    """
+    quiz_rows = db.execute(
+        select(
+            Quiz.module_id,
+            func.avg(QuizAttempt.percentage),
+            func.sum(QuizAttempt.camera_correct),
+            func.sum(QuizAttempt.camera_total),
+        )
+        .join(Quiz, Quiz.quiz_id == QuizAttempt.quiz_id)
+        .where(
+            QuizAttempt.user_id == user_id,
+            QuizAttempt.completed_at.is_not(None),
+        )
+        .group_by(Quiz.module_id)
+    ).all()
+    quiz_by_module = {r[0]: r for r in quiz_rows}
+
+    game_rows = db.execute(
+        select(Minigame.module_id, func.avg(MinigameAttempt.accuracy))
+        .join(Minigame, Minigame.minigame_id == MinigameAttempt.minigame_id)
+        .where(
+            MinigameAttempt.user_id == user_id,
+            MinigameAttempt.completed_at.is_not(None),
+            MinigameAttempt.accuracy.is_not(None),
+            Minigame.game_type == "camera",
+        )
+        .group_by(Minigame.module_id)
+    ).all()
+    game_acc_by_module = {r[0]: r[1] for r in game_rows}
+
+    result = []
+    for module in list_modules(db):
+        q_row = quiz_by_module.get(module.module_id)
+        q = float(q_row[1]) if q_row and q_row[1] is not None else None
+
+        r = None
+        if q_row and q_row[3]:  # camera_total > 0
+            r = 100.0 * float(q_row[2] or 0) / float(q_row[3])
+        elif game_acc_by_module.get(module.module_id) is not None:
+            r = float(game_acc_by_module[module.module_id])
+
+        score = 0.5 * (q or 0.0) + 0.5 * (r or 0.0)
+        result.append({
+            "module_id": module.module_id,
+            "module_code": module.module_code,
+            "title": module.title,
+            "quiz_performance": round(q, 1) if q is not None else None,
+            "camera_accuracy": round(r, 1) if r is not None else None,
+            "score": round(score, 1),
+        })
+    return result
 
 # ══════════════════════════════════════════════════════════════════════
 # offline_auth
@@ -1434,7 +1538,7 @@ def upsert_minigame_attempt(
 
 def create_offline_auth(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     username: str,
     password_verifier: str,
 ) -> OfflineAuth:
@@ -1448,7 +1552,7 @@ def create_offline_auth(
         user_id=user_id,
         username=username,
         password_verifier=password_verifier,
-        last_online_login=datetime.now(),
+        last_online_login=datetime.now(timezone.utc),
     )
     db.add(offline_auth)
     db.commit()
@@ -1458,22 +1562,29 @@ def create_offline_auth(
 
 def get_offline_auth(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
 ) -> OfflineAuth | None:
     return db.get(OfflineAuth, user_id)
 
+def get_offline_auth_by_email(db: Session, email: str) -> OfflineAuth | None:
+    statement = (
+        select(OfflineAuth)
+        .join(User, User.user_id == OfflineAuth.user_id)
+        .where(User.email == normalize_email(email))
+    )
+    return db.scalar(statement)    
 
-def get_offline_auth_by_username(
-    db: Session,
-    username: str,
-) -> OfflineAuth | None:
-    statement = select(OfflineAuth).where(OfflineAuth.username == username)
+def get_offline_auth_by_username(db: Session, username: str) -> OfflineAuth | None:
+    statement = (
+        select(OfflineAuth)
+        .join(User, User.user_id == OfflineAuth.user_id)
+        .where(func.lower(User.username) == username.strip().lower())
+    )
     return db.scalar(statement)
-
 
 def update_offline_auth(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     password_verifier: str | None = None,
     last_online_login: datetime | None = None,
 ) -> OfflineAuth | None:
@@ -1507,7 +1618,7 @@ def record_failed_login_attempt(
 
 def reset_failed_login_attempts(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
 ) -> OfflineAuth | None:
     offline_auth = get_offline_auth(db, user_id)
     if offline_auth is None:
@@ -1522,7 +1633,7 @@ def reset_failed_login_attempts(
 
 def lock_offline_auth(
     db: Session,
-    user_id: int,
+    user_id: uuid.UUID,
     lock_until: datetime,
 ) -> OfflineAuth | None:
     offline_auth = get_offline_auth(db, user_id)
@@ -1538,16 +1649,19 @@ def lock_offline_auth(
 # sync_queue
 # ══════════════════════════════════════════════════════════════════════
 
+EntityType = Literal["quiz_attempt", "minigame_attempt", "lesson_progress"]
+Operation = Literal["upsert", "delete"]
+
 def enqueue_sync(
     db: Session,
-    sync_id: str,
-    user_id: int,
-    entity_type: str,
-    entity_id: str,
-    payload: str,
+    sync_id: uuid.UUID,
+    user_id: uuid.UUID,
+    entity_type: EntityType,
+    entity_id: str | int | uuid.UUID,
+    payload: dict[str, Any],
     operation: str = "upsert",
 ) -> SyncQueue:
-    if entity_type not in ("quiz_attempt", "minigame_attempt", "lesson_completion"):
+    if entity_type not in ("quiz_attempt", "minigame_attempt", "lesson_progress"):
         raise ValueError(f"Invalid entity_type: {entity_type}")
     if operation not in ("upsert", "delete"):
         raise ValueError(f"Invalid operation: {operation}")
@@ -1556,13 +1670,12 @@ def enqueue_sync(
         sync_id=sync_id,
         user_id=user_id,
         entity_type=entity_type,
-        entity_id=entity_id,
+        entity_id=str(entity_id),
         operation=operation,
-        payload=payload,
+        payload=json.dumps(payload),
     )
     db.add(sync_queue)
-    db.commit()
-    db.refresh(sync_queue)
+    db.flush()
     return sync_queue
 
 
@@ -1581,13 +1694,13 @@ def dequeue_pending_sync(
 
 def mark_synced(
     db: Session,
-    sync_id: str,
+    sync_id: uuid.UUID,
 ) -> bool:
     sync_item = db.get(SyncQueue, sync_id)
     if sync_item is None:
         return False
 
-    sync_item.synced_at = datetime.now()
+    sync_item.synced_at = datetime.now(timezone.utc)
     sync_item.retry_count = 0
     sync_item.last_error = None
     db.commit()
@@ -1596,7 +1709,7 @@ def mark_synced(
 
 def mark_sync_failed(
     db: Session,
-    sync_id: str,
+    sync_id: uuid.UUID,
     error_message: str,
 ) -> bool:
     sync_item = db.get(SyncQueue, sync_id)
@@ -1604,7 +1717,7 @@ def mark_sync_failed(
         return False
 
     sync_item.retry_count += 1
-    sync_item.last_attempted_at = datetime.now()
+    sync_item.last_attempted_at = datetime.now(timezone.utc)
     sync_item.last_error = error_message
     db.commit()
     return True
@@ -1612,7 +1725,7 @@ def mark_sync_failed(
 
 def get_sync_queue_stats(
     db: Session,
-    user_id: int | None = None,
+    user_id: uuid.UUID | None = None,
 ) -> dict:
     query = select(SyncQueue)
     if user_id is not None:

@@ -10,10 +10,10 @@ This service ensures that:
 """
 import json
 from datetime import datetime, timezone
-from typing import Any, Optional
-from uuid import uuid4
+import logging
+import uuid
 
-from .database.session import get_session
+from .database.session import session_scope
 from .database.repository import (
     enqueue_sync,
     dequeue_pending_sync,
@@ -27,17 +27,31 @@ from .database.repository import (
 )
 from .database.models import SyncQueue
 
+logger = logging.getLogger(__name__)
+
+VALID_LESSON_STATUSES = ("Not Started", "In Progress", "Completed")
+
+
+def _iso_utc(dt: datetime) -> str:
+    if dt.tzinfo is None:
+        raise ValueError("Naive datetime not allowed; use timezone-aware UTC")
+    return dt.isoformat()
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
 
 class SyncService:
     """Service for idempotent client-initiated synchronization."""
 
-    def __init__(self):
+    def __init__(self) -> None:
         self.client_version = "1.0.0"
 
     def queue_quiz_attempt(
         self,
-        user_id: int,
-        attempt_id: str,
+        user_id: uuid.UUID,
+        attempt_id: uuid.UUID,
         quiz_id: int,
         started_at: datetime,
         completed_at: datetime,
@@ -45,35 +59,47 @@ class SyncService:
         max_score: int,
         percentage: float,
         passed: bool,
-    ) -> str:
+    ) -> uuid.UUID:
         """
-        Queue a quiz attempt for synchronization.
-        
-        The attempt_id is a client-generated UUID. When synced, the server will
-        return a server-assigned ID. Both are stored in the payload for idempotency.
+        Save a quiz attempt locally and queue it for synchronization.
+
+        attempt_id is a client-generated UUID and is also the server primary
+        key, so retries upsert the same row and no ID remapping is needed.
         """
         payload = {
-            "attempt_id": attempt_id,  # Client UUID
-            "quiz_id": quiz_id,  # Server-assigned content ID
-            "started_at": started_at.isoformat(),
-            "completed_at": completed_at.isoformat(),
+            "attempt_id": str(attempt_id),
+            "quiz_id": quiz_id,  # server-assigned content ID
+            "started_at": _iso_utc(started_at),
+            "completed_at": _iso_utc(completed_at),
             "score": score,
             "max_score": max_score,
             "percentage": percentage,
-            "passed": passed,
+            "passed": passed,  # server recomputes this; sent for display only
             "client_version": self.client_version,
         }
 
-        sync_id = str(uuid4())
+        sync_id = uuid.uuid4()
 
-        with get_session() as db:
+        with session_scope() as db:
+            upsert_quiz_attempt(
+                db,
+                user_id=user_id,
+                attempt_id=attempt_id,
+                quiz_id=quiz_id,
+                started_at=started_at,
+                completed_at=completed_at,
+                score=score,
+                max_score=max_score,
+                percentage=percentage,
+                passed=passed,
+            )
             enqueue_sync(
                 db,
                 sync_id=sync_id,
                 user_id=user_id,
                 entity_type="quiz_attempt",
-                entity_id=attempt_id,  # Use client UUID for entity_id
-                payload=json.dumps(payload),
+                entity_id=attempt_id,
+                payload=payload,
                 operation="upsert",
             )
 
@@ -81,206 +107,181 @@ class SyncService:
 
     def queue_minigame_attempt(
         self,
-        user_id: int,
-        game_attempt_id: str,
+        user_id: uuid.UUID,
+        game_attempt_id: uuid.UUID,
         minigame_id: int,
         started_at: datetime,
         completed_at: datetime,
         score: int,
         duration_seconds: int,
         accuracy: float,
-    ) -> str:
+    ) -> uuid.UUID:
         """
-        Queue a minigame attempt for synchronization.
-        
-        The game_attempt_id is a client-generated UUID. When synced, the server will
-        return a server-assigned ID. Both are stored in the payload for idempotency.
+        Save a minigame attempt locally and queue it for synchronization.
+
+        game_attempt_id is a client-generated UUID and is also the server
+        primary key, so retries are idempotent.
         """
         payload = {
-            "game_attempt_id": game_attempt_id,  # Client UUID
-            "minigame_id": minigame_id,  # Server-assigned content ID
-            "started_at": started_at.isoformat(),
-            "completed_at": completed_at.isoformat(),
+            "game_attempt_id": str(game_attempt_id),
+            "minigame_id": minigame_id,  # server-assigned content ID
+            "started_at": _iso_utc(started_at),
+            "completed_at": _iso_utc(completed_at),
             "score": score,
             "duration_seconds": duration_seconds,
             "accuracy": accuracy,
             "client_version": self.client_version,
         }
 
-        sync_id = str(uuid4())
+        sync_id = uuid.uuid4()
 
-        with get_session() as db:
+        with session_scope() as db:
+            upsert_minigame_attempt(
+                db,
+                user_id=user_id,
+                game_attempt_id=game_attempt_id,
+                minigame_id=minigame_id,
+                started_at=started_at,
+                completed_at=completed_at,
+                score=score,
+                duration_seconds=duration_seconds,
+                accuracy=accuracy,
+            )
             enqueue_sync(
                 db,
                 sync_id=sync_id,
                 user_id=user_id,
                 entity_type="minigame_attempt",
-                entity_id=game_attempt_id,  # Use client UUID for entity_id
-                payload=json.dumps(payload),
+                entity_id=game_attempt_id,
+                payload=payload,
                 operation="upsert",
             )
 
         return sync_id
 
-    def queue_lesson_completion(
+    def queue_lesson_progress(
         self,
-        user_id: int,
+        user_id: uuid.UUID,
         lesson_id: int,
         completion_percentage: float,
         status: str,
         time_spent_seconds: int,
-    ) -> str:
+        client_updated_at: datetime | None = None,
+    ) -> uuid.UUID:
         """
-        Queue a lesson completion for synchronization.
-        
-        Uses server-assigned lesson_id for idempotency.
+        Save lesson progress locally and queue it for synchronization.
+
+        The key is (user_id, lesson_id). client_updated_at lets the server
+        apply its merge rules (GREATEST on time/percentage, never regress
+        from Completed).
         """
+        if status not in VALID_LESSON_STATUSES:
+            raise ValueError(f"Invalid status: {status}")
+
+        now = _utcnow()
+        client_updated_at = client_updated_at or now
+
         payload = {
-            "lesson_id": lesson_id,  # Server-assigned content ID
+            "lesson_id": lesson_id,  # server-assigned content ID
             "completion_percentage": completion_percentage,
             "status": status,
             "time_spent_seconds": time_spent_seconds,
+            "client_updated_at": _iso_utc(client_updated_at),
             "client_version": self.client_version,
         }
+        if status == "Completed":
+            # Server CHECK requires completed_at when status is Completed
+            payload["completed_at"] = _iso_utc(now)
 
-        sync_id = str(uuid4())
+        sync_id = uuid.uuid4()
 
-        with get_session() as db:
+        with session_scope() as db:
+            create_or_update_lesson_progress(
+                db,
+                user_id=user_id,
+                lesson_id=lesson_id,
+                completion_percentage=completion_percentage,
+                status=status,
+                time_spent_seconds=time_spent_seconds,
+                last_accessed=now,
+            )
             enqueue_sync(
                 db,
                 sync_id=sync_id,
                 user_id=user_id,
-                entity_type="lesson_completion",
-                entity_id=str(lesson_id),  # Use server ID for entity_id
-                payload=json.dumps(payload),
+                entity_type="lesson_progress",
+                entity_id=lesson_id,  # enqueue_sync converts to str
+                payload=payload,
                 operation="upsert",
             )
 
         return sync_id
 
-    def process_pending_syncs(self, user_id: int, batch_size: int = 10) -> dict:
+    # Backward-compatible alias for the old name
+    queue_lesson_completion = queue_lesson_progress
+
+    # ------------------------------------------------------------------
+    # Processing
+    # ------------------------------------------------------------------
+
+    def process_pending_syncs(self, user_id: uuid.UUID, batch_size: int = 10) -> dict:
         """
         Process pending sync items.
-        
-        In a real implementation, this would:
-        1. Send batched data to the server
-        2. Receive server responses with server-assigned IDs
-        3. Update local records with server IDs
-        4. Mark sync items as synced or failed
-        
-        For now, this is a placeholder that simulates successful sync.
+
+        In a real implementation, this would send each item (or a batch) to
+        the FastAPI backend and mark it synced or failed based on the response.
+        Local rows are already saved at queue time, so this step only talks
+        to the server and updates queue status.
         """
-        with get_session() as db:
+        results = {"processed": 0, "succeeded": 0, "failed": 0, "errors": []}
+
+        with session_scope() as db:
             pending_items = dequeue_pending_sync(db, limit=batch_size)
 
-            results = {
-                "processed": 0,
-                "succeeded": 0,
-                "failed": 0,
-                "errors": [],
-            }
-
             for item in pending_items:
+                results["processed"] += 1
                 try:
-                    # Simulate server sync
-                    success = self._simulate_server_sync(item)
-
-                    if success:
+                    if self._send_to_server(item):
                         mark_synced(db, item.sync_id)
                         results["succeeded"] += 1
                     else:
                         mark_sync_failed(db, item.sync_id, "Server rejected sync")
                         results["failed"] += 1
                         results["errors"].append(f"{item.entity_type}:{item.entity_id}")
-
-                    results["processed"] += 1
-
                 except Exception as e:
+                    logger.exception("Sync error for %s:%s", item.entity_type, item.entity_id)
                     mark_sync_failed(db, item.sync_id, str(e))
                     results["failed"] += 1
-                    results["errors"].append(f"{item.entity_type}:{item.entity_id} - {str(e)}")
-                    results["processed"] += 1
+                    results["errors"].append(f"{item.entity_type}:{item.entity_id} - {e}")
 
         return results
 
-    def _simulate_server_sync(self, item: SyncQueue) -> bool:
+    def _send_to_server(self, item: SyncQueue) -> bool:
         """
-        Simulate server sync for development/testing.
-        
-        In production, this would make an HTTP request to the FastAPI backend.
+        Placeholder for the HTTP call to the FastAPI backend.
+
+        It must not open its own session: the caller's session is already
+        in a transaction, and a second writer on SQLite can hit
+        "database is locked". Replace the body with the real request.
         """
-        try:
-            payload = json.loads(item.payload)
+        payload = json.loads(item.payload)  # validates the stored JSON
+        logger.debug("Would send %s %s: %s", item.entity_type, item.entity_id, payload)
+        return True
 
-            # Update local database with the synced data
-            with get_session() as db:
-                if item.entity_type == "quiz_attempt":
-                    upsert_quiz_attempt(
-                        db,
-                        user_id=item.user_id,
-                        attempt_id=payload["attempt_id"],
-                        quiz_id=payload["quiz_id"],
-                        started_at=datetime.fromisoformat(payload["started_at"]),
-                        completed_at=datetime.fromisoformat(payload["completed_at"]),
-                        score=payload["score"],
-                        max_score=payload["max_score"],
-                        percentage=payload["percentage"],
-                        passed=payload["passed"],
-                    )
-
-                elif item.entity_type == "minigame_attempt":
-                    upsert_minigame_attempt(
-                        db,
-                        user_id=item.user_id,
-                        game_attempt_id=payload["game_attempt_id"],
-                        minigame_id=payload["minigame_id"],
-                        started_at=datetime.fromisoformat(payload["started_at"]),
-                        completed_at=datetime.fromisoformat(payload["completed_at"]),
-                        score=payload["score"],
-                        duration_seconds=payload["duration_seconds"],
-                        accuracy=payload["accuracy"],
-                    )
-
-                elif item.entity_type == "lesson_completion":
-                    create_or_update_lesson_progress(
-                        db,
-                        user_id=item.user_id,
-                        lesson_id=payload["lesson_id"],
-                        completion_percentage=payload["completion_percentage"],
-                        status=payload["status"],
-                        time_spent_seconds=payload["time_spent_seconds"],
-                        last_accessed=datetime.now(timezone.utc),
-                    )
-
-            return True
-
-        except Exception as e:
-            print(f"Sync error for {item.entity_type}:{item.entity_id}: {e}")
-            return False
-
-    def get_sync_status(self, user_id: int) -> dict:
+    def get_sync_status(self, user_id: uuid.UUID) -> dict:
         """Get sync queue statistics for a user."""
-        with get_session() as db:
+        with session_scope() as db:
             return get_sync_queue_stats(db, user_id)
 
     def sync_content_from_server(self, content_version: int) -> dict:
         """
-        Sync content from server to local cache.
-        
-        This ensures idempotency by:
-        1. Checking if content version matches
-        2. Using server-assigned IDs for all content
-        3. Using db.merge() to update existing records or create new ones
-        4. Preserving local user data
-        
-        In production, this would:
-        1. Fetch content from the server API
-        2. Apply it to the local database
-        3. Handle version conflicts
+        Sync content from the server to the local cache (placeholder).
+
+        In production this would fetch content from the server API and upsert
+        it using server-assigned IDs (db.merge), leaving local user data
+        untouched.
         """
-        # Placeholder for content sync implementation
-        # In production, this would make HTTP requests to the server
-        with get_session() as db:
+        with session_scope() as db:
             version = get_content_version_by_number(db, content_version)
             if version is None:
                 return {
@@ -294,33 +295,19 @@ class SyncService:
             "version": content_version,
         }
 
-    def handle_server_response(self, sync_id: str, server_response: dict) -> bool:
+    def handle_server_response(self, sync_id: uuid.UUID, server_response: dict) -> bool:
         """
-        Handle server response for a sync operation.
-        
-        This ensures idempotency by:
-        1. Extracting server-assigned IDs from the response
-        2. Updating local records with server IDs
-        3. Marking the sync as complete
+        Handle the server's response for a sync operation.
+
+        Records and queue rows use client-generated UUIDs that the server
+        keeps, so there is no server ID to write back. This only marks the
+        queue entry as synced.
         """
         try:
-            with get_session() as db:
-                # Mark as synced
-                success = mark_synced(db, sync_id)
-
-                if not success:
-                    return False
-
-                # In production, we would update local records with server IDs here
-                # For example, if the server returns a new attempt_id, we would:
-                # 1. Update the local record with the server ID
-                # 2. Update the sync queue payload to include the server ID
-                # 3. This ensures future syncs use the server ID
-
-            return True
-
-        except Exception as e:
-            print(f"Error handling server response: {e}")
+            with session_scope() as db:
+                return bool(mark_synced(db, sync_id))
+        except Exception:
+            logger.exception("Error handling server response for %s", sync_id)
             return False
 
 
@@ -329,8 +316,8 @@ _sync_service = SyncService()
 
 
 def queue_quiz_attempt(
-    user_id: int,
-    attempt_id: str,
+    user_id: uuid.UUID,
+    attempt_id: uuid.UUID,
     quiz_id: int,
     started_at: datetime,
     completed_at: datetime,
@@ -338,50 +325,56 @@ def queue_quiz_attempt(
     max_score: int,
     percentage: float,
     passed: bool,
-) -> str:
-    """Queue a quiz attempt for synchronization."""
+) -> uuid.UUID:
+    """Save a quiz attempt locally and queue it for synchronization."""
     return _sync_service.queue_quiz_attempt(
         user_id, attempt_id, quiz_id, started_at, completed_at,
-        score, max_score, percentage, passed
+        score, max_score, percentage, passed,
     )
 
 
 def queue_minigame_attempt(
-    user_id: int,
-    game_attempt_id: str,
+    user_id: uuid.UUID,
+    game_attempt_id: uuid.UUID,
     minigame_id: int,
     started_at: datetime,
     completed_at: datetime,
     score: int,
     duration_seconds: int,
     accuracy: float,
-) -> str:
-    """Queue a minigame attempt for synchronization."""
+) -> uuid.UUID:
+    """Save a minigame attempt locally and queue it for synchronization."""
     return _sync_service.queue_minigame_attempt(
         user_id, game_attempt_id, minigame_id, started_at, completed_at,
-        score, duration_seconds, accuracy
+        score, duration_seconds, accuracy,
     )
 
 
-def queue_lesson_completion(
-    user_id: int,
+def queue_lesson_progress(
+    user_id: uuid.UUID,
     lesson_id: int,
     completion_percentage: float,
     status: str,
     time_spent_seconds: int,
-) -> str:
-    """Queue a lesson completion for synchronization."""
-    return _sync_service.queue_lesson_completion(
-        user_id, lesson_id, completion_percentage, status, time_spent_seconds
+    client_updated_at: datetime | None = None,
+) -> uuid.UUID:
+    """Save lesson progress locally and queue it for synchronization."""
+    return _sync_service.queue_lesson_progress(
+        user_id, lesson_id, completion_percentage, status,
+        time_spent_seconds, client_updated_at,
     )
 
 
-def process_pending_syncs(user_id: int, batch_size: int = 10) -> dict:
+# Backward-compatible alias for the old name
+queue_lesson_completion = queue_lesson_progress
+
+
+def process_pending_syncs(user_id: uuid.UUID, batch_size: int = 10) -> dict:
     """Process pending sync items."""
     return _sync_service.process_pending_syncs(user_id, batch_size)
 
 
-def get_sync_status(user_id: int) -> dict:
+def get_sync_status(user_id: uuid.UUID) -> dict:
     """Get sync queue statistics for a user."""
     return _sync_service.get_sync_status(user_id)
 

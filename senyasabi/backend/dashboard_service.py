@@ -2,13 +2,10 @@
 
 from .database.session import get_session
 from .database.repository import (
-    get_user_statistics,
-    list_lesson_progress,
-    list_user_badges,
-    get_leaderboard_cache,
-    get_streak,
+    get_user_statistics, list_lesson_progress, list_user_badges,
+    get_leaderboard_cache, get_streak,
+    get_latest_badge, get_current_module, get_module_performance,
 )
-from .database.models import Streak
 
 
 class SQLiteDashboardRepository:

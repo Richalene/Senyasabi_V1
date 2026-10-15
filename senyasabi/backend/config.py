@@ -9,7 +9,9 @@ and your data lives at:
 
 If your paths differ, this is the only file you need to edit.
 """
+import os
 from pathlib import Path
+from dotenv import load_dotenv
 
 BACKEND_DIR   = Path(__file__).resolve().parent           # .../senyasabi/backend
 BASE_DIR      = BACKEND_DIR.parent                         # .../senyasabi
@@ -22,7 +24,18 @@ LESSONS_PATH  = DATA_DIR / 'lessons.json'
 # ---- Database Configuration --------------------------------------------
 # SQLite is the primary local database for Phase 1
 # PostgreSQL will be added in Phase 2 for cloud sync
-POSTGRESQL_URL = None  # Set to postgresql+psycopg2://user:pass@host/db for Phase 2
+load_dotenv()
+POSTGRESQL_URL = os.getenv("DATABASE_URL")  
+
+# ---- Supabase Configuration (Phase 2) ----------------------------------
+SUPABASE_URL = os.getenv("SUPABASE_URL")
+SUPABASE_KEY = os.getenv("S3_ACCESS_KEY")
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("S3_SECRET_KEY")
+
+# ---- FastAPI Configuration (Phase 2) ----------------------------------
+FASTAPI_HOST = os.getenv("FASTAPI_HOST", "127.0.0.1")
+FASTAPI_PORT = int(os.getenv("FASTAPI_PORT", "8000"))
+FASTAPI_DEBUG = os.getenv("FASTAPI_DEBUG", "false").lower() == "true"
 
 # ---- Sync Configuration (for Phase 2) ----------------------------------
 SYNC_BATCH_SIZE = 10
