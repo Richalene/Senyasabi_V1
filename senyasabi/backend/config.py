@@ -33,6 +33,7 @@ LESSONS_PATH = DATA_DIR / "lessons.json"
 DATABASE_PATH = Path(os.getenv("SENYASABI_DB") or DATA_DIR / "senyasabi.db")
 SQLITE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
+MEDIA_CACHE_DIR = Path(os.getenv("SENYASABI_MEDIA_CACHE") or BASE_DIR / "cache" / "media")
 
 # ---- Postgres (Supabase) -----------------------------------------------
 def _normalize_pg_url(url: str | None) -> str | None:

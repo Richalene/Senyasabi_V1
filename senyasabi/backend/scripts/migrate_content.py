@@ -130,7 +130,7 @@ def upsert(conn, table: str, pk: str | None, conflict: list[str],
 # ---------------------------------------------------------------------------
 # Input parsing
 # ---------------------------------------------------------------------------
-MODULE_RE = re.compile(r"^##\s*Module\s+(.+)$", re.IGNORECASE)
+MODULE_RE = re.compile(r"^##\s*Module\s+\d+[:\s\.-]+(.+)$", re.IGNORECASE)
 
 def parse_expected_dataset(file_path: Path) -> list[dict]:
     """

@@ -33,7 +33,7 @@ async def sync_content(since_version: int = 0):
                 "SELECT version_number " \
                 "FROM content_versions " \
                 "WHERE is_published = true " \
-                "ORDER BY version_number DESC" \
+                "ORDER BY version_number DESC " \
                 "LIMIT 1"
             ))
             current_version_row = result.fetchone()
@@ -79,7 +79,7 @@ async def get_current_version():
                 "SELECT version_number, content_version_id " \
                 "FROM content_versions " \
                 "WHERE is_published = true " \
-                "ORDER BY version_number DESC" \
+                "ORDER BY version_number DESC " \
                 "LIMIT 1"
             ))
             version_row = result.fetchone()

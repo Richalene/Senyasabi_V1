@@ -145,8 +145,8 @@ def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:
             :time_spent_seconds, :client_updated_at, now()
         )
         ON CONFLICT (user_id, lesson_id) DO UPDATE SET
-            completion_percentage = GREATEST(EXCLUDED.completion_percentage, EXCLUDED.completion_percentage),
-            time_spent_seconds = GREATEST(EXCLUDED.time_spent_seconds, EXCLUDED.time_spent_seconds),
+            completion_percentage = GREATEST(your_table_name.completion_percentage, EXCLUDED.completion_percentage),
+            time_spent_seconds = GREATEST(your_table_name.time_spent_seconds, EXCLUDED.time_spent_seconds),
             status = CASE
                 WHEN EXCLUDED.status = 'Completed' THEN 'Completed'  -- Never regress Completed
                 WHEN :status = 'Completed' THEN 'Completed'
@@ -306,72 +306,6 @@ async def get_sync_queue(user_id: str):
         "items": [],
         "message": "Sync queue endpoint - to be implemented"
     }
-
-
-@router.post("/reorder-lessons")
-async def reorder_lessons(
-    module_id: int,
-    lesson_id_1: int,
-    lesson_id_2: int,
-    user_id: str = Depends(get_current_user_id)
-):
-    """
-    Reorder two lessons within a module.
-    
-    Because the partial unique index (parent_module, lesson_order) is not deferrable,
-    we use a temporary order value (e.g., -1) to avoid conflicts during the swap.
-    
-    Args:
-        module_id: The module ID
-        lesson_id_1: First lesson to swap
-        lesson_id_2: Second lesson to swap
-        user_id: The user ID (UUID) from JWT
-        
-    Returns:
-        Success/failure status
-    """
-    try:
-        with get_postgres_session() as db:
-            # Get current lesson orders
-            result = db.execute(text("""
-                SELECT lesson_id, lesson_order FROM lessons
-                WHERE lesson_id IN (:lesson_id_1, :lesson_id_2)
-            """), {"lesson_id_1": lesson_id_1, "lesson_id_2": lesson_id_2})
-            
-            lessons = {row[0]: row[1] for row in result}
-            
-            if len(lessons) != 2:
-                raise HTTPException(
-                    status_code=status.HTTP_400_BAD_REQUEST,
-                    detail="Both lessons must exist in the same module"
-                )
-            
-            order_1 = lessons[lesson_id_1]
-            order_2 = lessons[lesson_id_2]
-            
-            # Swap orders using temporary value to avoid unique index conflict
-            db.execute(text("""
-                UPDATE lessons SET lesson_order = -1 WHERE lesson_id = :lesson_id_1
-            """), {"lesson_id_1": lesson_id_1})
-            
-            db.execute(text("""
-                UPDATE lessons SET lesson_order = :order_1 WHERE lesson_id = :lesson_id_2
-            """), {"order_1": order_1, "lesson_id_2": lesson_id_2})
-            
-            db.execute(text("""
-                UPDATE lessons SET lesson_order = :order_2 WHERE lesson_id = :lesson_id_1
-            """), {"order_2": order_2, "lesson_id_1": lesson_id_1})
-            
-            return {
-                "success": True,
-                "message": "Lessons reordered successfully"
-            }
-            
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error reordering lessons: {str(e)}"
-        )
 
 
 @router.post("/reorder-lessons")
