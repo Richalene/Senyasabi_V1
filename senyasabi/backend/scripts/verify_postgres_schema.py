@@ -62,7 +62,7 @@ def verify_schema():
             'signs', 'lesson_signs', 'sign_media', 'lesson_media', 'quizzes',
             'quiz_attempts', 'minigames', 'minigame_signs', 'badges', 
             'user_badges', 'lesson_progress', 'user_statistics', 'streaks',
-            'minigame_attempts'
+            'minigame_attempts', 'quiz_signs'
         ]
         
         # Query for existing tables
@@ -85,18 +85,30 @@ def verify_schema():
             ORDER BY ordinal_position
         """))
         
-        has_auth_user_id = False
-        for row in result:
-            col_name, data_type, is_nullable = row
-            print(f"  {col_name}: {data_type} (nullable: {is_nullable})")
-            if col_name == 'auth_user_id':
-                has_auth_user_id = True
-        
-        if has_auth_user_id:
-            print("  ✓ auth_user_id column exists")
-        else:
-            print("  ✗ auth_user_id column MISSING")
-        
+        print("\nChecking users table links to Supabase Auth...")
+        fk = db.execute(text("""
+            SELECT 1
+            FROM information_schema.table_constraints tc
+            JOIN information_schema.constraint_column_usage ccu
+              ON ccu.constraint_name = tc.constraint_name
+            WHERE tc.table_schema = 'public' AND tc.table_name = 'users'
+              AND tc.constraint_type = 'FOREIGN KEY'
+              AND ccu.table_schema = 'auth' AND ccu.table_name = 'users'
+        """)).first()
+        print("  ✓ users.user_id references auth.users(id)" if fk
+              else "  ✗ users.user_id -> auth.users FK MISSING")
+
+        print("\nChecking step 2 columns...")
+        for table, col in [("quizzes", "quiz_code"), ("quizzes", "config"),
+                           ("quizzes", "category_code"), ("badges", "badge_code"),
+                           ("lesson_progress", "client_updated_at"),
+                           ("quiz_attempts", "camera_accuracy")]:
+            found = db.execute(text("""
+                SELECT 1 FROM information_schema.columns
+                WHERE table_schema='public' AND table_name=:t AND column_name=:c
+            """), {"t": table, "c": col}).first()
+            print(f"  {'✓' if found else '✗'} {table}.{col}")
+
         # Check for auth trigger
         print("\nChecking for handle_new_auth_user trigger...")
         result = db.execute(text("""
@@ -110,33 +122,27 @@ def verify_schema():
         else:
             print("  ✗ on_auth_user_created trigger MISSING")
         
-        # Check for refresh triggers
-        print("\nChecking for trg_refresh_stats trigger...")
-        result = db.execute(text("""
-            SELECT trigger_name
-            FROM information_schema.triggers
-            WHERE trigger_name LIKE '%refresh%'
-        """))
-        
-        triggers_found = [row[0] for row in result]
-        if triggers_found:
-            print(f"  ✓ Triggers found: {', '.join(triggers_found)}")
-        else:
-            print("  ✗ No refresh triggers found")
-        
+        print("\nChecking updated_at triggers...")
+        n = db.execute(text("""
+            SELECT count(*) FROM information_schema.triggers
+            WHERE trigger_schema = 'public' AND trigger_name LIKE 'trg\\_%\\_updated'
+        """)).scalar()
+        print(f"  {'✓' if n >= 14 else '✗'} {n} updated_at triggers (expected 15 with quiz_signs)")
+
         # Check for statistics functions
         print("\nChecking for statistics functions...")
         required_functions = [
             'refresh_user_statistics',
-            'trg_refresh_stats',
-            'rebuild_user_statistics'
+            'rebuild_user_statistics',
+            'set_updated_at',
+            'handle_new_auth_user',
         ]
         
         for func_name in required_functions:
             result = db.execute(text(f"""
                 SELECT routine_name
                 FROM information_schema.routines
-                WHERE routine_name = '{func_name}'
+                WHERE routine_schema = 'public' AND routine_name = '{func_name}'
             """))
             if result.first() is not None:
                 print(f"  ✓ {func_name}")

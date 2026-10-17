@@ -45,7 +45,7 @@ from backend.database.models import (
     SignMedia
 )
 
-import config  # loads .env
+from backend import config  # loads .env
 
 # ---------------------------------------------------------------------------
 # Configuration
@@ -130,8 +130,7 @@ def upsert(conn, table: str, pk: str | None, conflict: list[str],
 # ---------------------------------------------------------------------------
 # Input parsing
 # ---------------------------------------------------------------------------
-MODULE_RE = re.compile(r"^##\s*Lesson\s*\d*\s*[:\-–]?\s*(.+)$", re.IGNORECASE)
-
+MODULE_RE = re.compile(r"^##\s*Module\s+(.+)$", re.IGNORECASE)
 
 def parse_expected_dataset(file_path: Path) -> list[dict]:
     """

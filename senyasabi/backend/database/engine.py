@@ -1,5 +1,4 @@
 from sqlalchemy import create_engine, event
-from sqlalchemy.engine import Engine
 
 from ..config import SQLITE_URL
 
@@ -11,7 +10,7 @@ engine = create_engine(
 )
 
 
-@event.listens_for(Engine, "connect")
+@event.listens_for(engine, "connect")
 def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
     """Enable foreign-key enforcement for every SQLite connection."""
     cursor = dbapi_connection.cursor()
