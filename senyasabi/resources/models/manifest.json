@@ -1,0 +1,62 @@
+{
+  "greeting": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "survival": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "number": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "calendar": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "days": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "family": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "relationships": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "color": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "food": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  },
+  "drink": {
+    "enabled": "auto",
+    "model_path": "best_landmark_model.keras",
+    "class_mapping_path": "class_mapping.json",
+    "landmark_config_path": "landmark_config.json"
+  }
+}
