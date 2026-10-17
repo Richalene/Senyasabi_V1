@@ -20,6 +20,7 @@ from .api.sync import router as sync_router
 from .api.progress import router as progress_router
 from .api.leaderboard import router as leaderboard_router
 from .api.packages import router as packages_router
+from .api.auth import router as auth_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -46,7 +47,7 @@ app.include_router(sync_router)
 app.include_router(progress_router)
 app.include_router(leaderboard_router)
 app.include_router(packages_router)
-
+app.include_router(auth_router)
 
 # Health check endpoint
 @app.get("/health")
@@ -94,6 +95,4 @@ if __name__ == "__main__":
     print(f"Debug mode: {FASTAPI_DEBUG}")
     print(f"API docs available at http://{FASTAPI_HOST}:{FASTAPI_PORT}/docs")
     
-    uvicorn.run(
-        "backend.main:app"
-    )
+    uvicorn.run("backend.main:app", host=FASTAPI_HOST, port=FASTAPI_PORT, reload=FASTAPI_DEBUG)
