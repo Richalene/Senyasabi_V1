@@ -30,7 +30,7 @@ class CredentialStore:
         return KEYRING_AVAILABLE
 
     @classmethod
-    def store_refresh_token(cls, user_id: int, refresh_token: str) -> bool:
+    def store_refresh_token(cls, user_id: str, refresh_token: str) -> bool:
         """
         Store a refresh token securely in the OS credential store.
 
@@ -54,7 +54,7 @@ class CredentialStore:
             return False
 
     @classmethod
-    def get_refresh_token(cls, user_id: int) -> Optional[str]:
+    def get_refresh_token(cls, user_id: str) -> Optional[str]:
         """
         Retrieve a refresh token from the OS credential store.
 
@@ -76,7 +76,7 @@ class CredentialStore:
             return None
 
     @classmethod
-    def delete_refresh_token(cls, user_id: int) -> bool:
+    def delete_refresh_token(cls, user_id: str) -> bool:
         """
         Delete a refresh token from the OS credential store.
 
@@ -134,16 +134,16 @@ class InMemoryCredentialStore:
         return True
 
     @classmethod
-    def store_refresh_token(cls, user_id: int, refresh_token: str) -> bool:
+    def store_refresh_token(cls, user_id: str, refresh_token: str) -> bool:
         cls._tokens[user_id] = refresh_token
         return True
 
     @classmethod
-    def get_refresh_token(cls, user_id: int) -> Optional[str]:
+    def get_refresh_token(cls, user_id: str) -> Optional[str]:
         return cls._tokens.get(user_id)
 
     @classmethod
-    def delete_refresh_token(cls, user_id: int) -> bool:
+    def delete_refresh_token(cls, user_id: str) -> bool:
         if user_id in cls._tokens:
             del cls._tokens[user_id]
             return True

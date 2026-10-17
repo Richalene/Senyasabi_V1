@@ -17,10 +17,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 
 # Add parent directory to path for imports
-BACKEND_DIR = Path(__file__).parent.parent
-sys.path.insert(0, str(BACKEND_DIR))
-
-from config import POSTGRESQL_URL
+from backend.config import POSTGRESQL_URL
 
 # Direct SQLAlchemy import for standalone script
 from sqlalchemy import create_engine, text
@@ -62,7 +59,7 @@ def verify_schema():
         # Check required tables
         required_tables = [
             'users', 'content_versions', 'media_files', 'modules', 'lessons',
-            'signs', 'lessons_signs', 'sign_media', 'lesson_media' 'quizzes', 
+            'signs', 'lesson_signs', 'sign_media', 'lesson_media', 'quizzes',
             'quiz_attempts', 'minigames', 'minigame_signs', 'badges', 
             'user_badges', 'lesson_progress', 'user_statistics', 'streaks',
             'minigame_attempts'

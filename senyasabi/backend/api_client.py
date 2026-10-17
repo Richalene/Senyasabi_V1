@@ -14,7 +14,7 @@ import requests
 from typing import Optional, Dict, Any, List
 from dataclasses import dataclass
 
-from config import FASTAPI_HOST, FASTAPI_PORT
+from .config import FASTAPI_HOST, FASTAPI_PORT
 
 
 @dataclass
@@ -57,8 +57,10 @@ class APIClient:
         headers = {
             "Content-Type": "application/json"
         }
-        if self.access_token:
-            headers["Authorization"] = f"Bearer {self.access_token}"
+        from . import auth_service  # lazy: auth_service never imports api_client
+        token = auth_service.get_access_token() or self.access_token
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
         return headers
     
     def _request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict]:

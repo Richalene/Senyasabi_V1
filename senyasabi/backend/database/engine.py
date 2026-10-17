@@ -1,11 +1,11 @@
 from sqlalchemy import create_engine, event
 from sqlalchemy.engine import Engine
 
-from ..config import DATABASE_URL
+from ..config import SQLITE_URL
 
 
 engine = create_engine(
-    DATABASE_URL,
+    SQLITE_URL,
     echo=False,
     future=True,
 )

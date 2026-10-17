@@ -8,11 +8,20 @@ This module handles:
 - Tracking schema version for migrations
 """
 from pathlib import Path
+import shutil
 import sqlite3
 
-from ..config import DATABASE_PATH, DATABASE_URL
+from ..config import DATABASE_PATH
 from .session import engine, Base
 
+SCHEMA_VERSION = 2
+
+def _stored_schema_version(db_path: Path) -> int:
+    conn = sqlite3.connect(db_path)
+    try:
+        return conn.execute("PRAGMA user_version").fetchone()[0]
+    finally:
+        conn.close()
 
 def ensure_database_directory():
     """Ensure the database directory exists."""
@@ -37,6 +46,7 @@ def run_schema_sql():
         conn.execute("PRAGMA foreign_keys = ON")
         # Execute the schema
         conn.executescript(schema_sql)
+        conn.execute(f"PRAGMA user_version = {SCHEMA_VERSION}")
         conn.commit()
     finally:
         conn.close()
@@ -90,7 +100,6 @@ def seed_initial_data():
             # Create initial content version
             content_version = ContentVersion(
                 version_number=1,
-                released_at=None,
                 changelog="Initial content version",
                 is_published=True,
                 is_deleted=False,

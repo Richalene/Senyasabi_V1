@@ -59,26 +59,24 @@ class SyncService:
         max_score: int,
         percentage: float,
         passed: bool,
+        duration_seconds: int | None = None,
+        camera_accuracy: float | None = None,
+        mc_accuracy: float | None = None,
     ) -> uuid.UUID:
-        """
-        Save a quiz attempt locally and queue it for synchronization.
-
-        attempt_id is a client-generated UUID and is also the server primary
-        key, so retries upsert the same row and no ID remapping is needed.
-        """
         payload = {
             "attempt_id": str(attempt_id),
-            "quiz_id": quiz_id,  # server-assigned content ID
+            "quiz_id": quiz_id,
             "started_at": _iso_utc(started_at),
             "completed_at": _iso_utc(completed_at),
             "score": score,
             "max_score": max_score,
             "percentage": percentage,
             "passed": passed,  # server recomputes this; sent for display only
+            "duration_seconds": duration_seconds,
+            "camera_accuracy": camera_accuracy,
+            "mc_accuracy": mc_accuracy,
             "client_version": self.client_version,
         }
-
-        sync_id = uuid.uuid4()
 
         with session_scope() as db:
             upsert_quiz_attempt(
@@ -92,19 +90,23 @@ class SyncService:
                 max_score=max_score,
                 percentage=percentage,
                 passed=passed,
+                duration_seconds=duration_seconds,
+                camera_accuracy=camera_accuracy,
+                mc_accuracy=mc_accuracy,
             )
-            enqueue_sync(
+            item = enqueue_sync(
                 db,
-                sync_id=sync_id,
+                sync_id=uuid.uuid4(),
                 user_id=user_id,
                 entity_type="quiz_attempt",
                 entity_id=attempt_id,
                 payload=payload,
                 operation="upsert",
             )
+            sync_id = item.sync_id
 
         return sync_id
-
+    
     def queue_minigame_attempt(
         self,
         user_id: uuid.UUID,
@@ -133,8 +135,6 @@ class SyncService:
             "client_version": self.client_version,
         }
 
-        sync_id = uuid.uuid4()
-
         with session_scope() as db:
             upsert_minigame_attempt(
                 db,
@@ -147,16 +147,16 @@ class SyncService:
                 duration_seconds=duration_seconds,
                 accuracy=accuracy,
             )
-            enqueue_sync(
+            item = enqueue_sync(
                 db,
-                sync_id=sync_id,
+                sync_id=uuid.uuid4(),
                 user_id=user_id,
                 entity_type="minigame_attempt",
                 entity_id=game_attempt_id,
                 payload=payload,
                 operation="upsert",
             )
-
+            sync_id = item.sync_id
         return sync_id
 
     def queue_lesson_progress(
@@ -181,42 +181,32 @@ class SyncService:
         now = _utcnow()
         client_updated_at = client_updated_at or now
 
-        payload = {
-            "lesson_id": lesson_id,  # server-assigned content ID
-            "completion_percentage": completion_percentage,
-            "status": status,
-            "time_spent_seconds": time_spent_seconds,
-            "client_updated_at": _iso_utc(client_updated_at),
-            "client_version": self.client_version,
-        }
-        if status == "Completed":
-            # Server CHECK requires completed_at when status is Completed
-            payload["completed_at"] = _iso_utc(now)
-
-        sync_id = uuid.uuid4()
-
         with session_scope() as db:
-            create_or_update_lesson_progress(
-                db,
-                user_id=user_id,
-                lesson_id=lesson_id,
-                completion_percentage=completion_percentage,
-                status=status,
-                time_spent_seconds=time_spent_seconds,
-                last_accessed=now,
+            progress = create_or_update_lesson_progress(
+                db, user_id=user_id, lesson_id=lesson_id,
+                completion_percentage=completion_percentage, status=status,
+                time_spent_seconds=time_spent_seconds,   # delta
+                last_accessed=now, client_updated_at=client_updated_at,
             )
-            enqueue_sync(
-                db,
-                sync_id=sync_id,
-                user_id=user_id,
-                entity_type="lesson_progress",
-                entity_id=lesson_id,  # enqueue_sync converts to str
-                payload=payload,
-                operation="upsert",
+            # send absolute totals from the stored row, not this call's delta
+            payload = {
+                "lesson_id": lesson_id,
+                "completion_percentage": progress.completion_percentage,
+                "status": progress.status,
+                "time_spent_seconds": progress.time_spent_seconds,
+                "client_updated_at": _iso_utc(client_updated_at),
+                "client_version": self.client_version,
+            }
+            if progress.completed_at is not None:
+                payload["completed_at"] = _iso_utc(progress.completed_at)
+            item = enqueue_sync(
+                db, sync_id=uuid.uuid4(), user_id=user_id,
+                entity_type="lesson_progress", entity_id=lesson_id,
+                payload=payload, operation="upsert",
             )
-
+            sync_id = item.sync_id
         return sync_id
-
+    
     # Backward-compatible alias for the old name
     queue_lesson_completion = queue_lesson_progress
 
@@ -325,11 +315,17 @@ def queue_quiz_attempt(
     max_score: int,
     percentage: float,
     passed: bool,
+    duration_seconds: int | None = None,
+    camera_accuracy: float | None = None,
+    mc_accuracy: float | None = None,
 ) -> uuid.UUID:
     """Save a quiz attempt locally and queue it for synchronization."""
     return _sync_service.queue_quiz_attempt(
         user_id, attempt_id, quiz_id, started_at, completed_at,
         score, max_score, percentage, passed,
+        duration_seconds=duration_seconds,
+        camera_accuracy=camera_accuracy,
+        mc_accuracy=mc_accuracy,
     )
 
 

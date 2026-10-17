@@ -7,8 +7,8 @@ This provides endpoints for:
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 
-from database.postgre_session import get_postgres_session
-from security import get_current_user_id
+from ..database.postgre_session import get_postgres_session
+from ..security import get_current_user_id
 
 router = APIRouter(prefix="/api/v1/leaderboard", tags=["leaderboard"])
 

@@ -86,3 +86,4 @@ CMakeLists.txt.user*
 .venv/
 .env
 _test_cache
+**/__pycache__/

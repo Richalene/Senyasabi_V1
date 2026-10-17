@@ -14,8 +14,8 @@ from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from sqlalchemy import text
 
-from database.postgre_session import get_postgres_session
-from security import get_current_user_id
+from ..database.postgre_session import get_postgres_session
+from ..security import get_current_user_id
 
 router = APIRouter(prefix="/api/v1/sync", tags=["sync"])
 

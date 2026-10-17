@@ -7,8 +7,8 @@ This provides endpoints for serving JSON packages to the client:
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional, Dict, Any, List
 
-from database.postgre_session import get_postgres_session
-from security import get_current_user_id
+from ..database.postgre_session import get_postgres_session
+from ..security import get_current_user_id
 
 router = APIRouter(prefix="/api/v1/packages", tags=["packages"])
 

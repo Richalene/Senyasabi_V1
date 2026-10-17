@@ -7,27 +7,32 @@ from sqlalchemy import (
     Text,
     Integer,
     Boolean,
-    DateTime,
+    text,
     ForeignKey,
     CheckConstraint,
     Float,
     UniqueConstraint,
     Date,
     Index,
-    Uuid
+    Uuid,
+    LargeBinary
 )
 
 from sqlalchemy.orm import Mapped, mapped_column, relationship
-
+from .custom_types import UTCDateTime, JsonType
 from .session import Base
 
 def utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
-
+def _updated_at():
+    return mapped_column(UTCDateTime, default=utcnow, onupdate=utcnow, nullable=False)
 
 class User(Base):
     __tablename__ = "users"
+    __table_args__ = (
+        Index("idx_users_username_lower", text("lower(username)"), unique=True),
+    )
 
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, primary_key=True)  
     username: Mapped[str] = mapped_column(
@@ -35,12 +40,15 @@ class User(Base):
         nullable=False,
         index=True,
     )
-    email: Mapped[str | None] = mapped_column(String(255), nullable=True)
+    email: Mapped[str | None] = mapped_column(String(255), unique=True, nullable=True)
     display_name: Mapped[str | None] = mapped_column(
         String(100),
         nullable=True,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
+    dark_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = _updated_at()
     offline_auth: Mapped["OfflineAuth | None"] = relationship(back_populates="user", uselist=False)
     lesson_progress: Mapped[list["LessonProgress"]] = relationship(back_populates="user")
     quiz_attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="user")
@@ -57,13 +65,13 @@ class OfflineAuth(Base):
     )
     password_verifier: Mapped[str] = mapped_column(Text, nullable=False)
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        UTCDateTime,
         default=utcnow,
         nullable=False,
     )
-    last_online_login: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    last_online_login: Mapped[datetime] = mapped_column(UTCDateTime, nullable=False)
     failed_attempts: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    locked_until: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    locked_until: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="offline_auth")
 
@@ -74,7 +82,7 @@ class ContentVersion(Base):
     content_version_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     version_number: Mapped[int] = mapped_column(Integer, nullable=False, unique=True)
     released_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        UTCDateTime,
         default=utcnow,
         nullable=False,
     )
@@ -89,6 +97,7 @@ class ContentVersion(Base):
         default=False,
         nullable=False,
     )
+    updated_at: Mapped[datetime] = _updated_at()
 
     media_files: Mapped[list["MediaFile"]] = relationship(back_populates="content_version_rel")
     modules: Mapped[list["Module"]] = relationship(back_populates="content_version_rel")
@@ -110,28 +119,24 @@ class MediaFile(Base):
         CheckConstraint("media_type IN ('Image', 'Video')", name="ck_media_files_media_type"),
     )
 
-    media_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # Server-assigned
-    file_name: Mapped[str] = mapped_column(String(255), nullable=False)
+    media_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # server-assigned
+    file_name: Mapped[str | None] = mapped_column(String(255), nullable=True)
     object_key: Mapped[str] = mapped_column(String(255), nullable=False, unique=True)
     media_type: Mapped[str] = mapped_column(Text, nullable=False)
+    width: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    height: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     file_size: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    checksum: Mapped[str | None] = mapped_column(Text, nullable=True)
+    checksum: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)  # SHA-256 digest
     content_version_id: Mapped[int] = mapped_column(
-        ForeignKey("content_versions.content_version_id"),
-        nullable=False,
-        index=True,
-    )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    is_deleted: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
 
     content_version_rel: Mapped["ContentVersion"] = relationship(back_populates="media_files")
-    sign: Mapped["Sign | None"] = relationship(back_populates="media_file")
+    sign_links: Mapped[list["SignMedia"]] = relationship(back_populates="media_file")
+    lesson_links: Mapped[list["LessonMedia"]] = relationship(back_populates="media_file")
     media_cache: Mapped["MediaCache | None"] = relationship(back_populates="media_file")
-
 
 class MediaCache(Base):
     __tablename__ = "media_cache"
@@ -147,11 +152,11 @@ class MediaCache(Base):
         index=True,
     )
     cached_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        UTCDateTime,
         default=utcnow,
         nullable=False,
     )
-    checksum: Mapped[str | None] = mapped_column(Text, nullable=True)
+    checksum: Mapped[bytes | None] = mapped_column(LargeBinary, nullable=True)
 
     content_version_rel: Mapped["ContentVersion"] = relationship(back_populates="media_cache")
     media_file: Mapped["MediaFile"] = relationship(back_populates="media_cache")
@@ -170,7 +175,7 @@ class Module(Base):
         default=True,
         nullable=False,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = _updated_at()
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -206,7 +211,7 @@ class Lesson(Base):
         default=True,
         nullable=False,
     )
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    updated_at: Mapped[datetime] = _updated_at()
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -220,91 +225,123 @@ class Lesson(Base):
 
     module: Mapped["Module"] = relationship(back_populates="lessons")
     content_version_rel: Mapped["ContentVersion"] = relationship(back_populates="lessons")
-    signs: Mapped[list["Sign"]] = relationship(back_populates="lesson")
+    lesson_signs: Mapped[list["LessonSign"]] = relationship(back_populates="lesson")
+    lesson_media: Mapped[list["LessonMedia"]] = relationship(back_populates="lesson")
     lesson_progress: Mapped[list["LessonProgress"]] = relationship(back_populates="lesson")
 
 
 class Sign(Base):
     __tablename__ = "signs"
 
-    sign_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # Server-assigned
+    sign_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # server-assigned
     sign_code: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    lesson_id: Mapped[int] = mapped_column(
-        ForeignKey("lessons.lesson_id"),
-        nullable=False,
-        index=True,
-    )
-    media_id: Mapped[int] = mapped_column(
-        ForeignKey("media_files.media_id"),
-        unique=True,
-        nullable=False,
-    )
     label: Mapped[str] = mapped_column(String(100), nullable=False)
     recognition_label: Mapped[str] = mapped_column(String(100), nullable=False)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    is_deleted: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     content_version_id: Mapped[int] = mapped_column(
-        ForeignKey("content_versions.content_version_id"),
-        nullable=False,
-        index=True,
-    )
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
 
-    lesson: Mapped["Lesson"] = relationship(back_populates="signs")
-    media_file: Mapped["MediaFile"] = relationship(back_populates="sign")
     content_version_rel: Mapped["ContentVersion"] = relationship(back_populates="signs")
+    lesson_links: Mapped[list["LessonSign"]] = relationship(back_populates="sign")
+    media_links: Mapped[list["SignMedia"]] = relationship(back_populates="sign")
     minigame_signs: Mapped[list["MinigameSign"]] = relationship(back_populates="sign")
+    quiz_signs: Mapped[list["QuizSign"]] = relationship(back_populates="sign")
 
+class LessonSign(Base):
+    __tablename__ = "lesson_signs"
+
+    lesson_id: Mapped[int] = mapped_column(ForeignKey("lessons.lesson_id"), primary_key=True)
+    sign_id: Mapped[int] = mapped_column(ForeignKey("signs.sign_id"), primary_key=True, index=True)
+    display_order: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    content_version_id: Mapped[int] = mapped_column(
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
+
+    lesson: Mapped["Lesson"] = relationship(back_populates="lesson_signs")
+    sign: Mapped["Sign"] = relationship(back_populates="lesson_links")
+
+
+class SignMedia(Base):
+    __tablename__ = "sign_media"
+
+    sign_id: Mapped[int] = mapped_column(ForeignKey("signs.sign_id"), primary_key=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media_files.media_id"), primary_key=True)
+    media_role: Mapped[str] = mapped_column(Text, primary_key=True, default="demonstration")
+    display_order: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    content_version_id: Mapped[int] = mapped_column(
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
+
+    sign: Mapped["Sign"] = relationship(back_populates="media_links")
+    media_file: Mapped["MediaFile"] = relationship(back_populates="sign_links")
+
+class LessonMedia(Base):
+    __tablename__ = "lesson_media"
+
+    lesson_id: Mapped[int] = mapped_column(ForeignKey("lessons.lesson_id"), primary_key=True)
+    media_id: Mapped[int] = mapped_column(ForeignKey("media_files.media_id"), primary_key=True)
+    media_role: Mapped[str] = mapped_column(Text, primary_key=True)
+    display_order: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    content_version_id: Mapped[int] = mapped_column(
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
+
+    lesson: Mapped["Lesson"] = relationship(back_populates="lesson_media")
+    media_file: Mapped["MediaFile"] = relationship(back_populates="lesson_links")
 
 class Quiz(Base):
     __tablename__ = "quizzes"
 
-    quiz_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # Server-assigned
-    module_id: Mapped[int] = mapped_column(
-        ForeignKey("modules.module_id"),
-        nullable=False,
-    )
-    title: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    passing_score: Mapped[int] = mapped_column(
-        Integer,
-        default=70,
-        nullable=False,
-    )
+    quiz_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # server-assigned
+    quiz_code: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
+    module_id: Mapped[int] = mapped_column(ForeignKey("modules.module_id"), nullable=False, index=True)
+    category_code: Mapped[str | None] = mapped_column(String(100), nullable=True)
+    title: Mapped[str] = mapped_column(String(100), nullable=False)
+    passing_score: Mapped[int] = mapped_column(Integer, default=70, nullable=False)
     time_limit_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    is_deleted: Mapped[bool] = mapped_column(
-        Boolean,
-        default=False,
-        nullable=False,
-    )
+    config: Mapped[dict] = mapped_column(JsonType, nullable=False, default=dict)  # shuffle, question_types
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
     content_version_id: Mapped[int] = mapped_column(
-        ForeignKey("content_versions.content_version_id"),
-        nullable=False,
-        index=True,
-    )
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
 
     module: Mapped["Module"] = relationship(back_populates="quizzes")
     content_version_rel: Mapped["ContentVersion"] = relationship(back_populates="quizzes")
     attempts: Mapped[list["QuizAttempt"]] = relationship(back_populates="quiz")
+    quiz_signs: Mapped[list["QuizSign"]] = relationship(back_populates="quiz")
 
+class QuizSign(Base):
+    __tablename__ = "quiz_signs"
+
+    quiz_id: Mapped[int] = mapped_column(ForeignKey("quizzes.quiz_id"), primary_key=True)
+    sign_id: Mapped[int] = mapped_column(ForeignKey("signs.sign_id"), primary_key=True)
+    display_order: Mapped[int] = mapped_column(Integer, default=1, nullable=False)
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    content_version_id: Mapped[int] = mapped_column(
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
+
+    quiz: Mapped["Quiz"] = relationship(back_populates="quiz_signs")
+    sign: Mapped["Sign"] = relationship(back_populates="quiz_signs")
 
 class Minigame(Base):
     __tablename__ = "minigames"
 
     minigame_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # Server-assigned
     minigame_code: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
-    game_name: Mapped[str | None] = mapped_column(String(100), nullable=True)
-    game_type: Mapped[str | None] = mapped_column(String(50), nullable=True)
+    game_name: Mapped[str] = mapped_column(String(100), nullable=False)
+    game_type: Mapped[str] = mapped_column(String(50), nullable=False)
     module_id: Mapped[int] = mapped_column(
         ForeignKey("modules.module_id"),
         nullable=False,
     )
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
-    config: Mapped[str] = mapped_column(Text, nullable=False)  # JSON stored as TEXT
-    updated_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    config: Mapped[dict] = mapped_column(JsonType, nullable=False, default=dict)
+    updated_at: Mapped[datetime] = _updated_at()
     is_deleted: Mapped[bool] = mapped_column(
         Boolean,
         default=False,
@@ -333,6 +370,10 @@ class MinigameSign(Base):
         ForeignKey("signs.sign_id"),
         primary_key=True,
     )
+    updated_at: Mapped[datetime] = _updated_at()
+    is_deleted: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    content_version_id: Mapped[int] = mapped_column(
+        ForeignKey("content_versions.content_version_id"), nullable=False, index=True)
 
     minigame: Mapped["Minigame"] = relationship(back_populates="minigame_signs")
     sign: Mapped["Sign"] = relationship(back_populates="minigame_signs")
@@ -342,6 +383,7 @@ class Badge(Base):
     __tablename__ = "badges"
 
     badge_id: Mapped[int] = mapped_column(Integer, primary_key=True)  # Server-assigned
+    badge_code: Mapped[str] = mapped_column(String(100), nullable=False, unique=True)
     badge_name: Mapped[str] = mapped_column(String(100), nullable=False)
     description: Mapped[str | None] = mapped_column(Text, nullable=True)
     is_deleted: Mapped[bool] = mapped_column(
@@ -358,7 +400,7 @@ class UserBadges(Base):
 
     user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.user_id"), primary_key=True)
     badge_id: Mapped[int] = mapped_column(Integer, ForeignKey("badges.badge_id"), primary_key=True)
-    unlocked_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), default=utcnow, nullable=False)
+    unlocked_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
 
     user: Mapped["User"] = relationship(back_populates="user_badges")
     badge: Mapped["Badge"] = relationship(back_populates="user_badges")
@@ -367,10 +409,8 @@ class UserBadges(Base):
 class LessonProgress(Base):
     __tablename__ = "lesson_progress"
     __table_args__ = (
-        CheckConstraint(
-            "status IN ('Not Started', 'In Progress', 'Completed')",
-            name="ck_lesson_progress_status",
-        ),
+        CheckConstraint("status <> 'Completed' OR completed_at IS NOT NULL",
+            name="ck_lesson_progress_completed_at"),
     )
 
     user_id: Mapped[uuid.UUID] = mapped_column(
@@ -390,14 +430,11 @@ class LessonProgress(Base):
         default="Not Started",
         nullable=False,
     )
-    last_accessed: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_accessed: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     time_spent_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utcnow,
-        nullable=False,
-    )
+    client_updated_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
+    updated_at: Mapped[datetime] = _updated_at()
 
     user: Mapped["User"] = relationship(back_populates="lesson_progress")
     lesson: Mapped["Lesson"] = relationship(back_populates="lesson_progress")
@@ -418,29 +455,16 @@ class UserStatistics(Base):
     total_minigame_score: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     average_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
     total_time_spent_seconds: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    updated_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
-        default=utcnow,
-        nullable=False,
-    )
+    updated_at: Mapped[datetime] = _updated_at()
 
 
 class Streak(Base):
     __tablename__ = "streaks"
-    __table_args__ = (
-        UniqueConstraint("user_id", name="uq_streaks_user_id"),
-    )
-
-    streak_id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
-    user_id: Mapped[uuid.UUID] = mapped_column(
-        Uuid,
-        ForeignKey("users.user_id"),
-        nullable=False,
-        unique=True,
-    )
-    current_streak: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    longest_streak: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    user_id: Mapped[uuid.UUID] = mapped_column(Uuid, ForeignKey("users.user_id"), primary_key=True)
+    current_streak: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
+    longest_streak: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     last_activity_date: Mapped[date | None] = mapped_column(Date, nullable=True)
+    updated_at: Mapped[datetime] = _updated_at()
 
 
 class LeaderboardCache(Base):
@@ -460,7 +484,7 @@ class LeaderboardCache(Base):
     rank_position: Mapped[int] = mapped_column(Integer, nullable=False)
     current_streak: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
     badge_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    fetched_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), nullable=False)
+    fetched_at: Mapped[datetime] = mapped_column(UTCDateTime, nullable=False)
 
 
 class QuizAttempt(Base):
@@ -481,14 +505,15 @@ class QuizAttempt(Base):
         ForeignKey("quizzes.quiz_id"),
         nullable=False,
     )
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     max_score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     percentage: Mapped[float | None] = mapped_column(Float, nullable=True)
     passed: Mapped[bool | None] = mapped_column(Boolean, nullable=True)
-    camera_correct: Mapped[int | None] = mapped_column(Integer, nullable=True)
-    camera_total: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
+    camera_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
+    mc_accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
 
     user: Mapped["User"] = relationship(back_populates="quiz_attempts")
     quiz: Mapped["Quiz"] = relationship(back_populates="attempts")
@@ -512,8 +537,8 @@ class MinigameAttempt(Base):
         ForeignKey("minigames.minigame_id"),
         nullable=False,
     )
-    started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
-    completed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    started_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
+    completed_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     score: Mapped[int | None] = mapped_column(Integer, nullable=True)
     duration_seconds: Mapped[int | None] = mapped_column(Integer, nullable=True)
     accuracy: Mapped[float | None] = mapped_column(Float, nullable=True)
@@ -529,9 +554,10 @@ class MinigameAttempt(Base):
 class SyncQueue(Base):
     __tablename__ = "sync_queue"
     __table_args__ = (
-        UniqueConstraint("entity_type", "entity_id", name="uq_sync_pending"),
+        Index("uq_sync_pending", "user_id", "entity_type", "entity_id",
+            unique=True, sqlite_where=text("synced_at IS NULL")),
         CheckConstraint(
-            "entity_type IN ('quiz_attempt', 'minigame_attempt', 'lesson_completion')",
+            "entity_type IN ('quiz_attempt', 'minigame_attempt', 'lesson_progress')",
             name="ck_sync_queue_entity_type",
         ),
         CheckConstraint(
@@ -547,12 +573,12 @@ class SyncQueue(Base):
     operation: Mapped[str] = mapped_column(String(20), nullable=False, default="upsert")
     payload: Mapped[str] = mapped_column(Text, nullable=False)  # JSON with full entity data
     created_at: Mapped[datetime] = mapped_column(
-        DateTime(timezone=True),
+        UTCDateTime,
         default=utcnow,
         nullable=False,
     )
     retry_count: Mapped[int] = mapped_column(Integer, nullable=False, default=0)
-    last_attempted_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    last_attempted_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
     last_error: Mapped[str | None] = mapped_column(Text, nullable=True)
-    synced_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True), nullable=True)
+    synced_at: Mapped[datetime | None] = mapped_column(UTCDateTime, nullable=True)
 

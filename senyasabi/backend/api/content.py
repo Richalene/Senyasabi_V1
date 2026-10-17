@@ -7,9 +7,10 @@ This provides content synchronization endpoints for:
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 from datetime import datetime
+from sqlalchemy import text
 
-from database.postgre_session import get_postgres_session
-from security import get_current_user_id
+from ..database.postgre_session import get_postgres_session
+from ..security import get_current_user_id
 
 router = APIRouter(prefix="/api/v1/content", tags=["content"])
 
@@ -28,9 +29,13 @@ async def sync_content(since_version: int = 0):
     try:
         with get_postgres_session() as db:
             # Get current content version
-            result = db.execute(
-                "SELECT version_number FROM content_versions WHERE is_published = true ORDER BY version_number DESC LIMIT 1"
-            )
+            result = db.execute(text(
+                "SELECT version_number " \
+                "FROM content_versions " \
+                "WHERE is_published = true " \
+                "ORDER BY version_number DESC" \
+                "LIMIT 1"
+            ))
             current_version_row = result.fetchone()
             
             if not current_version_row:
@@ -70,9 +75,13 @@ async def get_current_version():
     """
     try:
         with get_postgres_session() as db:
-            result = db.execute(
-                "SELECT version_number, released_at, changelog FROM content_versions WHERE is_published = true ORDER BY version_number DESC LIMIT 1"
-            )
+            result = db.execute(text(
+                "SELECT version_number, content_version_id " \
+                "FROM content_versions " \
+                "WHERE is_published = true " \
+                "ORDER BY version_number DESC" \
+                "LIMIT 1"
+            ))
             version_row = result.fetchone()
             
             if not version_row:
@@ -92,3 +101,12 @@ async def get_current_version():
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error fetching content version: {str(e)}"
         )
+
+@router.get("/version/modules")
+async def get_changed_modules():
+    """
+    Get the current published content version.
+    
+    Returns:
+        Current content version information
+    """

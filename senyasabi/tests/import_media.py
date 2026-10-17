@@ -106,7 +106,7 @@ def import_media():
             conn.execute(text("""
                 INSERT INTO media_files
                   (file_name, object_key, media_type, width, height,
-                   file_size, checksum, content_version)
+                   file_size, checksum, content_version_id)
                 VALUES (:name, :key, :type, :w, :h, :size, :sum, :ver)
                 ON CONFLICT (object_key) DO UPDATE SET
                   width = EXCLUDED.width, height = EXCLUDED.height,

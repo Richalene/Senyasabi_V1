@@ -38,7 +38,8 @@ DROP TABLE IF EXISTS
     public.media_files,
     public.content_versions,
     public.refresh_tokens,
-    public.users
+    public.users,
+    public.quiz_signs
 CASCADE;
 
 -- ------------------------------------------------------------
@@ -259,7 +260,7 @@ CREATE INDEX idx_lesson_media_version ON public.lesson_media (content_version_id
 
 -- ------------------------------------------------------------
 -- QUIZZES
--- Questions are generated on the fly from a module's signs (no question tables).
+-- Questions are taken from quiz_signs.
 -- Signs for a module:
 --   SELECT DISTINCT s.*
 --   FROM public.signs s
@@ -271,12 +272,15 @@ CREATE INDEX idx_lesson_media_version ON public.lesson_media (content_version_id
 -- ------------------------------------------------------------
 CREATE TABLE public.quizzes (
     quiz_id BIGINT GENERATED ALWAYS AS IDENTITY PRIMARY KEY,
+    quiz_code VARCHAR(100) NOT NULL UNIQUE,
     module_id BIGINT NOT NULL
         REFERENCES public.modules(module_id) ON DELETE RESTRICT,
+    category_code VARCHAR(100), -- Leave NULL for per module quizz
     title VARCHAR(100) NOT NULL,
     passing_score INTEGER NOT NULL DEFAULT 70
         CHECK (passing_score BETWEEN 0 AND 100),
     time_limit_seconds INTEGER CHECK (time_limit_seconds IS NULL OR time_limit_seconds > 0),
+    config JSONB NOT NULL DEFAULT '{}'::jsonb,
     updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
     is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
     content_version_id BIGINT NOT NULL
@@ -310,6 +314,18 @@ CREATE TABLE public.quiz_attempts (
 
 CREATE INDEX idx_quiz_attempts_user ON public.quiz_attempts (user_id, synced_at);
 CREATE INDEX idx_quiz_attempts_quiz ON public.quiz_attempts (quiz_id);
+
+CREATE TABLE public.quiz_signs (
+    quiz_id BIGINT NOT NULL REFERENCES public.quizzes(quiz_id) ON DELETE CASCADE,
+    sign_id BIGINT NOT NULL REFERENCES public.signs(sign_id) ON DELETE RESTRICT,
+    display_order INTEGER NOT NULL DEFAULT 1,
+    updated_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+    is_deleted BOOLEAN NOT NULL DEFAULT FALSE,
+    content_version_id BIGINT NOT NULL
+        REFERENCES public.content_versions(content_version_id) ON DELETE RESTRICT,
+    PRIMARY KEY (quiz_id, sign_id)
+);
+CREATE INDEX idx_quiz_signs_version ON public.quiz_signs (content_version_id);
 
 -- ------------------------------------------------------------
 -- MINIGAMES
@@ -613,7 +629,8 @@ BEGIN
     FOREACH t IN ARRAY ARRAY[
         'users', 'content_versions', 'media_files', 'modules', 'lessons',
         'signs', 'lesson_signs', 'sign_media', 'lesson_media', 'quizzes',
-        'minigames', 'minigame_signs', 'lesson_progress', 'streaks'
+        'minigames', 'minigame_signs', 'lesson_progress', 'streaks', 
+        'quiz_signs'
     ]
     LOOP
         EXECUTE format(

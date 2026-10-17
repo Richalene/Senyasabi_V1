@@ -2,13 +2,17 @@
 -- USERS (SQLite cache; UUID primary key stored as TEXT)
 -- ============================================
 CREATE TABLE IF NOT EXISTS users (
-    user_id TEXT PRIMARY KEY, -- UUID stored as 32-char hex by SQLAlchemy Uuid
+    user_id TEXT PRIMARY KEY,
     username VARCHAR(50) NOT NULL,
-    email VARCHAR(255),
+    email VARCHAR(255) UNIQUE CHECK (email IS NULL OR email = lower(email)),
     display_name VARCHAR(100),
-    updated_at TEXT
+    notifications_enabled INTEGER NOT NULL DEFAULT 1,
+    dark_mode INTEGER NOT NULL DEFAULT 0,
+    created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );
 CREATE INDEX IF NOT EXISTS ix_users_username ON users (username);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_users_username_lower ON users (lower(username));
 -- ============================================
 -- OFFLINE AUTH (SQLite only)
 -- ============================================
@@ -28,6 +32,7 @@ CREATE TABLE IF NOT EXISTS content_versions (
     content_version_id INTEGER PRIMARY KEY AUTOINCREMENT,
     version_number INTEGER NOT NULL UNIQUE,
     released_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     changelog TEXT,
     is_published BOOLEAN DEFAULT 0,
     is_deleted BOOLEAN DEFAULT 0 NOT NULL
@@ -37,20 +42,20 @@ CREATE TABLE IF NOT EXISTS content_versions (
 -- ============================================
 CREATE TABLE IF NOT EXISTS media_files (
     media_id INTEGER PRIMARY KEY,
-    file_name VARCHAR(255) NOT NULL,
+    file_name VARCHAR(255),
     object_key VARCHAR(255) NOT NULL UNIQUE,
-    media_type TEXT NOT NULL
-        CHECK (media_type IN ('Image', 'Video')),
-    file_size INTEGER,
-    checksum TEXT,
+    media_type TEXT NOT NULL CHECK (media_type IN ('Image', 'Video')),
+    width INTEGER CHECK (width IS NULL OR width > 0),
+    height INTEGER CHECK (height IS NULL OR height > 0),
+    duration_seconds INTEGER CHECK (duration_seconds IS NULL OR duration_seconds >= 0),
+    file_size INTEGER CHECK (file_size IS NULL OR file_size >= 0),
+    checksum BLOB,
     content_version_id INTEGER NOT NULL,
-    updated_at TEXT,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     is_deleted INTEGER NOT NULL DEFAULT 0,
-    FOREIGN KEY (content_version_id)
-        REFERENCES content_versions(content_version_id)
+    FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
 );
-CREATE INDEX IF NOT EXISTS idx_media_files_version
-    ON media_files (content_version_id);
+CREATE INDEX IF NOT EXISTS idx_media_files_version ON media_files (content_version_id);
 -- ============================================
 -- MEDIA CACHE (SQLITE)
 -- ============================================
@@ -59,7 +64,7 @@ CREATE TABLE IF NOT EXISTS media_cache (
     local_path VARCHAR(500),
     content_version_id INT NOT NULL,
     cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    checksum TEXT,
+    checksum BLOB,
     FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
         ON DELETE RESTRICT,
     FOREIGN KEY (media_id) REFERENCES media_files(media_id)
@@ -108,58 +113,115 @@ CREATE INDEX IF NOT EXISTS idx_lessons_content_version
     ON lessons (content_version_id);
 CREATE INDEX IF NOT EXISTS idx_lessons_parent_module
     ON lessons (parent_module);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_lessons_module_order
+    ON lessons (parent_module, lesson_order) WHERE is_deleted = 0;
 -- ============================================
 -- SIGNS
 -- ============================================
 CREATE TABLE IF NOT EXISTS signs (
-    sign_id INTEGER PRIMARY KEY,  -- server-assigned ID
+    sign_id INTEGER PRIMARY KEY,
     sign_code TEXT NOT NULL UNIQUE,
-    lesson_id INTEGER NOT NULL,
-    media_id INTEGER UNIQUE NOT NULL,
     label TEXT NOT NULL,
     recognition_label TEXT NOT NULL,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    is_deleted INTEGER DEFAULT 0 NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     content_version_id INTEGER NOT NULL,
-    FOREIGN KEY (lesson_id) REFERENCES lessons (lesson_id)
-        ON DELETE RESTRICT,
-    FOREIGN KEY (media_id) REFERENCES media_files (media_id)
-        ON DELETE RESTRICT,
     FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
         ON DELETE RESTRICT
 );
-CREATE INDEX IF NOT EXISTS idx_signs_lesson ON signs (lesson_id);
-CREATE INDEX IF NOT EXISTS idx_signs_content_version
-    ON signs (content_version_id);
+CREATE INDEX IF NOT EXISTS idx_signs_content_version ON signs (content_version_id);
+
+CREATE TABLE IF NOT EXISTS lesson_signs (
+    lesson_id INTEGER NOT NULL,
+    sign_id INTEGER NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    content_version_id INTEGER NOT NULL,
+    PRIMARY KEY (lesson_id, sign_id),
+    FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id) ON DELETE RESTRICT,
+    FOREIGN KEY (sign_id) REFERENCES signs(sign_id) ON DELETE RESTRICT,
+    FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
+        ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS idx_lesson_signs_sign ON lesson_signs (sign_id);
+CREATE INDEX IF NOT EXISTS idx_lesson_signs_version ON lesson_signs (content_version_id);
+
+CREATE TABLE IF NOT EXISTS sign_media (
+    sign_id INTEGER NOT NULL,
+    media_id INTEGER NOT NULL,
+    media_role TEXT NOT NULL DEFAULT 'demonstration',
+    display_order INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    content_version_id INTEGER NOT NULL,
+    PRIMARY KEY (sign_id, media_id, media_role),
+    FOREIGN KEY (sign_id) REFERENCES signs(sign_id) ON DELETE RESTRICT,
+    FOREIGN KEY (media_id) REFERENCES media_files(media_id) ON DELETE RESTRICT,
+    FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
+        ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS idx_sign_media_version ON sign_media (content_version_id);
+
+CREATE TABLE IF NOT EXISTS lesson_media (
+    lesson_id INTEGER NOT NULL,
+    media_id INTEGER NOT NULL,
+    media_role TEXT NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    content_version_id INTEGER NOT NULL,
+    PRIMARY KEY (lesson_id, media_id, media_role),
+    FOREIGN KEY (lesson_id) REFERENCES lessons(lesson_id) ON DELETE RESTRICT,
+    FOREIGN KEY (media_id) REFERENCES media_files(media_id) ON DELETE RESTRICT,
+    FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
+        ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS idx_lesson_media_version ON lesson_media (content_version_id);
 -- ============================================
 -- QUIZZES
 -- ============================================
 CREATE TABLE IF NOT EXISTS quizzes (
-    quiz_id INTEGER PRIMARY KEY,  -- server-assigned ID
+    quiz_id INTEGER PRIMARY KEY,
+    quiz_code TEXT NOT NULL UNIQUE,
     module_id INTEGER NOT NULL,
-    title TEXT,
-    passing_score INTEGER DEFAULT 70,
-    time_limit_seconds INTEGER,
-    updated_at TEXT DEFAULT CURRENT_TIMESTAMP,
-    is_deleted INTEGER DEFAULT 0 NOT NULL,
+    category_code TEXT,
+    title TEXT NOT NULL,
+    passing_score INTEGER NOT NULL DEFAULT 70 CHECK (passing_score BETWEEN 0 AND 100),
+    time_limit_seconds INTEGER CHECK (time_limit_seconds IS NULL OR time_limit_seconds > 0),
+    config TEXT NOT NULL DEFAULT '{}',
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
     content_version_id INTEGER NOT NULL,
-    FOREIGN KEY (module_id) REFERENCES modules (module_id)
-        ON DELETE RESTRICT,
+    FOREIGN KEY (module_id) REFERENCES modules (module_id) ON DELETE RESTRICT,
     FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
         ON DELETE RESTRICT
 );
-CREATE INDEX IF NOT EXISTS idx_quizzes_version
-    ON quizzes (content_version_id);
-CREATE INDEX IF NOT EXISTS idx_quizzes_module
-    ON quizzes (module_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_version ON quizzes (content_version_id);
+CREATE INDEX IF NOT EXISTS idx_quizzes_module ON quizzes (module_id);
+
+CREATE TABLE IF NOT EXISTS quiz_signs (
+    quiz_id INTEGER NOT NULL,
+    sign_id INTEGER NOT NULL,
+    display_order INTEGER NOT NULL DEFAULT 1,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    content_version_id INTEGER NOT NULL,
+    PRIMARY KEY (quiz_id, sign_id),
+    FOREIGN KEY (quiz_id) REFERENCES quizzes(quiz_id) ON DELETE CASCADE,
+    FOREIGN KEY (sign_id) REFERENCES signs(sign_id) ON DELETE RESTRICT,
+    FOREIGN KEY (content_version_id) REFERENCES content_versions(content_version_id)
+        ON DELETE RESTRICT
+);
+CREATE INDEX IF NOT EXISTS idx_quiz_signs_version ON quiz_signs (content_version_id);
 -- ============================================
 -- MINIGAMES
 -- ============================================
 CREATE TABLE IF NOT EXISTS minigames (
     minigame_id INTEGER PRIMARY KEY,  -- server-assigned ID
     minigame_code TEXT NOT NULL UNIQUE,
-    game_name TEXT,
-    game_type TEXT,
+    game_name TEXT NOT NULL,
+    game_type TEXT NOT NULL,
     module_id INTEGER NOT NULL,
     description TEXT,
     config TEXT NOT NULL,  -- JSON stored as TEXT
@@ -181,6 +243,10 @@ CREATE INDEX IF NOT EXISTS idx_minigames_module
 CREATE TABLE IF NOT EXISTS minigame_signs (
     minigame_id INTEGER NOT NULL,
     sign_id INTEGER NOT NULL,
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    is_deleted INTEGER NOT NULL DEFAULT 0,
+    content_version_id INTEGER NOT NULL REFERENCES content_versions(content_version_id),
+
     PRIMARY KEY (minigame_id, sign_id),
     FOREIGN KEY (minigame_id) REFERENCES minigames (minigame_id)
         ON DELETE CASCADE,
@@ -192,6 +258,7 @@ CREATE TABLE IF NOT EXISTS minigame_signs (
 -- ============================================
 CREATE TABLE IF NOT EXISTS badges (
     badge_id INTEGER PRIMARY KEY,  -- server-assigned ID
+    badge_code TEXT NOT NULL UNIQUE,
     badge_name TEXT NOT NULL,
     description TEXT,
     is_deleted INTEGER DEFAULT 0 NOT NULL
@@ -227,7 +294,10 @@ CREATE TABLE IF NOT EXISTS lesson_progress (
     last_accessed TEXT,
     completed_at TEXT,
     time_spent_seconds INTEGER NOT NULL DEFAULT 0,
+    client_updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    
+    CHECK (status <> 'Completed' OR completed_at IS NOT NULL),
     PRIMARY KEY (user_id, lesson_id),
     FOREIGN KEY (user_id)
         REFERENCES users(user_id) ON DELETE CASCADE,
@@ -348,10 +418,9 @@ quiz_stats AS (
             SUM(
                 CASE
                     WHEN completed_at IS NOT NULL
-                     AND started_at IS NOT NULL
                     THEN COALESCE(
-                        strftime('%s', completed_at)
-                        - strftime('%s', started_at),
+                        duration_seconds,
+                        strftime('%s', completed_at) - strftime('%s', started_at),
                         0
                     )
                     ELSE 0
@@ -437,13 +506,12 @@ LEFT JOIN accuracy_stats ast
 -- STREAKS (CACHED AGG)
 -- ============================================
 CREATE TABLE IF NOT EXISTS streaks (
-    streak_id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user_id TEXT NOT NULL UNIQUE,
-    current_streak INTEGER,
-    longest_streak INTEGER,
+    user_id TEXT PRIMARY KEY,
+    current_streak INTEGER NOT NULL DEFAULT 0 CHECK (current_streak >= 0),
+    longest_streak INTEGER NOT NULL DEFAULT 0 CHECK (longest_streak >= 0),
     last_activity_date TEXT,
-    FOREIGN KEY (user_id) REFERENCES users (user_id)
-        ON DELETE CASCADE
+    updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users (user_id) ON DELETE CASCADE
 );
 -- ============================================
 -- LEADERBOARD CACHE (SQLITE ONLY)
@@ -475,8 +543,10 @@ CREATE TABLE IF NOT EXISTS quiz_attempts (
     max_score INTEGER,
     percentage REAL,
     passed INTEGER,
-    camera_correct INTEGER,
-    camera_total INTEGER,
+    duration_seconds INTEGER,
+    camera_accuracy REAL,
+    mc_accuracy REAL,
+
     FOREIGN KEY (user_id) REFERENCES users (user_id)
         ON DELETE CASCADE,
     FOREIGN KEY (quiz_id) REFERENCES quizzes (quiz_id)
@@ -519,19 +589,18 @@ CREATE TABLE IF NOT EXISTS sync_queue (
     sync_id TEXT PRIMARY KEY,
     user_id TEXT NOT NULL,
     entity_type TEXT NOT NULL
-        CHECK (entity_type IN ('quiz_attempt', 'minigame_attempt', 'lesson_completion')),
-    entity_id TEXT NOT NULL,  -- server-assigned UUID
+        CHECK (entity_type IN ('quiz_attempt', 'minigame_attempt', 'lesson_progress')),
+    entity_id TEXT NOT NULL,
     operation TEXT NOT NULL DEFAULT 'upsert' CHECK (operation IN ('upsert', 'delete')),
-    payload TEXT NOT NULL,  -- JSON with full entity data including server IDs
+    payload TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     retry_count INTEGER NOT NULL DEFAULT 0,
     last_attempted_at TEXT,
     last_error TEXT,
-    synced_at TEXT,
-    UNIQUE (entity_type, entity_id)
+    synced_at TEXT
 );
--- At most one pending item per entity; re-queueing replaces the payload
+-- at most one PENDING row per user+entity; synced rows may repeat
 CREATE UNIQUE INDEX IF NOT EXISTS uq_sync_pending
-  ON sync_queue (entity_type, entity_id) WHERE synced_at IS NULL;
+    ON sync_queue (user_id, entity_type, entity_id) WHERE synced_at IS NULL;
 CREATE INDEX IF NOT EXISTS idx_sync_pending
-  ON sync_queue (created_at) WHERE synced_at IS NULL;
+    ON sync_queue (created_at) WHERE synced_at IS NULL;

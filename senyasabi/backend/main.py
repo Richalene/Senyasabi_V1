@@ -12,14 +12,14 @@ Authentication is handled via Supabase Auth JWT tokens.
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
 
-from config import FASTAPI_HOST, FASTAPI_PORT, FASTAPI_DEBUG, POSTGRESQL_URL
-from security import get_current_user_id
-from api.media import router as media_router
-from api.content import router as content_router
-from api.sync import router as sync_router
-from api.progress import router as progress_router
-from api.leaderboard import router as leaderboard_router
-from api.packages import router as packages_router
+from .config import FASTAPI_HOST, FASTAPI_PORT, FASTAPI_DEBUG, POSTGRESQL_URL
+from .security import get_current_user_id
+from .api.media import router as media_router
+from .api.content import router as content_router
+from .api.sync import router as sync_router
+from .api.progress import router as progress_router
+from .api.leaderboard import router as leaderboard_router
+from .api.packages import router as packages_router
 
 # Create FastAPI app
 app = FastAPI(
@@ -95,8 +95,5 @@ if __name__ == "__main__":
     print(f"API docs available at http://{FASTAPI_HOST}:{FASTAPI_PORT}/docs")
     
     uvicorn.run(
-        "main:app",
-        host=FASTAPI_HOST,
-        port=FASTAPI_PORT,
-        reload=FASTAPI_DEBUG
+        "backend.main:app"
     )

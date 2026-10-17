@@ -6,20 +6,29 @@ following the pattern from test_fetch.py.
 from fastapi import APIRouter, Depends, HTTPException, status
 from typing import Optional
 
-from config import SUPABASE_URL, SUPABASE_KEY
-from security import get_current_user_id
+from ..config import SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY
+from ..security import get_current_user_id
+
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
 
 router = APIRouter(prefix="/api/v1/media", tags=["media"])
 
 # Supabase Storage client
-try:
-    from supabase import create_client
-    supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
-    STORAGE_AVAILABLE = True
-except Exception as e:
-    print(f"Supabase Storage not available: {e}")
-    STORAGE_AVAILABLE = False
+def get_required_env(name: str) -> str:
+    value = os.getenv(name)
 
+    if not value:
+        raise ValueError(f"Missing required environment variable: {name}")
+
+    return value
+
+SUPABASE_URL = get_required_env("SUPABASE_URL")
+SUPABASE_ANON_KEY = get_required_env("SUPABASE_ANON_KEY")
+SUPABASE_SERVICE_ROLE_KEY = get_required_env("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_JWT_SECRET = get_required_env("SUPABASE_JWT_SECRET")
 
 @router.get("/presign/{media_id}")
 async def get_presigned_url(
