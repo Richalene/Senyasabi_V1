@@ -9,9 +9,10 @@ from __future__ import annotations
 import sys
 from pathlib import Path
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Signal, QSize
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QPushButton
+from screens.navigation import BackButton, install_page_menu
 
 _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
@@ -54,9 +55,12 @@ class AlphabetMenuWidget(QWidget):
         self.resize(self._ui.width(), self._ui.height())
         self._ui.resize(self.size())
         self.setWindowTitle("SenyaSabi — Alphabet")
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
         # wire buttons
-        self._ui.findChild(QPushButton, "backBtn").clicked.connect(self.go_back)
+        self.back_button = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self.back_button.setGeometry(40,24,52,52)
+        self.back_button.clicked.connect(self.go_back)
         self._ui.findChild(QPushButton, "learnBtn").clicked.connect(self.open_learn)
         self._ui.findChild(QPushButton, "spellBtn").clicked.connect(self.open_spell)
 

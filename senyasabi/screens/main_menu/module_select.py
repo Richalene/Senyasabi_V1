@@ -9,6 +9,7 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QFrame,
                               QVBoxLayout, QGraphicsDropShadowEffect)
 from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.main_menu.word_menu import _load_categories
+from screens.navigation import BackButton, install_page_menu
 
 ROOT = Path(__file__).resolve().parents[2]
 # Positions are canvas fractions, independent of desktop resolution.
@@ -17,7 +18,7 @@ POSITIONS = ((.29,.74), (.71,.74), (.24,.60), (.76,.60), (.29,.46),
 MODULE_NODES = [dict(module_code="alphabet", title="FSL Alphabet",
                      description="Learn the FSL alphabet", count=sum(map(len, LESSON_LETTERS.values())),
                      x=.50, y=.86)] + [
-    dict(module_code=code, title=code.title(), description="Learn FSL words and phrases",
+    dict(module_code=code.casefold(), title=code.title(), description="Learn FSL words and phrases",
          count=len(words), x=position[0], y=position[1])
     for (code, words), position in zip(_load_categories().items(), POSITIONS)
 ]
@@ -60,7 +61,7 @@ class ModuleSelectWidget(QWidget):
         self._ui = QUiLoader().load(str(ROOT / "ui/designer/module_select.ui"), self)
         if self._ui is None:
             raise RuntimeError("Unable to load module_select.ui")
-        self.setWindowTitle("SenyaSabi ? Module Map")
+        self.setWindowTitle("SenyaSabi — Module Map")
         # This screen owns proportional fitting, including its dynamic overlays.
         self._fitted_form = self
         self.resize(1306,735)
@@ -69,15 +70,17 @@ class ModuleSelectWidget(QWidget):
         self.background.setScaledContents(True)
         self.background.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.background.lower()
+        self.back_button = BackButton.replace(self._ui.findChild(QPushButton,"backBtn"))
+        self.back_button.setGeometry(60,40,60,60)
+        self.back_button.clicked.connect(self.go_back)
+        # Keep the level text clear of the shared top-right menu artwork.
+        self._ui.findChild(QLabel, "levelLabel").setGeometry(1480, 40, 230, 60)
         self._fixed = [(child, child.geometry(), child.styleSheet())
                        for child in self._ui.findChildren(QWidget)
                        if child is not self.background]
         self._base_style = self._ui.styleSheet()
-        self.back_button = self._ui.findChild(QPushButton,"backBtn")
-        self.back_button.clicked.connect(self.go_back)
+        install_page_menu(self, canvas_size=QSize(1920, 1080))
         icon = QIcon(str(ROOT / "resources/img/ui/firefly.png"))
-        if icon.isNull():
-            raise RuntimeError("Missing resources/img/ui/firefly.png")
         self.buttons = []
         for number, node in enumerate(MODULE_NODES,1):
             button = FireflyButton(self._ui)
@@ -86,6 +89,9 @@ class ModuleSelectWidget(QWidget):
             button.setAccessibleName(f'Module {number}: {node["title"]}')
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setIcon(icon)
+            if icon.isNull():
+                button.setText('●')
+                button.setStyleSheet('color: #e7bd42; font-size: 32px; border: none; background: transparent;')
             glow = QGraphicsDropShadowEffect(button)
             glow.setColor(QColor(255,206,66,190))
             glow.setOffset(0,0)

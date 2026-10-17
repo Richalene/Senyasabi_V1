@@ -1,4 +1,5 @@
 """Dashboard data boundary. No persistence until the V4 repository is ready."""
+import logging
 
 
 class DefaultDashboardRepository:
@@ -38,4 +39,15 @@ def get_dashboard_stats(user_id):
     """Return fresh V4-shaped data; anonymous previews also use safe defaults."""
     if user_id is None:
         return DefaultDashboardRepository().get_dashboard_stats(None)
-    return _repository.get_dashboard_stats(user_id)
+    defaults = DefaultDashboardRepository().get_dashboard_stats(user_id)
+    try:
+        data = _repository.get_dashboard_stats(user_id) or {}
+    except (OSError, ConnectionError, TimeoutError) as error:
+        logging.getLogger(__name__).warning("Statistics unavailable: %s", error)
+        return defaults
+    for key, value in data.items():
+        if key in defaults and isinstance(defaults[key], dict) and isinstance(value, dict):
+            defaults[key].update({name: item for name, item in value.items() if item is not None})
+        elif key in defaults and value is not None:
+            defaults[key] = value
+    return defaults

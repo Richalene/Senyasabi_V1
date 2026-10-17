@@ -19,8 +19,12 @@ class LessonContent:
     def __init__(self, lessons_path: Path = config.LESSONS_PATH,
                  vrm_dir: Path = config.VRM_SIGNS_DIR,
                  alphabet_labels: Optional[List[str]] = None):
-        self.lessons: Dict[str, List[str]] = json.loads(
-            Path(lessons_path).read_text(encoding="utf-8"))
+        if Path(lessons_path).is_file():
+            self.lessons: Dict[str, List[str]] = json.loads(
+                Path(lessons_path).read_text(encoding="utf-8"))
+        else:
+            from .content_service import MODULE_CODES, get_words_for_module
+            self.lessons = {code.upper(): get_words_for_module(code) for code in MODULE_CODES}
         self.vrm_dir = Path(vrm_dir)
 
         if alphabet_labels is not None:
@@ -43,7 +47,7 @@ class LessonContent:
 
     @staticmethod
     def letters_of(word: str) -> List[str]:
-        return [c for c in word if c != ' ']
+        return [c for c in word.upper() if 'A' <= c <= 'Z']
 
     # ---- alphabet -------------------------------------------------------
     def alphabet(self) -> List[str]:

@@ -10,11 +10,8 @@ import sys
 from pathlib import Path
 from typing import List
 
-import cv2
-import numpy as np
-
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QImage, QPixmap, QColor
+from PySide6.QtCore import Qt, QTimer, Signal, QSize
+from PySide6.QtGui import QPixmap, QColor
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QFrame
 
@@ -22,7 +19,9 @@ _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from backend.recognition_engine import SignRecognitionEngine
+from screens.camera_access import LessonCameraMixin, alphabet_engine
+from screens.camera_preview import RoundedCameraPreview
+from screens.navigation import BackButton, install_page_menu
 from backend.session_state import CameraPracticeSession, Event, SessionState
 
 _UI_FILE  = _ROOT / "ui" / "designer" / "spell_lesson.ui"
@@ -43,18 +42,7 @@ _TILE_PENDING = "#1a1f2e"
 _TILE_SPACE   = "#0f1117"   # invisible for spaces
 
 
-def _bgr_to_qpixmap(frame_bgr: np.ndarray, w: int, h: int) -> QPixmap:
-    rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-    qimg = QImage(rgb.data, rgb.shape[1], rgb.shape[0],
-                  rgb.strides[0], QImage.Format.Format_RGB888)
-    return QPixmap.fromImage(qimg).scaled(
-        w, h,
-        Qt.AspectRatioMode.KeepAspectRatio,
-        Qt.TransformationMode.SmoothTransformation,
-    )
-
-
-class SpellLessonWidget(QWidget):
+class SpellLessonWidget(LessonCameraMixin, QWidget):
     """
     Fingerspell a word using the alphabet model.
 
@@ -78,13 +66,14 @@ class SpellLessonWidget(QWidget):
         self._word     = word
         self._category = category
         # letters only — skip spaces
-        self._letters: List[str] = [c for c in word if c != " "]
+        self._letters: List[str] = [c for c in word.upper() if "A" <= c <= "Z"]
 
         # ── load UI ──────────────────────────────────────────────────────
         loader = QUiLoader()
         self._ui = loader.load(str(_UI_FILE), self)
         if self._ui is None:
             raise RuntimeError(f"Failed to load {_UI_FILE}")
+        self._ui.setStyleSheet(self._ui.styleSheet() + (_ROOT / "resources/styles/lessons.qss").read_text())
         self.resize(self._ui.width(), self._ui.height())
         self._ui.resize(self.size())
         self.setWindowTitle(f"SenyaSabi — Spell: {word}")
@@ -96,7 +85,9 @@ class SpellLessonWidget(QWidget):
         self._letter_lbl   : QLabel  = self._ui.findChild(QLabel,  "currentLetterLabel")
         self._letter_sub   : QLabel  = self._ui.findChild(QLabel,  "letterSubtitle")
         self._ref_img_lbl  : QLabel  = self._ui.findChild(QLabel,  "refImageLabel")
-        self._camera_lbl   : QLabel  = self._ui.findChild(QLabel,  "cameraLabel")
+        self._camera_lbl = RoundedCameraPreview.replace(
+            self._ui.findChild(QLabel, "cameraLabel")
+        )
         self._cam_dot      : QLabel  = self._ui.findChild(QLabel,  "camStatusDot")
         self._feedback_lbl : QLabel  = self._ui.findChild(QLabel,  "feedbackLabel")
         self._pred_lbl     : QLabel  = self._ui.findChild(QLabel,  "predictionLabel")
@@ -104,7 +95,10 @@ class SpellLessonWidget(QWidget):
         self._hold_fill    : QLabel  = self._ui.findChild(QLabel,  "holdBarFill")
         self._tiles_area   : QLabel  = self._ui.findChild(QLabel,  "tilesArea")
         self._skip_btn     : QPushButton = self._ui.findChild(QPushButton, "skipBtn")
-        self._back_btn     : QPushButton = self._ui.findChild(QPushButton, "backBtn")
+        self._back_btn = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self._back_btn.setGeometry(1138, 24, 52, 52)
+        self._score_lbl.setGeometry(950, 24, 166, 28)
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
         self._skip_btn.clicked.connect(self._on_skip)
         self._back_btn.clicked.connect(self._on_back)
@@ -114,9 +108,8 @@ class SpellLessonWidget(QWidget):
         self._build_tiles()
 
         # ── backend ──────────────────────────────────────────────────────
-        self._engine  = SignRecognitionEngine(mode="alphabet")
-        cam_ok        = self._engine.open_camera()
-        self._set_cam_dot(cam_ok)
+        self._engine = None
+        self._set_cam_dot(False)
         self._resources_closed = False
 
         self._session = CameraPracticeSession(targets=self._letters)
@@ -125,7 +118,6 @@ class SpellLessonWidget(QWidget):
         self._timer          = QTimer(self)
         self._timer.setInterval(33)
         self._timer.timeout.connect(self._on_tick)
-        self._timer.start()
 
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -134,6 +126,8 @@ class SpellLessonWidget(QWidget):
 
         # ── initial render ───────────────────────────────────────────────
         self._refresh_ui()
+        self._init_camera(alphabet_engine)
+
 
     # ── tile row ─────────────────────────────────────────────────────────
 
@@ -285,19 +279,31 @@ class SpellLessonWidget(QWidget):
     def _on_tick(self):
         if self._engine is None:
             return
-        result = self._engine.read_frame()
+        try:
+            result = self._engine.read_frame()
+        except Exception as error:
+            import logging
+            logging.getLogger(__name__).exception("Spelling recognition failed")
+            self._cleanup_resources()
+            self._camera_failed(error)
+            return
         if result is None:
+            self._camera_misses += 1
+            if self._camera_misses < 3:
+                return
+            self._cleanup_resources()
+            self._camera_failed("Camera disconnected. Reopen the lesson to retry.")
             return
 
-        lbl = self._camera_lbl
-        pix = _bgr_to_qpixmap(result.annotated_bgr, lbl.width(), lbl.height())
-        lbl.setPixmap(pix)
+        self._camera_misses = 0
+        self._camera_lbl.set_bgr_frame(result.annotated_bgr)
         self._set_cam_dot(True)
 
         if self._session.state != SessionState.WAITING:
             return
 
-        if not result.hand_detected:
+        if not result.hand_detected or result.prediction is None:
+            self._session._hold = 0
             self._pred_lbl.setText("No hand detected")
             self._set_hold_bar(0.0)
             return
@@ -360,6 +366,8 @@ class SpellLessonWidget(QWidget):
         if self._resources_closed:
             return
         self._resources_closed = True
+        self._cancel_camera_setup()
+        self.loading.cancel()
         self._timer.stop()
         self._feedback_timer.stop()
         self._feedback_action = None
@@ -367,6 +375,10 @@ class SpellLessonWidget(QWidget):
             self._engine.close()
             self._engine = None
         self._set_cam_dot(False)
+
+    def hideEvent(self, event):
+        self._cleanup_resources()
+        super().hideEvent(event)
 
     def closeEvent(self, event):
         self._cleanup_resources()

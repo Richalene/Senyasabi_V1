@@ -78,9 +78,16 @@ def register_user(username, email, password, display_name=None):
     return _public_user(user)
 
 
-def authenticate_user(identifier, password):
+def authenticate_user(identifier, password, *, establish_session=True):
+    """Verify credentials, optionally publishing the session for synchronous callers.
+
+    Background jobs must pass ``establish_session=False`` and let their live UI
+    callback publish the result. A cancelled job can then finish without
+    restoring a session after the learner has navigated away or logged out.
+    """
     global _current_user
-    _current_user = None
+    if establish_session:
+        _current_user = None
     if not identifier.strip() or not password:
         raise AuthError("Username/email and password are required.")
     user = _repository.find_by_identifier(identifier)
@@ -90,7 +97,17 @@ def authenticate_user(identifier, password):
         _hasher.verify(user.password_hash, password)
     except VerificationError:
         raise AuthError("Invalid username/email or password.") from None
-    _current_user = _public_user(user)
+    public_user = _public_user(user)
+    if establish_session:
+        _current_user = dict(public_user)
+    return public_user
+
+
+def establish_session(user):
+    """Publish a verified public user from a successful, still-active UI job."""
+    global _current_user
+    _current_user = {key: value for key, value in user.items()
+                     if key not in ("password", "password_hash")}
     return dict(_current_user)
 
 

@@ -1,8 +1,10 @@
 from pathlib import Path
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
+from screens.auth.common import AuthForm
+from screens.navigation import BackButton
 
 
 # TEMPORARY: disable before distributing a production build.
@@ -29,6 +31,7 @@ class LoginScreen(QWidget):
     dev_login_requested = Signal()
     continue_requested = Signal()
     register_requested = Signal()
+    back_requested = Signal()
 
     def __init__(self, parent: QWidget | None = None):
         super().__init__(parent)
@@ -43,6 +46,7 @@ class LoginScreen(QWidget):
         self.email_input: QLineEdit = self._ui.findChild(QLineEdit, "emailInput")
         self.password_input: QLineEdit = self._ui.findChild(QLineEdit, "passwordInput")
         self.error_label = QLabel(self._ui)
+        self.error_label.setObjectName('authError')
         self.error_label.setWordWrap(True)
         self._ui.layout().insertWidget(8, self.error_label)
         self.password_input.returnPressed.connect(self.continue_requested)
@@ -54,8 +58,12 @@ class LoginScreen(QWidget):
         )
 
         add_dev_button(self)
+        self.back_button = BackButton(self._ui)
+        self.back_button.clicked.connect(self.back_requested.emit)
+        self._ui.layout().insertWidget(0, self.back_button, 0, Qt.AlignmentFlag.AlignLeft)
+        self._auth_form = AuthForm(self)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, "_ui") and self._ui:
-            self._ui.resize(self.size())
+        if hasattr(self, '_auth_form'):
+            self._auth_form.fit()

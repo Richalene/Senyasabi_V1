@@ -1,9 +1,9 @@
 """
 Hand-landmark extraction + sign prediction + camera capture.
 
-Pure OpenCV / MediaPipe / TensorFlow — no Qt. Feed it frames (or let it own
-the camera) and read back plain Python/NumPy results; wire those into
-whatever widgets you built in Qt Creator (PySide6).
+Recognition returns plain Python/NumPy results. Capture is supplied by the
+shared local camera service; landmark extraction and model mathematics remain
+independent of the camera settings UI.
 """
 import json
 import pickle
@@ -12,11 +12,10 @@ from pathlib import Path
 from typing import Optional
 
 import cv2
-import mediapipe as mp
 import numpy as np
-import tensorflow as tf
 
 from . import config
+from .camera_service import open_selected_capture
 
 
 @dataclass
@@ -40,6 +39,7 @@ class HandLandmarkExtractor:
     def __init__(self, max_num_hands: int = 1,
                  min_detection_confidence: float = 0.5,
                  min_tracking_confidence: float = 0.5):
+        import mediapipe as mp
         self._mp_hands = mp.solutions.hands
         self._mp_drawing = mp.solutions.drawing_utils
         self._hands = self._mp_hands.Hands(
@@ -94,6 +94,7 @@ class SignPredictor:
                  labels_path: Optional[Path] = None,
                  labels_fallback: Optional[list] = None,
                  scaler_path: Optional[Path] = None):
+        import tensorflow as tf
         self.model = tf.keras.models.load_model(model_path)
 
         if labels_path is not None:
@@ -146,12 +147,11 @@ class SignRecognitionEngine:
             event.accept()
     """
 
-    def __init__(self, mode: str = "alphabet", cam_index: int = config.CAM_INDEX):
-        self.cam_index = cam_index
-        self.extractor = HandLandmarkExtractor()
+    def __init__(self, mode: str = "alphabet"):
         self.mode = mode
         self.predictor = self._build_predictor(mode)
-        self._cap: Optional[cv2.VideoCapture] = None
+        self.extractor = HandLandmarkExtractor()
+        self._cap = None
         self._closed = False
 
     @staticmethod
@@ -174,6 +174,8 @@ class SignRecognitionEngine:
         self.mode = mode
 
     def open_camera(self) -> bool:
+        if self._closed:
+            return False
         if self._cap is not None:
             try:
                 if self._cap.isOpened():
@@ -182,11 +184,12 @@ class SignRecognitionEngine:
                 pass
             self.close_camera()
         try:
-            self._cap = cv2.VideoCapture(self.cam_index)
+            self._cap = open_selected_capture(self)
             if self._cap.isOpened():
                 return True
-        except cv2.error:
-            pass
+        except Exception:
+            self.close_camera()
+            raise
         if self._cap is not None:
             self.close_camera()
         return False

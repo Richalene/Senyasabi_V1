@@ -1,9 +1,9 @@
 """Local minigame content and timed round state; no Qt, camera, or database."""
-import json
 import random
-import re
+from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic
+from .content_service import MODULE_CODES, get_words_for_module as module_words
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = {
@@ -13,27 +13,41 @@ CONFIG = {
 }
 
 
+@dataclass(frozen=True)
+class MinigameContext:
+    """The entry route owns game content and the Back destination."""
+    scope: str = "global"
+    module_code: str | None = None
+
+    def __post_init__(self):
+        if self.scope not in ("global", "module"):
+            raise ValueError(f"Unknown minigame scope: {self.scope}")
+        if self.scope == "global" and self.module_code is not None:
+            raise ValueError("Global minigames cannot have a module.")
+        if self.scope == "module" and not self.module_code:
+            raise ValueError("Module minigames require a module.")
+        if self.module_code is not None:
+            object.__setattr__(self, "module_code", self.module_code.casefold())
+
+
 def letters(label):
     return [char for char in label.upper() if "A" <= char <= "Z"]
 
 
 def load_vocabulary(module_code=None):
-    if module_code is not None and module_code.casefold() == "alphabet":
-        return list("ABCDEFGHIJKLMNOPQRSTUVWXYZ")
-    entries = json.loads((ROOT / "resources/data/105labels.json").read_text(encoding="utf-8-sig"))
     if module_code is not None:
-        entries = [entry for entry in entries
-                   if entry["category"].casefold() == module_code.casefold()]
-        if not entries:
-            raise ValueError(f"Unknown module: {module_code}")
-    # Exclude damaged/non-alphabetic labels, retaining original words and punctuation.
-    return [entry["label"].strip() for entry in entries
-            if re.fullmatch(r"[A-Z]+(?:[ '’]+[A-Z]+)*", entry["label"].strip())]
+        return get_words_for_module(module_code)
+    return get_all_minigame_words()
+
+
+def get_all_minigame_words():
+    """Use the centralized word modules; Alphabet has its own scoped activities."""
+    return [word for code in MODULE_CODES for word in module_words(code)]
 
 
 def get_words_for_module(module_code):
     """One source for module-scoped game vocabulary; never fall back to other modules."""
-    return load_vocabulary(module_code)
+    return module_words(module_code)
 
 
 def normalize(answer):
@@ -41,16 +55,22 @@ def normalize(answer):
 
 
 class GameSession:
-    def __init__(self, kind, rounds=5, clock=monotonic, module_code=None):
+    def __init__(self, kind, rounds=5, clock=monotonic, module_code=None, *, scope=None):
         self.kind, self.total, self.clock = kind, rounds, clock
         self.limit = CONFIG[kind][2]
-        self.module_code = module_code
-        pool = get_words_for_module(module_code)
+        # Direct callers may supply just a module; navigation always supplies scope.
+        self.context = MinigameContext(
+            scope if scope is not None else ("module" if module_code is not None else "global"),
+            module_code)
+        self.scope, self.module_code = self.context.scope, self.context.module_code
+        pool = (get_all_minigame_words() if self.scope == "global"
+                else get_words_for_module(self.module_code))
         if kind in ("sprint", "quest"):
             pool = [word for word in pool if len(letters(word)) <= (12 if kind == "sprint" else 14)]
         if not pool:
-            raise ValueError(f"No playable content for module: {module_code}")
-        self.words = random.sample(pool, min(rounds, len(pool)))
+            raise ValueError(f"No playable content for {self.scope} minigames: {self.module_code}")
+        self.pool = pool
+        self.words = random.sample(self.pool, min(rounds, len(self.pool)))
         self.total = len(self.words)
         self.index = -1
         self.score = 0

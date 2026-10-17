@@ -10,6 +10,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from backend import auth_service, dashboard_service
 from PySide6.QtWidgets import QApplication
+from PySide6.QtTest import QTest
 from screens.dashboard.dashboard import StatisticsDashboardWindow
 
 
@@ -28,6 +29,14 @@ class DashboardTests(unittest.TestCase):
             self.window._menu.deleteLater()
         self.window.deleteLater()
         self.app.processEvents()
+
+    def wait_for_data(self):
+        for _ in range(300):
+            self.app.processEvents()
+            if not self.window.loading.busy:
+                return
+            QTest.qWait(10)
+        self.fail("Dashboard refresh did not finish")
 
     def test_defaults_and_fresh_data(self):
         data = dashboard_service.get_dashboard_stats("new-user")
@@ -52,21 +61,33 @@ class DashboardTests(unittest.TestCase):
         data["leaderboard"]["rank_position"] = 2
         with patch.object(auth_service, "get_current_user", return_value={"user_id": "user-42"}), patch.object(dashboard_service, "get_dashboard_stats", return_value=data) as service:
             self.window.show()
-            self.app.processEvents()
+            self.wait_for_data()
             service.assert_called_with("user-42")
         self.assertEqual(self.window.ui.lblLessonsCompleted.text(), "3")
         self.assertEqual(self.window.ui.lblModuleCount.text(), "1")
         self.assertEqual(self.window.ui.lblLatestBadge.text(), "first")
         self.assertEqual(self.window.ui.lblLeaderboardRank.text(), "#2")
 
-    def test_existing_menu_navigation_and_anonymous_guard(self):
-        self.window.ui.btnMenu.click()
+    def test_back_navigation_and_anonymous_guard(self):
+        self.window.ui.btnBack.click()
         self.assertIsNone(self.window._menu)
         with patch.object(auth_service, "get_current_user", return_value={"user_id": "user-42"}):
-            for button in (self.window.ui.btnBack, self.window.ui.btnMenu):
-                self.window.show()
-                button.click()
-                self.app.processEvents()
-                self.assertFalse(self.window.isVisible())
-                self.assertTrue(self.window._menu.isVisible())
-                self.window._menu.hide()
+            self.window.show()
+            self.wait_for_data()
+            self.window.ui.btnBack.click()
+            self.app.processEvents()
+            self.assertFalse(self.window.isVisible())
+            self.assertTrue(self.window._menu.isVisible())
+            self.window._menu.hide()
+
+    def test_hamburger_opens_shared_controls_without_navigating(self):
+        self.window.show()
+        self.wait_for_data()
+        self.window.ui.btnMenu.click()
+        self.app.processEvents()
+        menu = self.window.header.menu_button.menu()
+        self.assertTrue(menu.isVisible())
+        self.assertTrue(self.window.isVisible())
+        self.assertIsNone(self.window._menu)
+        self.assertEqual(menu.sign_out_action.text(), "Sign Out")
+        menu.close()

@@ -35,20 +35,20 @@ import sys
 from pathlib import Path
 from typing import List
 
-import cv2
-import numpy as np
-
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import Qt, QTimer, Signal, QSize
+from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QApplication, QWidget, QLabel
+from PySide6.QtWidgets import QApplication, QWidget, QLabel, QVBoxLayout
 
 # ── path gymnastics so imports work whether run directly or as a package ──
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from backend.recognition_engine import SignRecognitionEngine
+from screens.camera_access import LessonCameraMixin, alphabet_engine
+from screens.camera_preview import RoundedCameraPreview
+from screens.media_player import SignVideoPlayer
+from screens.navigation import BackButton, install_page_menu
 from backend.session_state import CameraPracticeSession, Event, SessionState
 
 # ── lesson definitions ────────────────────────────────────────────────────
@@ -73,19 +73,7 @@ _CLR_HOLDING  = ("color:#0f1117; background-color:#f0c040;"
 _CLR_HIDDEN   = "color:transparent; background-color:transparent;"
 
 
-def _bgr_to_qpixmap(frame_bgr: np.ndarray, w: int, h: int) -> QPixmap:
-    """Convert an OpenCV BGR frame to a scaled QPixmap."""
-    rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-    qimg = QImage(rgb.data, rgb.shape[1], rgb.shape[0],
-                  rgb.strides[0], QImage.Format.Format_RGB888)
-    return QPixmap.fromImage(qimg).scaled(
-        w, h,
-        Qt.AspectRatioMode.KeepAspectRatio,
-        Qt.TransformationMode.SmoothTransformation,
-    )
-
-
-class AlphabetLessonWidget(QWidget):
+class AlphabetLessonWidget(LessonCameraMixin, QWidget):
     """
     Self-contained alphabet lesson window.
 
@@ -117,6 +105,7 @@ class AlphabetLessonWidget(QWidget):
         self._ui = loader.load(str(_UI_FILE), self)
         if self._ui is None:
             raise RuntimeError(f"Failed to load UI file: {_UI_FILE}")
+        self._ui.setStyleSheet(self._ui.styleSheet() + (_ROOT / "resources/styles/lessons.qss").read_text())
 
         # Resize outer widget to match UI
         self.resize(self._ui.width(), self._ui.height())
@@ -130,7 +119,9 @@ class AlphabetLessonWidget(QWidget):
         self._letter_lbl:     QLabel = self._ui.findChild(QLabel,      "letterDisplay")
         self._letter_sub:     QLabel = self._ui.findChild(QLabel,      "letterSubtitle")
         self._ref_img_lbl:    QLabel = self._ui.findChild(QLabel,      "refImageLabel")
-        self._camera_lbl:     QLabel = self._ui.findChild(QLabel,      "cameraLabel")
+        self._camera_lbl = RoundedCameraPreview.replace(
+            self._ui.findChild(QLabel, "cameraLabel")
+        )
         self._cam_dot:        QLabel = self._ui.findChild(QLabel,      "camStatusDot")
         self._feedback_lbl:   QLabel = self._ui.findChild(QLabel,      "feedbackLabel")
         self._pred_lbl:       QLabel = self._ui.findChild(QLabel,      "predictionLabel")
@@ -139,19 +130,24 @@ class AlphabetLessonWidget(QWidget):
 
         from PySide6.QtWidgets import QPushButton
         self._next_btn = self._ui.findChild(QPushButton, "nextBtn")
-        self._back_btn = self._ui.findChild(QPushButton, "backBtn")
+        self._back_btn = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self._back_btn.setGeometry(1138, 24, 52, 52)
+        self._score_lbl.setGeometry(950, 24, 166, 28)
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
         # ── connect buttons ───────────────────────────────────────────────
         self._next_btn.clicked.connect(self._on_skip)
         self._back_btn.clicked.connect(self._on_back)
+        self.video = SignVideoPlayer(self._ref_img_lbl)
+        QVBoxLayout(self._ref_img_lbl).addWidget(self.video)
+        self.video.hide()
 
         # ── title label ───────────────────────────────────────────────────
         self._title_lbl.setText(f"FSL ALPHABET — LESSON {lesson_number}")
 
         # ── backend: recognition engine ───────────────────────────────────
-        self._engine = SignRecognitionEngine(mode="alphabet")
-        cam_ok = self._engine.open_camera()
-        self._set_cam_dot(cam_ok)
+        self._engine = None
+        self._set_cam_dot(False)
         self._resources_closed = False
 
         # ── backend: session state ────────────────────────────────────────
@@ -161,7 +157,6 @@ class AlphabetLessonWidget(QWidget):
         self._timer = QTimer(self)
         self._timer.setInterval(33)
         self._timer.timeout.connect(self._on_tick)
-        self._timer.start()
 
         # ── feedback auto-clear timer ─────────────────────────────────────
         self._feedback_timer = QTimer(self)
@@ -171,6 +166,8 @@ class AlphabetLessonWidget(QWidget):
 
         # ── initial render ────────────────────────────────────────────────
         self._refresh_ui()
+        self._init_camera(alphabet_engine)
+
 
     # ── UI helpers ────────────────────────────────────────────────────────
 
@@ -182,6 +179,11 @@ class AlphabetLessonWidget(QWidget):
 
     def _load_ref_image(self, letter: str):
         """Load VRM reference image for the given letter into refImageLabel."""
+        self.video.set_sign("alphabet", letter.lower())
+        self.video.setVisible(self.video.media.available)
+        if self.video.media.available:
+            self._ref_img_lbl.clear()
+            return
         img_path = _VRM_DIR / f"{letter.upper()}.png"
         lbl = self._ref_img_lbl
         if img_path.exists():
@@ -252,6 +254,7 @@ class AlphabetLessonWidget(QWidget):
 
         self._letter_lbl.setText("✓")
         self._letter_sub.setText("LESSON COMPLETE")
+        self.video.hide()
         self._ref_img_lbl.clear()
         self._ref_img_lbl.setText(
             f"<span style='color:#e8f4f8; font-size:22px; font-weight:700;'>"
@@ -277,14 +280,25 @@ class AlphabetLessonWidget(QWidget):
     def _on_tick(self):
         if self._engine is None:
             return
-        result = self._engine.read_frame()
+        try:
+            result = self._engine.read_frame()
+        except Exception as error:
+            import logging
+            logging.getLogger(__name__).exception("Alphabet recognition failed")
+            self._cleanup_resources()
+            self._camera_failed(error)
+            return
         if result is None:
+            self._camera_misses += 1
+            if self._camera_misses < 3:
+                return
+            self._cleanup_resources()
+            self._camera_failed("Camera disconnected. Reopen the lesson to retry.")
             return
 
         # ── display camera feed ───────────────────────────────────────────
-        lbl = self._camera_lbl
-        pix = _bgr_to_qpixmap(result.annotated_bgr, lbl.width(), lbl.height())
-        lbl.setPixmap(pix)
+        self._camera_misses = 0
+        self._camera_lbl.set_bgr_frame(result.annotated_bgr)
 
         # ── update camera status dot ──────────────────────────────────────
         self._set_cam_dot(True)
@@ -294,7 +308,8 @@ class AlphabetLessonWidget(QWidget):
             return
 
         # ── hand not detected ─────────────────────────────────────────────
-        if not result.hand_detected:
+        if not result.hand_detected or result.prediction is None:
+            self._session._hold = 0
             self._pred_lbl.setText("No hand detected")
             self._set_hold_bar(0.0)
             return
@@ -370,6 +385,9 @@ class AlphabetLessonWidget(QWidget):
         if self._resources_closed:
             return
         self._resources_closed = True
+        self._cancel_camera_setup()
+        self.loading.cancel()
+        self.video.stop()
         self._timer.stop()
         self._feedback_timer.stop()
         self._feedback_action = None
@@ -377,6 +395,10 @@ class AlphabetLessonWidget(QWidget):
             self._engine.close()
             self._engine = None
         self._set_cam_dot(False)
+
+    def hideEvent(self, event):
+        self._cleanup_resources()
+        super().hideEvent(event)
 
     def closeEvent(self, event):
         self._cleanup_resources()
@@ -388,3 +410,9 @@ class AlphabetLessonWidget(QWidget):
         super().resizeEvent(event)
         if hasattr(self, "_ui") and self._ui:
             self._ui.resize(self.size())
+        if hasattr(self, "_session") and not self._session.is_done():
+            QTimer.singleShot(0, self._resize_reference)
+
+    def _resize_reference(self):
+        if not self._resources_closed and not self._session.is_done():
+            self._load_ref_image(self._session.current_target)

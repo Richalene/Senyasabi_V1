@@ -1,7 +1,6 @@
 """
-Word Lesson — practice signing 105 words using the words model.
-Same camera/session flow as alphabet_lesson.py but mode="words".
-Reference image panel shows a placeholder until videos are added.
+Module word lesson with lazy category recognition and service-resolved video.
+Missing trained artifacts leave browsing and navigation available.
 """
 from __future__ import annotations
 
@@ -9,20 +8,22 @@ import sys
 from pathlib import Path
 from typing import List
 
-import cv2
-import numpy as np
-
-from PySide6.QtCore import Qt, QTimer, Signal
-from PySide6.QtGui import QImage, QPixmap
+from PySide6.QtCore import Qt, QTimer, Signal, QSize
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QWidget, QLabel, QPushButton
+from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QVBoxLayout
 
 _ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 
-from backend.recognition_engine import SignRecognitionEngine
+from backend.model_service import CategoryRecognitionEngine, _registry
+from backend.content_service import get_signs_for_module
+from backend.recognition_labels import normalize_label
 from backend.session_state import CameraPracticeSession, Event, SessionState
+from screens.camera_access import LessonCameraMixin, alphabet_engine
+from screens.camera_preview import RoundedCameraPreview
+from screens.media_player import SignVideoPlayer
+from screens.navigation import BackButton, install_page_menu
 
 _UI_FILE = _ROOT / "ui" / "designer" / "word_lesson.ui"
 
@@ -35,18 +36,7 @@ _CLR_HOLDING = ("color:#0f1117; background-color:#f0c040;"
 _CLR_HIDDEN  = "color:transparent; background-color:transparent;"
 
 
-def _bgr_to_qpixmap(frame_bgr: np.ndarray, w: int, h: int) -> QPixmap:
-    rgb  = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-    qimg = QImage(rgb.data, rgb.shape[1], rgb.shape[0],
-                  rgb.strides[0], QImage.Format.Format_RGB888)
-    return QPixmap.fromImage(qimg).scaled(
-        w, h,
-        Qt.AspectRatioMode.KeepAspectRatio,
-        Qt.TransformationMode.SmoothTransformation,
-    )
-
-
-class WordLessonWidget(QWidget):
+class WordLessonWidget(LessonCameraMixin, QWidget):
     """
     Practice signing a list of words with the words model.
 
@@ -67,12 +57,15 @@ class WordLessonWidget(QWidget):
 
         self._words    = words
         self._category = category
+        self.module_code = category.casefold()
+        self._signs = {sign.label: sign for sign in get_signs_for_module(self.module_code)}
 
         # ── load UI ──────────────────────────────────────────────────────
         loader   = QUiLoader()
         self._ui = loader.load(str(_UI_FILE), self)
         if self._ui is None:
             raise RuntimeError(f"Failed to load {_UI_FILE}")
+        self._ui.setStyleSheet(self._ui.styleSheet() + (_ROOT / "resources/styles/lessons.qss").read_text())
         self.resize(self._ui.width(), self._ui.height())
         self._ui.resize(self.size())
         self.setWindowTitle(f"SenyaSabi — {category}")
@@ -84,22 +77,29 @@ class WordLessonWidget(QWidget):
         self._word_lbl     : QLabel      = self._ui.findChild(QLabel,      "wordDisplay")
         self._word_sub     : QLabel      = self._ui.findChild(QLabel,      "wordSubtitle")
         self._ref_lbl      : QLabel      = self._ui.findChild(QLabel,      "refImageLabel")
-        self._camera_lbl   : QLabel      = self._ui.findChild(QLabel,      "cameraLabel")
+        self._camera_lbl = RoundedCameraPreview.replace(
+            self._ui.findChild(QLabel, "cameraLabel")
+        )
         self._cam_dot      : QLabel      = self._ui.findChild(QLabel,      "camStatusDot")
         self._feedback_lbl : QLabel      = self._ui.findChild(QLabel,      "feedbackLabel")
         self._pred_lbl     : QLabel      = self._ui.findChild(QLabel,      "predictionLabel")
         self._hold_bg      : QLabel      = self._ui.findChild(QLabel,      "holdBarBg")
         self._hold_fill    : QLabel      = self._ui.findChild(QLabel,      "holdBarFill")
         self._skip_btn     : QPushButton = self._ui.findChild(QPushButton,  "skipBtn")
-        self._back_btn     : QPushButton = self._ui.findChild(QPushButton,  "backBtn")
+        self._back_btn = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self._back_btn.setGeometry(1138, 24, 52, 52)
+        self._score_lbl.setGeometry(950, 24, 166, 28)
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
         self._skip_btn.clicked.connect(self._on_skip)
         self._back_btn.clicked.connect(self._on_back)
+        self._ref_lbl.clear()
+        self.video = SignVideoPlayer(self._ref_lbl)
+        QVBoxLayout(self._ref_lbl).addWidget(self.video)
 
         # ── backend ──────────────────────────────────────────────────────
-        self._engine  = SignRecognitionEngine(mode="words")
-        cam_ok        = self._engine.open_camera()
-        self._set_cam_dot(cam_ok)
+        self._engine = None
+        self._set_cam_dot(False)
         self._resources_closed = False
 
         self._session = CameraPracticeSession(targets=self._words)
@@ -108,7 +108,6 @@ class WordLessonWidget(QWidget):
         self._timer = QTimer(self)
         self._timer.setInterval(33)
         self._timer.timeout.connect(self._on_tick)
-        self._timer.start()
 
         self._feedback_timer = QTimer(self)
         self._feedback_timer.setSingleShot(True)
@@ -117,6 +116,8 @@ class WordLessonWidget(QWidget):
 
         # ── initial render ───────────────────────────────────────────────
         self._refresh_ui()
+        self._init_camera(lambda: CategoryRecognitionEngine(self.module_code), lambda: _registry.status(self.module_code))
+
 
     # ── UI helpers ────────────────────────────────────────────────────────
 
@@ -155,13 +156,17 @@ class WordLessonWidget(QWidget):
             return
 
         word = session.current_target
+        if self._engine is not None:
+            self._engine.reset_sequence()
 
         self._title_lbl.setText(
             f"WORD LESSON — {self._category.upper()}"
         )
+        self._word_lbl.setWordWrap(True)
         self._word_lbl.setText(word)
         self._word_sub.setText("SIGN THIS WORD")
-        self._ref_lbl.setText("📹  Video coming soon")
+        sign = self._signs[word]
+        self.video.set_sign(self.module_code, sign.sign_code)
 
         self._progress_lbl.setText(f"Word {idx + 1} of {total}")
         self._score_lbl.setText(f"Score: {session.score} / {total}")
@@ -179,6 +184,7 @@ class WordLessonWidget(QWidget):
 
         self._word_lbl.setText("✓  Done!")
         self._word_sub.setText("LESSON COMPLETE")
+        self.video.hide()
         self._ref_lbl.setText(
             f"<span style='color:#e8f4f8; font-size:20px; font-weight:700;'>"
             f"{self._category}<br>"
@@ -202,20 +208,37 @@ class WordLessonWidget(QWidget):
     def _on_tick(self):
         if self._engine is None:
             return
-        result = self._engine.read_frame()
+        try:
+            result = self._engine.read_frame()
+        except Exception as error:
+            import logging
+            logging.getLogger(__name__).exception("Category recognition failed")
+            self._cleanup_resources()
+            self._camera_failed(error)
+            return
         if result is None:
+            self._camera_misses += 1
+            if self._camera_misses < 3:
+                return
+            self._cleanup_resources()
+            self._camera_failed(RuntimeError("Camera disconnected. Reopen the lesson to retry."))
             return
 
-        lbl = self._camera_lbl
-        pix = _bgr_to_qpixmap(result.annotated_bgr, lbl.width(), lbl.height())
-        lbl.setPixmap(pix)
+        self._camera_misses = 0
+        self._camera_lbl.set_bgr_frame(result.annotated_bgr)
         self._set_cam_dot(True)
 
         if self._session.state != SessionState.WAITING:
             return
 
+        if result.prediction is None:
+            self._pred_lbl.setText(f"Collecting gesture: {self._engine.buffered_frames}/24 frames")
+            self._session._hold = 0
+            self._set_hold_bar(0.0)
+            return
         if not result.hand_detected:
             self._pred_lbl.setText("No hand detected")
+            self._session._hold = 0
             self._set_hold_bar(0.0)
             return
 
@@ -224,7 +247,9 @@ class WordLessonWidget(QWidget):
             f"Seeing: {pred.label}   ({pred.confidence:.0%})"
         )
 
-        event = self._session.process_prediction(pred.label, pred.confidence)
+        target = self._signs[self._session.current_target]
+        label = target.label if normalize_label(pred.label) == normalize_label(target.recognition_label) else ""
+        event = self._session.process_prediction(label, pred.confidence)
 
         if event == Event.HOLDING:
             self._set_hold_bar(self._session.hold_progress)
@@ -267,6 +292,8 @@ class WordLessonWidget(QWidget):
     def _on_skip(self):
         if self._session.is_done():
             return
+        self._feedback_timer.stop()
+        self._feedback_action = None
         self._session.skip()
         self._refresh_ui()
 
@@ -277,6 +304,9 @@ class WordLessonWidget(QWidget):
         if self._resources_closed:
             return
         self._resources_closed = True
+        self._cancel_camera_setup()
+        self.loading.cancel()
+        self.video.stop()
         self._timer.stop()
         self._feedback_timer.stop()
         self._feedback_action = None
@@ -284,6 +314,10 @@ class WordLessonWidget(QWidget):
             self._engine.close()
             self._engine = None
         self._set_cam_dot(False)
+
+    def hideEvent(self, event):
+        self._cleanup_resources()
+        super().hideEvent(event)
 
     # ── Qt lifecycle ──────────────────────────────────────────────────────
 

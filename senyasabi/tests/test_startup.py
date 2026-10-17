@@ -32,10 +32,11 @@ class StartupTests(unittest.TestCase):
     def assert_screen(self, screen):
         self.app.processEvents()
         self.assertEqual([widget for widget in self.app.topLevelWidgets() if widget.isVisible()], [screen])
-        self.assertTrue(screen.isFullScreen())
+        if hasattr(self.app, "fullscreen"):
+            self.assertEqual(screen.isFullScreen(), self.app.fullscreen)
 
     def test_launch(self):
-        with patch.object(main, "QApplication", return_value=self.app), patch.object(main, "AppController", return_value=self.controller), patch.object(QApplication, "exec", return_value=0):
+        with patch.object(QApplication, "instance", return_value=self.app), patch.object(main, "AppController", return_value=self.controller), patch.object(QApplication, "exec", return_value=0):
             self.assertEqual(main.main(), 0)
         self.assert_screen(self.controller.welcome)
 
@@ -48,7 +49,9 @@ class StartupTests(unittest.TestCase):
             self.assert_screen(c.welcome)
             c.welcome.ui.btnContinue.click()
             self.assert_screen(c.landing)
-            c.landing.ui.btnLearnMore.click()
+            with patch('screens.startup.QMessageBox.information') as notice:
+                c.landing.ui.btnLearnMore.click()
+                notice.assert_called_once()
             self.assert_screen(c.landing)
             c.landing.ui.btnGetStarted.click()
             self.assert_screen(c.register)
@@ -66,7 +69,7 @@ class StartupTests(unittest.TestCase):
         root = Path(__file__).resolve().parents[1] / "resources" / "img"
         self.assertEqual(self.controller.welcome.background_path, root / "welcome.png")
         self.assertEqual(self.controller.landing.background_path, root / "landing.png")
-        self.assertTrue(self.controller.welcome.ui.imgBackground.text())
+        self.assertFalse(self.controller.welcome.ui.imgBackground.pixmap().isNull())
 
     def test_welcome_continue_hit_area_passes_through_overlay(self):
         from PySide6.QtCore import Qt

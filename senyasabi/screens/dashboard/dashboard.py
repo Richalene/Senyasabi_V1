@@ -3,12 +3,38 @@ import sys
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QCloseEvent
-from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QMenu, QWidget
+from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMessageBox, QPushButton, QWidget
 
+from screens.loading import LoadingOverlay
+from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
 from screens.startup import FittedForm
 from ui.generated.ui_form import Ui_main
 from ui.generated.dashboard_ui import Ui_Dashboard
 from backend import auth_service, dashboard_service
+
+
+class _DataStatus(QWidget):
+    """A small recovery action that does not replace the dashboard's content."""
+    def __init__(self, parent, retry, geometry):
+        super().__init__(parent)
+        self.setGeometry(*geometry)
+        row = QHBoxLayout(self)
+        row.setContentsMargins(0, 0, 0, 0)
+        self.message = QLabel("We couldn't load your statistics.", self)
+        self.message.setStyleSheet("color: #754b3b; background: transparent; font-size: 15px;")
+        self.retry = QPushButton("Retry", self)
+        self.retry.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.retry.setStyleSheet("QPushButton { background: #f7f7dc; color: #526021; border: 1px solid #a9bd43; border-radius: 12px; padding: 6px 18px; }")
+        self.retry.clicked.connect(retry)
+        row.addWidget(self.message)
+        row.addWidget(self.retry)
+        row.addStretch()
+        self.hide()
+
+
+def _session_user_id():
+    user = auth_service.get_current_user()
+    return user.get("user_id") if user else None
 
 
 class StatisticsDashboardWindow(QWidget):
@@ -18,16 +44,71 @@ class StatisticsDashboardWindow(QWidget):
         super().__init__(parent)
         self.ui = Ui_Dashboard()
         self.ui.setupUi(self)
+        self.ui.titlePanel.resize(300, 60)
+        self.ui.btnBack.setGeometry(1280, 150, 110, 42)
+        self.ui.btnBack = BackButton.replace(self.ui.btnBack)
+        self.ui.streakPanel.hide()
+        self.ui.lblCurrentStreak.setObjectName("replacedCurrentStreak")
+        self.ui.btnMenu.hide()
+        self.ui.btnMenu.setEnabled(False)
+        self.ui.btnMenu.setObjectName("replacedMenu")
+        self.header = SenyaSabiHeader(self)
+        self.header.anchor_to_canvas(self.size())
+        install_page_menu(self, header=self.header)
+        self.ui.lblCurrentStreak = self.header.streak_label
+        self.ui.btnMenu = self.header.menu_button
+        self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
+        self.ui.btnMenu.setObjectName("btnMenu")
+        self.ui.badgeCard.resize(240, 180)
+        self.ui.badgeTitle.setGeometry(9, 67, 220, 24)
+        self.ui.lblLatestBadge.setGeometry(9, 100, 220, 60)
+        self.ui.lblLatestBadge.setWordWrap(True)
+        icons = {'quizImage': '?', 'lessonsImage': 'Aa', 'modulesImage': '10',
+                 'leaderboardImage': '1', 'minigamesImage': 'Play', 'badgeImage': '★'}
+        for name, text in icons.items():
+            label = getattr(self.ui, name)
+            label.setText(text)
+            label.setToolTip('')
+        self.ui.imgStatsChart.setText('Your progress will appear here as you complete learning activities.')
+        self.ui.imgStatsChart.setWordWrap(True)
+        for name in ('legendDot1', 'legendDot2', 'legendDot3', 'legendDot4', 'legendDot5', 'legendDot6'):
+            getattr(self.ui, name).hide()
         self._menu = None
         self._leaderboard = None
         self.ui.btnBack.clicked.connect(self._open_menu)
-        self.ui.btnMenu.clicked.connect(self._open_menu)
         self.ui.btnLeaderboard.clicked.connect(self._open_leaderboard)
-        self.refresh_stats()
+        self.data_status = _DataStatus(self, self.refresh_stats, (380, 176, 800, 38))
+        self._displayed_user_id = object()
+        self._loading_user_id = None
+        self._render_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
+        self._fitted_form = FittedForm(self)
+        self.loading = LoadingOverlay(self)
 
     def refresh_stats(self):
-        user = auth_service.get_current_user()
-        data = dashboard_service.get_dashboard_stats(user["user_id"] if user else None)
+        user_id = _session_user_id()
+        if self.loading.busy:
+            if self._loading_user_id == user_id:
+                return False
+            self.loading.cancel()
+        if self._displayed_user_id != user_id:
+            self._render_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
+            self._displayed_user_id = user_id
+        self._loading_user_id = user_id
+        self.data_status.hide()
+
+        def ready(data):
+            if _session_user_id() == user_id:
+                self._render_stats(data)
+
+        def failed(error):
+            if _session_user_id() == user_id:
+                self.data_status.show()
+
+        return self.loading.run(
+            lambda: dashboard_service.get_dashboard_stats(user_id), ready, failed,
+            message="Loading your statistics…", controls=(self.data_status.retry,))
+
+    def _render_stats(self, data):
         stats = data["user_statistics"]
         self.ui.lblCurrentStreak.setText(f'{data["streaks"]["current_streak"]} Days')
         self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
@@ -43,6 +124,10 @@ class StatisticsDashboardWindow(QWidget):
     def showEvent(self, event):
         self.refresh_stats()
         super().showEvent(event)
+
+    def hideEvent(self, event):
+        self.loading.cancel()
+        super().hideEvent(event)
 
     def _open_menu(self):
         if auth_service.get_current_user() is None:
@@ -72,6 +157,7 @@ class StatisticsDashboardWindow(QWidget):
         self._open_menu()
 
     def closeEvent(self, event):
+        self.loading.cancel()
         if self._leaderboard is not None:
             self._leaderboard.close()
         if self._menu is not None:
@@ -82,6 +168,7 @@ class StatisticsDashboardWindow(QWidget):
 class DashboardWindow(QWidget):
     stats_requested = Signal()
     logout_requested = Signal()
+    camera_settings_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -97,13 +184,27 @@ class DashboardWindow(QWidget):
 
         self.ui = Ui_main()
         self.ui.setupUi(self)
-        self._fitted_form = FittedForm(self)
+        self.ui.streakCard.hide()
+        self.ui.streakValue.setObjectName("replacedStreakValue")
+        self.ui.btnHamburger.hide()
+        self.ui.btnHamburger.setEnabled(False)
+        self.ui.btnHamburger.setObjectName("replacedHamburger")
+        self.header = SenyaSabiHeader(self)
+        self.header.anchor_to_canvas(self.size())
+        install_page_menu(self, header=self.header)
+        self.ui.streakValue = self.header.streak_label
+        self.ui.btnHamburger = self.header.menu_button
+        self.ui.streakValue.setObjectName("streakValue")
+        self.ui.btnHamburger.setObjectName("btnHamburger")
         app = QApplication.instance()
         if app is not None:
             app.aboutToQuit.connect(self._shutdown_resources)
 
         for label in self.findChildren(QLabel):
             label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+            label.setTextFormat(Qt.TextFormat.PlainText)
+        self.ui.welcomeLabel.setWordWrap(True)
+        self.ui.lblLatestBadgeValue.setWordWrap(True)
 
         self.ui.btnStartLearning.clicked.connect(self._open_lesson_select)
         self.ui.btnMinigames.clicked.connect(self._show_minigames_notice)
@@ -115,23 +216,51 @@ class DashboardWindow(QWidget):
         ):
             button.clicked.connect(self.stats_requested.emit)
 
-        self.logout_menu = QMenu(self)
-        self.logout_action = self.logout_menu.addAction("Log out")
+        self.logout_menu = self.header.menu_button.menu()
+        self.camera_action = self.logout_menu.camera_action
+        self.camera_action.triggered.connect(self.camera_settings_requested.emit)
+        self.logout_action = self.logout_menu.sign_out_action
         self.logout_action.triggered.connect(self.logout_requested.emit)
-        self.ui.btnHamburger.setMenu(self.logout_menu)
-        self.refresh_home_stats()
+        self.data_status = _DataStatus(self, self.refresh_home_stats, (50, 142, 850, 36))
+        self._displayed_user_id = object()
+        self._loading_user_id = None
+        self._render_home_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
+        self._fitted_form = FittedForm(self)
+        self.loading = LoadingOverlay(self)
 
     def refresh_home_stats(self):
-        user = auth_service.get_current_user()
-        user = user or {}
+        user = auth_service.get_current_user() or {}
+        user_id = user.get("user_id")
         display_name = user.get("display_name") or user.get("username") or "Learner"
-        data = dashboard_service.get_dashboard_stats(user.get("user_id"))
+        self.ui.welcomeLabel.setText(f"Welcome Back, {display_name}!")
+        if self.loading.busy:
+            if self._loading_user_id == user_id:
+                return False
+            self.loading.cancel()
+        if self._displayed_user_id != user_id:
+            self._render_home_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
+            self._displayed_user_id = user_id
+        self._loading_user_id = user_id
+        self.data_status.hide()
+
+        def ready(data):
+            if _session_user_id() == user_id:
+                self._render_home_stats(data)
+
+        def failed(error):
+            if _session_user_id() == user_id:
+                self.data_status.show()
+
+        return self.loading.run(
+            lambda: dashboard_service.get_dashboard_stats(user_id), ready, failed,
+            message="Loading your progress…", controls=(self.data_status.retry,))
+
+    def _render_home_stats(self, data):
         stats = data["user_statistics"]
         badges = data["user_badges"]
         latest_badge = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
         rank = data["leaderboard"]["rank_position"]
 
-        self.ui.welcomeLabel.setText(f"Welcome Back, {display_name}!")
         self.ui.streakValue.setText(f'{data["streaks"]["current_streak"]} Days')
         self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
         self.ui.lblModule.setText(str(len(data["module_progress"])))
@@ -143,6 +272,10 @@ class DashboardWindow(QWidget):
     def showEvent(self, event):
         self.refresh_home_stats()
         super().showEvent(event)
+
+    def hideEvent(self, event):
+        self.loading.cancel()
+        super().hideEvent(event)
 
     def _show_minigames_notice(self):
         QMessageBox.information(
@@ -307,6 +440,7 @@ class DashboardWindow(QWidget):
         if self._closing:
             return
         self._closing = True
+        self.loading.cancel()
         for attr in ("_learn_window", "_spell_lesson", "_word_lesson"):
             window = getattr(self, attr)
             if window is not None:

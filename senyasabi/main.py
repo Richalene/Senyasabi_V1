@@ -28,12 +28,10 @@ class SenyaSabiApplication(QApplication):
                     event.accept()
                     return True
                 if event.key() == Qt.Key.Key_Escape and window.isFullScreen():
-                    # Let the focused widget/lesson consume Escape first.
-                    result = super().notify(receiver, event)
-                    if not event.isAccepted():
-                        self.fullscreen = False
-                        window.showMaximized()
-                    return result
+                    self.fullscreen = False
+                    window.showMaximized()
+                    event.accept()
+                    return True
         result = super().notify(receiver, event)
         if screen and event.type() == QEvent.Type.Show:
             if not getattr(receiver, "_presentation_ready", False):
@@ -61,8 +59,9 @@ class SenyaSabiApplication(QApplication):
 
 
 def main() -> int:
-    app = SenyaSabiApplication(sys.argv)
+    app = QApplication.instance() or SenyaSabiApplication(sys.argv)
     controller = AppController()
+    app.aboutToQuit.connect(controller.shutdown)
     controller.show_welcome()
     return app.exec()
 

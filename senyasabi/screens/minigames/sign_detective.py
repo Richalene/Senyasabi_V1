@@ -4,8 +4,8 @@ from .common import AnswerGame, SignImage, label
 
 
 class SignDetective(AnswerGame):
-    def __init__(self, parent=None, module_code=None):
-        super().__init__("detective", parent, module_code=module_code)
+    def __init__(self, parent=None, module_code=None, *, scope=None):
+        super().__init__("detective", parent, module_code=module_code, scope=scope)
         self.content.addWidget(label("Decode the alphabet signs. Gaps separate words; apostrophes need no sign.", "instructionCard"))
         self.scroll = QScrollArea()
         self.scroll.setWidgetResizable(True)

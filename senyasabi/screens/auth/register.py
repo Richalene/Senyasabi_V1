@@ -1,6 +1,7 @@
 from pathlib import Path
 
 from screens.auth.login import add_dev_button
+from screens.auth.common import AuthForm
 
 from PySide6.QtCore import Signal
 from PySide6.QtUiTools import QUiLoader
@@ -35,6 +36,7 @@ class RegisterScreen(QWidget):
             QLineEdit, "confirmPasswordInput"
         )
         self.error_label = QLabel(self._ui)
+        self.error_label.setObjectName('authError')
         self.error_label.setWordWrap(True)
         self._ui.layout().insertWidget(14, self.error_label)
         self.confirm_password_input.returnPressed.connect(self.create_account_requested)
@@ -46,8 +48,9 @@ class RegisterScreen(QWidget):
         )
 
         add_dev_button(self)
+        self._auth_form = AuthForm(self)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, "_ui") and self._ui:
-            self._ui.resize(self.size())
+        if hasattr(self, '_auth_form'):
+            self._auth_form.fit()

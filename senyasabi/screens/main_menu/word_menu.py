@@ -8,8 +8,10 @@ import json
 import sys
 from collections import defaultdict
 from pathlib import Path
+from backend.content_service import MODULE_CODES, get_words_for_module
+from screens.navigation import BackButton, install_page_menu
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton,
@@ -42,11 +44,7 @@ _ROW_HOV = (
 
 
 def _load_categories() -> dict[str, list[str]]:
-    data = json.loads(_LABELS_PATH.read_text(encoding="utf-8"))
-    cats: dict[str, list[str]] = defaultdict(list)
-    for entry in data:
-        cats[entry["category"]].append(entry["label"])
-    return dict(cats)
+    return {code.upper(): get_words_for_module(code) for code in MODULE_CODES}
 
 
 class WordMenuWidget(QWidget):
@@ -69,8 +67,11 @@ class WordMenuWidget(QWidget):
         self.resize(self._ui.width(), self._ui.height())
         self._ui.resize(self.size())
         self.setWindowTitle("SenyaSabi — Word Lessons")
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
-        self._ui.findChild(QPushButton, "backBtn").clicked.connect(self.go_back)
+        self.back_button = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self.back_button.setGeometry(40,24,52,52)
+        self.back_button.clicked.connect(self.go_back)
 
         self._categories = _load_categories()
         self._populate_scroll()

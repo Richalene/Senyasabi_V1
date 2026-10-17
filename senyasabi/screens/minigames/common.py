@@ -5,6 +5,7 @@ from PySide6.QtGui import QPixmap
 from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
                               QScrollArea, QGridLayout, QLineEdit, QApplication)
 from backend.minigame_service import ROOT, CONFIG, GameSession
+from screens.navigation import BackButton, install_page_menu
 
 
 def style(widget, name):
@@ -24,6 +25,7 @@ def label(text, name):
 
 def button(text, action, name="controlButton"):
     widget = style(QPushButton(text), name)
+    widget.setCursor(Qt.CursorShape.PointingHandCursor)
     widget.clicked.connect(action)
     return widget
 
@@ -65,25 +67,36 @@ class SignImage(QLabel):
 class GameWindow(GameCanvas):
     back_requested = Signal()
 
-    def __init__(self, kind, parent=None, module_code=None):
+    def __init__(self, kind, parent=None, module_code=None, *, scope=None):
         super().__init__(parent)
         self.kind = kind
         self.setObjectName("minigameScreen")
-        self.module_code = module_code
-        self.session = GameSession(kind, module_code=module_code)
+        self.session = GameSession(kind, module_code=module_code, scope=scope)
+        self.context = self.session.context
+        self.scope, self.module_code = self.context.scope, self.context.module_code
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(26, 18, 26, 18)
-        header = QHBoxLayout()
-        header.addWidget(button("Back", self.go_back, "secondaryButton"))
-        header.addWidget(label(CONFIG[kind][0], "gameTitle"), 1)
+        self.header = QGridLayout()
+        self.back_button = BackButton()
+        self.back_button.clicked.connect(self.go_back)
+        self.title_label = label(CONFIG[kind][0], "gameTitle")
         self.timer_label = label("", "timer")
         self.score_label = label("", "score")
-        header.addWidget(self.timer_label)
-        header.addWidget(self.score_label)
-        self.body.addLayout(header)
+        self.menu_space = QWidget()
+        self.menu_space.setFixedSize(76, 64)
+        self.body.addLayout(self.header)
+        self._wide_header = None
+        self.arrange_header()
         self.body.addWidget(label(CONFIG[kind][1], "gameSubtitle"))
-        self.content = QVBoxLayout()
-        self.body.addLayout(self.content, 1)
+        self.content_host = QWidget()
+        self.content = QVBoxLayout(self.content_host)
+        self.content.setContentsMargins(0, 0, 0, 0)
+        self.content_scroll = QScrollArea()
+        self.content_scroll.setWidgetResizable(True)
+        self.content_scroll.setMinimumHeight(70)
+        self.content_scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self.content_scroll.setWidget(self.content_host)
+        self.body.addWidget(self.content_scroll, 1)
         self.feedback = label("", "resultCard")
         self.feedback.hide()
         self.body.addWidget(self.feedback)
@@ -94,6 +107,27 @@ class GameWindow(GameCanvas):
         self.countdown.setInterval(100)
         self.countdown.timeout.connect(self.tick)
         QApplication.instance().aboutToQuit.connect(self.stop)
+        install_page_menu(self)
+
+    def arrange_header(self):
+        wide = self.width() >= 1000
+        if self._wide_header == wide:
+            return
+        self._wide_header = wide
+        for widget in (self.back_button, self.title_label, self.timer_label, self.score_label,
+                       self.menu_space):
+            self.header.removeWidget(widget)
+        self.header.addWidget(self.back_button, 0, 0, Qt.AlignmentFlag.AlignLeft)
+        self.header.addWidget(self.title_label, 0, 1)
+        self.header.addWidget(self.timer_label, 0 if wide else 1, 2 if wide else 0)
+        self.header.addWidget(self.score_label, 0 if wide else 1, 3 if wide else 1)
+        self.header.addWidget(self.menu_space, 0, 4, 1 if wide else 2, 1)
+        self.header.setColumnStretch(1, 1)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, '_wide_header'):
+            self.arrange_header()
 
     def start(self):
         self.render_round()
@@ -157,8 +191,8 @@ class GameWindow(GameCanvas):
 
 
 class AnswerGame(GameWindow):
-    def __init__(self, kind, parent=None, module_code=None):
-        super().__init__(kind, parent, module_code=module_code)
+    def __init__(self, kind, parent=None, module_code=None, *, scope=None):
+        super().__init__(kind, parent, module_code=module_code, scope=scope)
         self.answer = QLineEdit()
         self.answer.setPlaceholderText("Type the word or phrase, preserving spaces/apostrophes")
         self.submit = button("Check answer", self.check_answer, "primaryButton")

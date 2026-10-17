@@ -1,6 +1,7 @@
-from PySide6.QtCore import Signal, QTimer
-from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout
-from backend.minigame_service import CONFIG
+from PySide6.QtCore import Signal, QTimer, Qt
+from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QHBoxLayout
+from backend.minigame_service import CONFIG, MinigameContext
+from screens.navigation import BackButton, install_page_menu
 from .common import GameCanvas, button, label
 from .sign_sprint import SignSprint
 from .sign_detective import SignDetective
@@ -14,7 +15,7 @@ class MinigameSelect(GameCanvas):
         super().__init__()
         self.setObjectName("minigameSelect")
         self.setWindowTitle("SenyaSabi Minigames")
-        self.module_code = None
+        self.context = MinigameContext()
         self.game = None
         self.stack = QStackedWidget()
         layout = QVBoxLayout(self)
@@ -22,19 +23,46 @@ class MinigameSelect(GameCanvas):
         self.menu = QWidget()
         choices = QVBoxLayout(self.menu)
         choices.setContentsMargins(60, 30, 60, 30)
-        choices.addWidget(button("Back", self.back_requested.emit, "secondaryButton"))
-        choices.addWidget(label("Minigames", "gameTitle"))
+        self.back_button = BackButton()
+        self.back_button.clicked.connect(self.back_requested.emit)
+        navigation_row = QHBoxLayout()
+        navigation_row.addWidget(self.back_button, alignment=Qt.AlignmentFlag.AlignLeft)
+        navigation_row.addStretch()
+        navigation_row.addSpacing(76)
+        choices.addLayout(navigation_row)
+        choices.addWidget(label("Global Minigames", "gameTitle"))
+        choices.addWidget(label("Practice words and phrases from all word modules.", "gameSubtitle"))
+        self.game_buttons = {}
         for kind in CONFIG:
             title, difficulty, _ = CONFIG[kind]
-            choices.addWidget(button(f"{title} ? {difficulty}", lambda checked=False, selected=kind: self.open_game(selected), "primaryButton"))
+            choice = button(f"{title}\n{difficulty}",
+                            lambda checked=False, selected=kind: self.open_game(
+                                selected, scope="global", module_code=None), "primaryButton")
+            self.game_buttons[kind] = choice
+            choices.addWidget(choice)
         choices.addStretch()
         self.stack.addWidget(self.menu)
+        # Each stacked activity owns its header; the hub header belongs only to this page.
+        self.navigation_header = install_page_menu(self.menu)
 
-    def open_game(self, kind, module_code=None):
+    @property
+    def scope(self):
+        return self.context.scope
+
+    @property
+    def module_code(self):
+        return self.context.module_code
+
+    def show_global_hub(self):
         self.return_menu()
+        self.context = MinigameContext(scope="global", module_code=None)
+
+    def open_game(self, kind, module_code=None, *, scope="global"):
+        context = MinigameContext(scope=scope, module_code=module_code)
         factory = {"sprint": SignSprint, "quest": FingerSpellQuest, "detective": SignDetective}[kind]
-        self.module_code = module_code
-        self.game = factory(self.stack, module_code=module_code)
+        self.return_menu()
+        self.context = context
+        self.game = factory(self.stack, scope=context.scope, module_code=context.module_code)
         self.game.back_requested.connect(self.game_back)
         self.stack.addWidget(self.game)
         self.stack.setCurrentWidget(self.game)
@@ -54,7 +82,7 @@ class MinigameSelect(GameCanvas):
 
     def game_back(self):
         self.return_menu()
-        if self.module_code is not None:
+        if self.scope == "module":
             self.back_requested.emit()
 
     def return_menu(self):

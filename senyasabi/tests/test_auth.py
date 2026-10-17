@@ -2,7 +2,10 @@
 import os
 from pathlib import Path
 import sys
+from concurrent.futures import ThreadPoolExecutor
+from threading import Event
 import unittest
+from unittest.mock import patch
 
 os.environ.setdefault('QT_QPA_PLATFORM', 'offscreen')
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -10,6 +13,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 from argon2 import PasswordHasher
 from backend import auth_service as auth
 from PySide6.QtWidgets import QApplication, QPushButton
+from PySide6.QtTest import QTest
 from screens.app_controller import AppController
 
 
@@ -55,6 +59,49 @@ class AuthTests(unittest.TestCase):
                 auth.authenticate_user(identifier, password)
             self.assertIsNone(auth.get_current_user())
 
+    def test_verification_only_keeps_session_until_explicit_commit(self):
+        auth.register_user('mary', 'mary@example.com', 'secret')
+        auth.register_user('other', 'other@example.com', 'other-secret')
+        auth.authenticate_user('mary', 'secret')
+
+        verified = auth.authenticate_user('other', 'other-secret', establish_session=False)
+        self.assertEqual(verified['username'], 'other')
+        self.assertNotIn('password_hash', verified)
+        self.assertEqual(auth.get_current_user()['username'], 'mary')
+        with self.assertRaises(auth.AuthError):
+            auth.authenticate_user('other', 'wrong', establish_session=False)
+        self.assertEqual(auth.get_current_user()['username'], 'mary')
+
+        committed = auth.establish_session(verified)
+        verified['username'] = 'changed'
+        committed['username'] = 'also-changed'
+        self.assertEqual(auth.get_current_user()['username'], 'other')
+
+    def test_finishing_verification_after_logout_does_not_restore_session(self):
+        auth.register_user('mary', 'mary@example.com', 'secret')
+        auth.authenticate_user('mary', 'secret')
+        verifying, finish = Event(), Event()
+        original_verify = auth._hasher.verify
+
+        def delayed_verify(*args, **kwargs):
+            verifying.set()
+            if not finish.wait(timeout=5):
+                raise AssertionError('Timed out waiting for logout')
+            return original_verify(*args, **kwargs)
+
+        with patch.object(auth, '_hasher') as hasher:
+            hasher.verify.side_effect = delayed_verify
+            with ThreadPoolExecutor(max_workers=1) as executor:
+                result = executor.submit(auth.authenticate_user, 'mary', 'secret',
+                                         establish_session=False)
+                try:
+                    self.assertTrue(verifying.wait(timeout=5))
+                    auth.logout_user()
+                finally:
+                    finish.set()
+                self.assertEqual(result.result(timeout=5)['username'], 'mary')
+        self.assertIsNone(auth.get_current_user())
+
 
 class NavigationTests(unittest.TestCase):
     @classmethod
@@ -68,17 +115,33 @@ class NavigationTests(unittest.TestCase):
         self.controller.show_login()
 
     def tearDown(self):
+        self.controller.shutdown()
         for widget in (self.controller.welcome, self.controller.landing,
                        self.controller.login, self.controller.register,
                        self.controller.dashboard, self.controller.main_menu):
             widget.close()
             widget.deleteLater()
         self.app.processEvents()
+        self.wait_for_jobs()
         auth.logout_user()
+
+    def wait_for_jobs(self):
+        from screens.loading import _JOBS
+        for _ in range(300):
+            self.app.processEvents()
+            if not _JOBS:
+                return
+            QTest.qWait(10)
+        self.fail('Timed out waiting for background work')
 
     def click(self, screen, name):
         screen.findChild(QPushButton, name).click()
-        self.app.processEvents()
+        for _ in range(300):
+            self.app.processEvents()
+            if not self.controller.login.loading.busy and not self.controller.register.loading.busy:
+                return
+            QTest.qWait(10)
+        self.fail('Timed out waiting for authentication')
 
     def assert_screen(self, expected):
         self.assertTrue(expected.isVisible())

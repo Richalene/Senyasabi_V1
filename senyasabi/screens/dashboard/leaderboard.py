@@ -1,8 +1,11 @@
 """Controller for the existing leaderboard.ui form."""
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLayout, QWidget
+from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLayout, QPushButton, QWidget
 
-from backend import leaderboard_service
+from backend import auth_service, leaderboard_service
+from screens.loading import LoadingOverlay
+from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
+from screens.startup import FittedForm
 from ui.generated.leaderboard_ui import Ui_Leaderboard
 
 
@@ -35,7 +38,7 @@ QLabel[class="leaderboardRank"] {
     min-width: 46px; max-width: 46px; padding: 0px;
 }
 QLabel[currentUser="true"] {
-    color: #FFFDF3; font-weight: 700; font-style: normal;
+    color: #38451F; font-weight: 700; font-style: normal;
 }
 QScrollBar:vertical {
     background: transparent; width: 10px; margin: 4px 1px 4px 1px;
@@ -57,16 +60,62 @@ class LeaderboardWindow(QWidget):
         super().__init__(parent)
         self.ui = Ui_Leaderboard()
         self.ui.setupUi(self)
+        self.ui.btnBack.setGeometry(1110, 125, 100, 36)
+        self.ui.btnBack = BackButton.replace(self.ui.btnBack)
+        self.ui.lblCurrentStreak.hide()
+        self.ui.lblCurrentStreak.setObjectName("replacedCurrentStreak")
+        self.ui.btnMenu.hide()
+        self.ui.btnMenu.setEnabled(False)
+        self.ui.btnMenu.setObjectName("replacedMenu")
+        self.header = SenyaSabiHeader(self)
+        self.header.anchor_to_canvas(self.size())
+        install_page_menu(self, header=self.header)
+        self.ui.lblCurrentStreak = self.header.streak_label
+        self.ui.btnMenu = self.header.menu_button
+        self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
+        self.ui.btnMenu.setObjectName("btnMenu")
         self.ui.btnBack.clicked.connect(self.back_requested.emit)
-        self.ui.btnMenu.clicked.connect(self.menu_requested.emit)
         self.ui.scrollLeaderboard.setObjectName("leaderboardScrollArea")
         self.ui.scrollLeaderboard.setStyleSheet(LEADERBOARD_QSS)
         self.ui.leaderboardLayout.setSpacing(8)
         self.ui.leaderboardLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.ui.leaderboardLayout.setSizeConstraint(QLayout.SizeConstraint.SetMinAndMaxSize)
         self.ui.scrollLeaderboard.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+        self._displayed_user_id = object()
+        self._loading_user_id = None
+        self._render_entries([])
+        self._fitted_form = FittedForm(self)
+        self.loading = LoadingOverlay(self)
 
     def refresh(self):
+        user = auth_service.get_current_user() or {}
+        user_id = user.get("user_id")
+        if self.loading.busy:
+            if self._loading_user_id == user_id:
+                return False
+            self.loading.cancel()
+        if self._displayed_user_id != user_id:
+            self._render_entries([])
+            self._displayed_user_id = user_id
+        self._loading_user_id = user_id
+
+        def current_session():
+            current = auth_service.get_current_user() or {}
+            return current.get("user_id") == user_id
+
+        def ready(entries):
+            if current_session():
+                self._render_entries(entries)
+
+        def failed(error):
+            if current_session():
+                self._render_entries([], failed=True)
+
+        return self.loading.run(
+            lambda: leaderboard_service.get_leaderboard(user_id=user_id), ready, failed,
+            message="Loading the leaderboard…")
+
+    def _render_entries(self, entries, *, failed=False):
         layout = self.ui.leaderboardLayout
         while layout.count():
             widget = layout.takeAt(0).widget()
@@ -74,7 +123,15 @@ class LeaderboardWindow(QWidget):
                 widget.hide()
                 widget.deleteLater()
         self.ui.lblCurrentStreak.setText("0 Days")
-        entries = leaderboard_service.get_leaderboard()
+        if failed:
+            layout.addWidget(QLabel("We couldn't load the leaderboard. Please try again.",
+                                   self.ui.leaderboardContainer))
+            retry = QPushButton("Retry", self.ui.leaderboardContainer)
+            retry.setCursor(Qt.CursorShape.PointingHandCursor)
+            retry.setStyleSheet("QPushButton { background: #f7f7dc; color: #526021; border: 1px solid #a9bd43; border-radius: 12px; padding: 8px 18px; }")
+            retry.clicked.connect(self.refresh)
+            layout.addWidget(retry)
+            return
         for entry in entries:
             rank = entry["rank_position"]
             current = entry["is_current_user"]
@@ -102,6 +159,9 @@ class LeaderboardWindow(QWidget):
                                   if name == "rank" else f"leaderboard{name.title()}")
                 label.setProperty("currentUser", current)
                 label.setTextFormat(Qt.TextFormat.PlainText)
+                if name == 'username':
+                    label.setWordWrap(True)
+                    label.setToolTip(entry['username'])
                 label.setAlignment(alignment | Qt.AlignmentFlag.AlignVCenter)
                 if width:
                     label.setFixedWidth(width)
@@ -115,3 +175,11 @@ class LeaderboardWindow(QWidget):
     def showEvent(self, event):
         self.refresh()
         super().showEvent(event)
+
+    def hideEvent(self, event):
+        self.loading.cancel()
+        super().hideEvent(event)
+
+    def closeEvent(self, event):
+        self.loading.cancel()
+        super().closeEvent(event)

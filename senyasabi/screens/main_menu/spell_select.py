@@ -10,12 +10,13 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 
-from PySide6.QtCore import Qt, Signal
+from PySide6.QtCore import Qt, Signal, QSize
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (
     QWidget, QLabel, QPushButton,
     QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QSizePolicy
 )
+from screens.navigation import BackButton, install_page_menu
 
 _ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
@@ -86,8 +87,11 @@ class SpellCategoryWidget(QWidget):
         self.resize(self._ui.width(), self._ui.height())
         self._ui.resize(self.size())
         self.setWindowTitle("SenyaSabi — Spell: Choose Category")
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
-        self._ui.findChild(QPushButton, "backBtn").clicked.connect(self.go_back)
+        self.back_button = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self.back_button.setGeometry(40,24,52,52)
+        self.back_button.clicked.connect(self.go_back)
 
         self._categories = _load_categories()
         self._populate_scroll()
@@ -182,8 +186,11 @@ class SpellWordWidget(QWidget):
         self.resize(self._ui.width(), self._ui.height())
         self._ui.resize(self.size())
         self.setWindowTitle(f"SenyaSabi — Spell: {category}")
+        install_page_menu(self, canvas_size=QSize(1306, 753))
 
-        self._ui.findChild(QPushButton, "backBtn").clicked.connect(self.go_back)
+        self.back_button = BackButton.replace(self._ui.findChild(QPushButton, "backBtn"))
+        self.back_button.setGeometry(40,24,52,52)
+        self.back_button.clicked.connect(self.go_back)
         self._ui.findChild(QLabel, "categoryLabel").setText(category)
         self._ui.findChild(QLabel, "titleLabel").setText("Choose a Word")
 

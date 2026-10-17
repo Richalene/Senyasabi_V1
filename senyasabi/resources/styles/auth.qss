@@ -1,0 +1,7 @@
+QWidget#LoginPage, QWidget#RegisterPage { background: #fff9e9; border-radius: 24px; color: #704833; font-family: "Segoe UI"; font-size: 15px; }
+QLabel#titleLabel { color: #526536; font-size: 26px; font-weight: 700; }
+QLabel#subtitleLabel { color: #80644d; font-size: 15px; }
+QLabel#authError { color: #8c453b; font-size: 14px; }
+QScrollArea, QScrollArea > QWidget { background: transparent; border: none; }
+QLineEdit:focus { border: 2px solid #80984d; }
+QPushButton#devLoginButton { background: #fff6d2; font-size: 11px; padding: 3px 8px; min-height: 18px; }
