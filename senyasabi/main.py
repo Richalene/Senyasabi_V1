@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QApplication, QWidget
 from screens.startup import FittedForm
 
 from screens.app_controller import AppController
+from backend import initialize_database
 
 
 class SenyaSabiApplication(QApplication):
@@ -59,7 +60,10 @@ class SenyaSabiApplication(QApplication):
 
 
 def main() -> int:
-    app = QApplication.instance() or SenyaSabiApplication(sys.argv)
+    # Initialize SQLite database on startup
+    initialize_database()
+
+    app = QApplication(sys.argv)
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
     controller.show_welcome()

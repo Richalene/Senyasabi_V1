@@ -80,7 +80,7 @@ class CameraPracticeSession:
 
     @property
     def hold_progress(self) -> float:
-        """0.0–1.0, handy for driving a progress bar while holding a sign."""
+        """0.0-1.0, handy for driving a progress bar while holding a sign."""
         return min(self._hold / self.hold_frames, 1.0) if self.hold_frames else 0.0
 
     def is_done(self) -> bool:

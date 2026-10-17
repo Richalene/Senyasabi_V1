@@ -131,7 +131,10 @@ class AppController:
         def registered(user):
             self.login.email_input.setText(user["username"])
             self.show_login()
-            self.login.error_label.setText("Account created. Sign in to continue.")
+            self.login.error_label.setText(
+                "Account created. Check your email to confirm it, then sign in."
+                if user.get("needs_confirmation")
+                else "Account created. Sign in to continue.")
             for field in (screen.username_input, screen.email_input, screen.name_input):
                 field.clear()
 

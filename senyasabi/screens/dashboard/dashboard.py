@@ -113,7 +113,7 @@ class StatisticsDashboardWindow(QWidget):
         self.ui.lblCurrentStreak.setText(f'{data["streaks"]["current_streak"]} Days')
         self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
         self.ui.lblTotalQuizScore.setText(str(stats["total_quiz_score"]))
-        self.ui.lblModuleCount.setText(str(len(data["module_progress"])))
+        self.ui.lblModuleCount.setText(str(data["module_count"]))
         badges = data["user_badges"]
         latest = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
         self.ui.lblLatestBadge.setText(str(latest["badge_id"]) if latest else "No badges yet")
