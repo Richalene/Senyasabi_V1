@@ -1,12 +1,13 @@
 # This Python file uses the following encoding: utf-8
 import sys
-from pathlib import Path
 
-from PySide6.QtGui import QCloseEvent, QPixmap
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QCloseEvent
+from PySide6.QtWidgets import QApplication, QLabel, QMessageBox, QMenu, QWidget
 
+from screens.startup import FittedForm
 from ui.generated.ui_form import Ui_main
-from ui.dashboard_ui import Ui_Dashboard
+from ui.generated.dashboard_ui import Ui_Dashboard
 from backend import auth_service, dashboard_service
 
 
@@ -79,6 +80,9 @@ class StatisticsDashboardWindow(QWidget):
 
 
 class DashboardWindow(QWidget):
+    stats_requested = Signal()
+    logout_requested = Signal()
+
     def __init__(self, parent=None):
         super().__init__(parent)
         self._alphabet_menu = None
@@ -93,25 +97,57 @@ class DashboardWindow(QWidget):
 
         self.ui = Ui_main()
         self.ui.setupUi(self)
+        self._fitted_form = FittedForm(self)
         app = QApplication.instance()
         if app is not None:
             app.aboutToQuit.connect(self._shutdown_resources)
 
-        image_path = Path(__file__).resolve().parents[2] / "resources" / "img" / "menu.png"
-        self.ui.bg.setPixmap(QPixmap(str(image_path)))
-        self.ui.bg.setScaledContents(True)
+        for label in self.findChildren(QLabel):
+            label.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
 
-        # ── Alphabet button ───────────────────────────────────────────────
-        self.ui.alphabetBtn.clicked.connect(self._open_alphabet_menu)
+        self.ui.btnStartLearning.clicked.connect(self._open_lesson_select)
+        self.ui.btnMinigames.clicked.connect(self._show_minigames_notice)
+        for button in (
+            self.ui.btnLessonsCompleted,
+            self.ui.btnModule,
+            self.ui.btnLatestBadge,
+            self.ui.btnLeaderboardRank,
+        ):
+            button.clicked.connect(self.stats_requested.emit)
 
-        # ── Word Lessons button (add this in Qt Designer, name: wordLessonsBtn)
-        self.ui.wordLessonsBtn.clicked.connect(self._open_word_menu)
+        self.logout_menu = QMenu(self)
+        self.logout_action = self.logout_menu.addAction("Log out")
+        self.logout_action.triggered.connect(self.logout_requested.emit)
+        self.ui.btnHamburger.setMenu(self.logout_menu)
+        self.refresh_home_stats()
 
-        # other buttons — wire when those modules are ready
-        # self.ui.signSprint.clicked.connect(...)
-        # self.ui.EIP.clicked.connect(...)
-        # self.ui.signDetective.clicked.connect(...)
-        # self.ui.fingerspellQuest.clicked.connect(...)
+    def refresh_home_stats(self):
+        user = auth_service.get_current_user()
+        user = user or {}
+        display_name = user.get("display_name") or user.get("username") or "Learner"
+        data = dashboard_service.get_dashboard_stats(user.get("user_id"))
+        stats = data["user_statistics"]
+        badges = data["user_badges"]
+        latest_badge = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
+        rank = data["leaderboard"]["rank_position"]
+
+        self.ui.welcomeLabel.setText(f"Welcome Back, {display_name}!")
+        self.ui.streakValue.setText(f'{data["streaks"]["current_streak"]} Days')
+        self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
+        self.ui.lblModule.setText(str(len(data["module_progress"])))
+        self.ui.lblLatestBadgeValue.setText(
+            str(latest_badge["badge_id"]) if latest_badge else "No badges yet"
+        )
+        self.ui.lblLeaderboardRank.setText(f"#{rank}" if rank else "Unranked")
+
+    def showEvent(self, event):
+        self.refresh_home_stats()
+        super().showEvent(event)
+
+    def _show_minigames_notice(self):
+        QMessageBox.information(
+            self, "Minigames", "Minigames are not available yet."
+        )
 
     # ══════════════════════════════════════════════════════════════════════
     # ALPHABET navigation
@@ -119,7 +155,7 @@ class DashboardWindow(QWidget):
 
     def _open_alphabet_menu(self):
         if self._alphabet_menu is None:
-            from menus.alphabet_menu import AlphabetMenuWidget
+            from screens.main_menu.alphabet_menu import AlphabetMenuWidget
             self._alphabet_menu = AlphabetMenuWidget()
             self._alphabet_menu.go_back.connect(self._on_back_to_main)
             self._alphabet_menu.open_learn.connect(self._open_lesson_select)
@@ -129,17 +165,18 @@ class DashboardWindow(QWidget):
 
     def _open_lesson_select(self):
         if self._lesson_select is None:
-            from menus.lesson_select import LessonSelectWidget
+            from screens.main_menu.lesson_select import LessonSelectWidget
             self._lesson_select = LessonSelectWidget()
             self._lesson_select.go_back.connect(self._back_to_alphabet_menu)
             self._lesson_select.lesson_chosen.connect(self._open_learn_lesson)
         if self._alphabet_menu is not None:
             self._alphabet_menu.hide()
+        self.hide()
         self._lesson_select.show()
 
     def _open_learn_lesson(self, lesson_number: int):
-        from menus.alphabet_menu import LESSON_LETTERS
-        from lessons.alphabet_lesson import AlphabetLessonWidget
+        from screens.main_menu.alphabet_menu import LESSON_LETTERS
+        from screens.lessons.alphabet.alphabet_lesson import AlphabetLessonWidget
         if self._lesson_select is not None:
             self._lesson_select.hide()
         if self._learn_window is not None:
@@ -153,7 +190,7 @@ class DashboardWindow(QWidget):
 
     def _open_spell_category(self):
         if self._spell_cat is None:
-            from menus.spell_select import SpellCategoryWidget
+            from screens.main_menu.spell_select import SpellCategoryWidget
             self._spell_cat = SpellCategoryWidget()
             self._spell_cat.go_back.connect(self._back_to_alphabet_menu)
             self._spell_cat.category_chosen.connect(self._open_spell_words)
@@ -162,7 +199,7 @@ class DashboardWindow(QWidget):
         self._spell_cat.show()
 
     def _open_spell_words(self, category: str, words: list):
-        from menus.spell_select import SpellWordWidget
+        from screens.main_menu.spell_select import SpellWordWidget
         if self._spell_words is not None:
             self._spell_words.hide()
             self._spell_words.deleteLater()
@@ -177,7 +214,7 @@ class DashboardWindow(QWidget):
         self._spell_words.show()
 
     def _open_spell_lesson(self, word: str, category: str):
-        from lessons.spell_lesson import SpellLessonWidget
+        from screens.lessons.spelling.spell_lesson import SpellLessonWidget
         if self._spell_words is not None:
             self._spell_words.hide()
         if self._spell_lesson is not None:
@@ -192,7 +229,7 @@ class DashboardWindow(QWidget):
 
     def _open_word_menu(self):
         if self._word_menu is None:
-            from menus.word_menu import WordMenuWidget
+            from screens.main_menu.word_menu import WordMenuWidget
             self._word_menu = WordMenuWidget()
             self._word_menu.go_back.connect(self._on_back_to_main)
             self._word_menu.category_chosen.connect(self._open_word_lesson)
@@ -200,7 +237,7 @@ class DashboardWindow(QWidget):
         self._word_menu.show()
 
     def _open_word_lesson(self, category: str, words: list):
-        from lessons.word_lesson import WordLessonWidget
+        from screens.lessons.words.word_lesson import WordLessonWidget
         if self._word_menu is not None:
             self._word_menu.hide()
         if self._word_lesson is not None:
@@ -227,6 +264,8 @@ class DashboardWindow(QWidget):
             self._spell_cat.hide()
         if self._alphabet_menu is not None:
             self._alphabet_menu.show()
+        else:
+            self.show()
 
     def _back_to_lesson_select(self):
         if self._closing:

@@ -1,0 +1,249 @@
+{
+  "quizzes": [
+    {
+        "quiz_code":  "GREETING_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "GREETING",
+        "title":  "Greeting Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "GOOD MORNING",
+                      "GOOD AFTERNOON",
+                      "GOOD EVENING",
+                      "HELLO",
+                      "HOW ARE YOU",
+                      "IM FINE",
+                      "NICE TO MEET YOU",
+                      "THANK YOU",
+                      "YOURE WELCOME",
+                      "SEE YOU TOMORROW"
+                  ]
+    },
+    {
+        "quiz_code":  "SURVIVAL_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "SURVIVAL",
+        "title":  "Survival Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "UNDERSTAND",
+                      "DON'T UNDERSTAND",
+                      "KNOW",
+                      "DON'T KNOW",
+                      "NO",
+                      "YES",
+                      "WRONG",
+                      "CORRECT",
+                      "SLOW",
+                      "FAST"
+                  ]
+    },
+    {
+        "quiz_code":  "NUMBER_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "NUMBER",
+        "title":  "Number Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "ONE",
+                      "TWO",
+                      "THREE",
+                      "FOUR",
+                      "FIVE",
+                      "SIX",
+                      "SEVEN",
+                      "EIGHT",
+                      "NINE",
+                      "TEN"
+                  ]
+    },
+    {
+        "quiz_code":  "CALENDAR_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "CALENDAR",
+        "title":  "Calendar Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "JANUARY",
+                      "FEBRUARY",
+                      "MARCH",
+                      "APRIL",
+                      "MAY",
+                      "JUNE",
+                      "JULY",
+                      "AUGUST",
+                      "SEPTEMBER",
+                      "OCTOBER",
+                      "NOVEMBER",
+                      "DECEMBER"
+                  ]
+    },
+    {
+        "quiz_code":  "DAYS_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "DAYS",
+        "title":  "Days Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "MONDAY",
+                      "TUESDAY",
+                      "WEDNESDAY",
+                      "THURSDAY",
+                      "FRIDAY",
+                      "SATURDAY",
+                      "SUNDAY",
+                      "TODAY",
+                      "TOMORROW",
+                      "YESTERDAY"
+                  ]
+    },
+    {
+        "quiz_code":  "FAMILY_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "FAMILY",
+        "title":  "Family Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "FATHER",
+                      "MOTHER",
+                      "SON",
+                      "DAUGHTER",
+                      "GRANDFATHER",
+                      "GRANDMOTHER",
+                      "UNCLE",
+                      "AUNTIE",
+                      "COUSIN",
+                      "PARENTS"
+                  ]
+    },
+    {
+        "quiz_code":  "RELATIONSHIPS_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "RELATIONSHIPS",
+        "title":  "Relationships Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "BOY",
+                      "GIRL",
+                      "MAN",
+                      "WOMAN",
+                      "DEAF",
+                      "HARD OF HEARING",
+                      "WHEELCHAIR PERSON",
+                      "BLIND",
+                      "DEAF BLIND",
+                      "MARRIED"
+                  ]
+    },
+    {
+        "quiz_code":  "COLOR_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "COLOR",
+        "title":  "Color Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "BLUE",
+                      "GREEN",
+                      "RED",
+                      "BROWN",
+                      "BLACK",
+                      "WHITE",
+                      "YELLOW",
+                      "ORANGE",
+                      "GRAY",
+                      "PINK",
+                      "VIOLET",
+                      "LIGHT",
+                      "DARK"
+                  ]
+    },
+    {
+        "quiz_code":  "FOOD_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "FOOD",
+        "title":  "Food Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "BREAD",
+                      "EGG",
+                      "FISH",
+                      "MEAT",
+                      "CHICKEN",
+                      "SPAGHETTI",
+                      "RICE",
+                      "LONGANISA",
+                      "SHRIMP",
+                      "CRAB"
+                  ]
+    },
+    {
+        "quiz_code":  "DRINK_QUIZ",
+        "module_code":  "WORD",
+        "category_code":  "DRINK",
+        "title":  "Drink Quiz",
+        "passing_score":  70,
+        "shuffle":  true,
+        "question_types":  [
+                               "camera",
+                               "identification"
+                           ],
+        "signs":  [
+                      "HOT",
+                      "COLD",
+                      "JUICE",
+                      "MILK",
+                      "COFFEE",
+                      "TEA",
+                      "BEER",
+                      "WINE",
+                      "SUGAR",
+                      "NO SUGAR"
+                  ]
+    }
+  ]
+}

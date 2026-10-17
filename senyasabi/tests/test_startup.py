@@ -32,6 +32,7 @@ class StartupTests(unittest.TestCase):
     def assert_screen(self, screen):
         self.app.processEvents()
         self.assertEqual([widget for widget in self.app.topLevelWidgets() if widget.isVisible()], [screen])
+        self.assertTrue(screen.isFullScreen())
 
     def test_launch(self):
         with patch.object(main, "QApplication", return_value=self.app), patch.object(main, "AppController", return_value=self.controller), patch.object(QApplication, "exec", return_value=0):
@@ -66,3 +67,11 @@ class StartupTests(unittest.TestCase):
         self.assertEqual(self.controller.welcome.background_path, root / "welcome.png")
         self.assertEqual(self.controller.landing.background_path, root / "landing.png")
         self.assertTrue(self.controller.welcome.ui.imgBackground.text())
+
+    def test_welcome_continue_hit_area_passes_through_overlay(self):
+        from PySide6.QtCore import Qt
+
+        overlay = self.controller.welcome.ui.nextButton
+        self.assertTrue(
+            overlay.testAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        )

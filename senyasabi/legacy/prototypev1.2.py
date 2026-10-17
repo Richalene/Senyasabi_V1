@@ -11,7 +11,7 @@ import numpy as np
 import tensorflow as tf
 from PIL import Image, ImageTk
 
-BASE_DIR      = Path(__file__).resolve().parent
+BASE_DIR      = Path(__file__).resolve().parents[1]
 OUTPUT_DIR    = BASE_DIR / 'output'
 IMG_DIR       = BASE_DIR / 'img'
 MODEL_PATH    = OUTPUT_DIR / 'best_landmark_model.keras'

@@ -8,14 +8,14 @@ Wires together:
 
 Usage (from main.py or any parent widget):
 
-    from lessons.alphabet_lesson import AlphabetLessonWidget
+    from screens.lessons.alphabet.alphabet_lesson import AlphabetLessonWidget
 
     LESSON_LETTERS = {
         1: list("ABCDEF"),
         2: list("GHIJKL"),
         3: list("MNOPQR"),
         4: list("STUVWX"),
-        5: list("YZ"),
+        5: list("YZ"), (make it 4)
     }
 
     def open_alphabet_lesson(self, lesson_number: int = 1):
@@ -44,8 +44,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QApplication, QWidget, QLabel
 
 # ── path gymnastics so imports work whether run directly or as a package ──
-_HERE = Path(__file__).resolve().parent
-_ROOT = _HERE.parent  # senyasabi/
+_ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 

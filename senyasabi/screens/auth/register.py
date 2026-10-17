@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from screens.auth.login import add_dev_button
+
 from PySide6.QtCore import Signal
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
@@ -9,6 +11,7 @@ _UI_FILE = Path(__file__).resolve().parents[2] / "ui" / "designer" / "register.u
 
 
 class RegisterScreen(QWidget):
+    dev_login_requested = Signal()
     sign_in_requested = Signal()
     create_account_requested = Signal()
 
@@ -41,6 +44,8 @@ class RegisterScreen(QWidget):
         self._ui.findChild(QPushButton, "signInButton").clicked.connect(
             self.sign_in_requested
         )
+
+        add_dev_button(self)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)

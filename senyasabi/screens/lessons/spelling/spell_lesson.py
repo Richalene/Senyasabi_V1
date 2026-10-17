@@ -18,8 +18,7 @@ from PySide6.QtGui import QImage, QPixmap, QColor
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QFrame
 
-_HERE = Path(__file__).resolve().parent
-_ROOT = _HERE.parent
+_ROOT = Path(__file__).resolve().parents[3]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 

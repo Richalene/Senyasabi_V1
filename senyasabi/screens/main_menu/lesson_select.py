@@ -1,94 +1,91 @@
-"""
-Lesson Select — shows 5 lesson cards for the Learn mode.
-User picks one, caller opens AlphabetLessonWidget with that lesson's letters.
-"""
-from __future__ import annotations
-
-import sys
+"""Module-scoped lesson and minigame choices, using existing content definitions."""
 from pathlib import Path
-
 from PySide6.QtCore import Signal, Qt
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import QWidget, QPushButton, QLabel
+from PySide6.QtWidgets import QWidget, QPushButton, QLabel, QVBoxLayout
+from screens.main_menu.alphabet_menu import LESSON_LETTERS
+from screens.main_menu.word_menu import _load_categories
 
-_HERE = Path(__file__).resolve().parent
-_ROOT = _HERE.parent
-if str(_ROOT) not in sys.path:
-    sys.path.insert(0, str(_ROOT))
-
-from menus.alphabet_menu import LESSON_LETTERS
-
-_UI_FILE = _ROOT / "ui" / "designer" / "lesson_select.ui"
-
-_CARD_STYLE = """
-    color: #ffffff;
-    font-size: {size}px;
-    font-weight: 700;
-    background: transparent;
-    letter-spacing: {spacing}px;
-"""
+ROOT = Path(__file__).resolve().parents[2]
 
 
 class LessonSelectWidget(QWidget):
-    """
-    Signals
-    -------
-    go_back          — back to alphabet menu
-    lesson_chosen(n) — lesson number 1-5 selected
-    """
-    go_back       = Signal()
+    go_back = Signal()
+    menu_requested = Signal()
     lesson_chosen = Signal(int)
+    game_chosen = Signal(str)
 
-    def __init__(self, parent: QWidget | None = None):
+    def __init__(self, parent=None, module_code="alphabet"):
         super().__init__(parent)
-
-        loader = QUiLoader()
-        self._ui = loader.load(str(_UI_FILE), self)
+        self._ui = QUiLoader().load(str(ROOT / "ui/designer/lesson_select.ui"),self)
         if self._ui is None:
-            raise RuntimeError(f"Failed to load {_UI_FILE}")
+            raise RuntimeError("Unable to load lesson_select.ui")
+        self._fitted_form = self
+        self.resize(1306,735)
+        self.setWindowTitle("SenyaSabi ? Lessons + Minigames")
+        self._ui.findChild(QPushButton,"backBtn").clicked.connect(self.go_back)
+        self._ui.findChild(QPushButton,"menuBtn").clicked.connect(self.menu_requested)
+        self.lesson_layout = self._ui.findChild(QVBoxLayout,"lessonLayout")
+        games = self._ui.findChild(QVBoxLayout,"gameLayout")
+        games.addWidget(self.heading("MiniGames"))
+        self.game_buttons = {}
+        for stars,kind,title in ((1,"sprint","Sign Sprint"),(2,"quest","FingerSpell Quest"),(3,"detective","Sign Detective")):
+            button = QPushButton("\u2b50"*stars+"  "+title)
+            button.setProperty("class","minigameButton")
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda checked=False,kind=kind:self.game_chosen.emit(kind))
+            self.game_buttons[kind] = button
+            games.addWidget(button)
+        games.addStretch()
+        self.set_module(module_code)
+        self.fit()
 
-        self.resize(self._ui.width(), self._ui.height())
-        self._ui.resize(self.size())
-        self.setWindowTitle("SenyaSabi — Choose a Lesson")
+    def heading(self,text):
+        heading = QLabel(text)
+        heading.setProperty("class","sectionTitle")
+        return heading
 
-        self._ui.findChild(QPushButton, "backBtn").clicked.connect(self.go_back)
+    def set_module(self,code):
+        self.module_code = code.lower()
+        if self.module_code=="alphabet":
+            self.module_title = "FSL Alphabet"
+            lessons = [(number,f"Lesson {number} ? {chars[0]}?{chars[-1]}") for number,chars in LESSON_LETTERS.items()]
+        else:
+            categories = _load_categories()
+            key = self.module_code.upper()
+            if key not in categories:
+                raise ValueError(f"Unknown module: {code}")
+            self.module_title = key.title()
+            # The existing word lesson exposes one complete category lesson.
+            lessons = [(1,f"Lesson 1 ? {len(categories[key])} Signs")]
+        self._ui.findChild(QLabel,"moduleTitle").setText(self.module_title)
+        while self.lesson_layout.count():
+            item = self.lesson_layout.takeAt(0)
+            widget = item.widget()
+            if widget:
+                widget.hide()
+                widget.deleteLater()
+        self.lesson_layout.addWidget(self.heading("My Lessons"))
+        self.lesson_buttons = []
+        for number,title in lessons:
+            button = QPushButton(title)
+            button.setProperty("class","lessonButton")
+            button.setCursor(Qt.CursorShape.PointingHandCursor)
+            button.clicked.connect(lambda checked=False,number=number:self.lesson_chosen.emit(number))
+            self.lesson_layout.addWidget(button)
+            self.lesson_buttons.append(button)
+        self.lesson_layout.addStretch()
 
-        # wire each lesson button + overlay labels
-        for n in range(1, 6):
-            btn: QPushButton = self._ui.findChild(QPushButton, f"lesson{n}Btn")
-            letters = LESSON_LETTERS[n]
-            letter_range = f"{letters[0]}–{letters[-1]}"
+    def set_streak(self,text):
+        self._ui.findChild(QLabel,"streakLabel").setText(text)
 
-            # number label
-            num_lbl = QLabel(f"Lesson {n}", btn)
-            num_lbl.setStyleSheet(_CARD_STYLE.format(size=13, spacing=2) +
-                                  "color: #7ecfed;")
-            num_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-            num_lbl.setGeometry(0, 60, btn.width(), 24)
+    def fit(self):
+        if not hasattr(self,"_ui"):
+            return
+        scale = min(self.width()/1306,self.height()/735)
+        width,height = round(1306*scale),round(735*scale)
+        self._ui.setGeometry((self.width()-width)//2,(self.height()-height)//2,width,height)
 
-            # letter range label
-            range_lbl = QLabel(letter_range, btn)
-            range_lbl.setStyleSheet(_CARD_STYLE.format(size=42, spacing=0))
-            range_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-            range_lbl.setGeometry(0, 96, btn.width(), 60)
-
-            # letter count label
-            count_lbl = QLabel(f"{len(letters)} letters", btn)
-            count_lbl.setStyleSheet(_CARD_STYLE.format(size=12, spacing=1) +
-                                    "color: #5a6080;")
-            count_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-            count_lbl.setGeometry(0, 168, btn.width(), 24)
-
-            # all letters preview
-            preview_lbl = QLabel("  ".join(letters), btn)
-            preview_lbl.setStyleSheet(_CARD_STYLE.format(size=13, spacing=3) +
-                                      "color: #3a4060;")
-            preview_lbl.setAlignment(Qt.AlignmentFlag.AlignHCenter)
-            preview_lbl.setGeometry(0, 200, btn.width(), 30)
-
-            btn.clicked.connect(lambda checked=False, num=n: self.lesson_chosen.emit(num))
-
-    def resizeEvent(self, event):
+    def resizeEvent(self,event):
         super().resizeEvent(event)
-        if hasattr(self, "_ui") and self._ui:
-            self._ui.resize(self.size())
+        self.fit()

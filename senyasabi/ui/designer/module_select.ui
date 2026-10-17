@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>ModuleSelect</class>
+ <widget class="QWidget" name="ModuleSelect">
+  <property name="geometry"><rect><x>0</x><y>0</y><width>1920</width><height>1080</height></rect></property>
+  <property name="windowTitle"><string>SenyaSabi ? Module Map</string></property>
+  <property name="styleSheet"><string notr="true">
+QWidget#ModuleSelect { background: #C2D076; }
+QPushButton#backBtn { background: #FFF7D6; color: #69452F; border: 1px solid #879D25; border-radius: 16px; font-size: 22px; font-weight: 700; }
+QLabel#titleLabel { background: transparent; color: #69452F; font-size: 40px; font-weight: 800; }
+QLabel#levelLabel { background: #FFF7D6; color: #69452F; border-radius: 18px; font-size: 24px; font-weight: 700; }
+QPushButton[class="moduleFirefly"] { background: transparent; border: none; padding: 0px; }
+QFrame[class="modulePopup"] { background: #FFF7D6; border: 2px solid #879D25; border-radius: 16px; }
+QLabel[class="modulePopupTitle"] { color: #69452F; font-size: 16px; font-weight: 700; background: transparent; border: none; }
+QLabel[class="modulePopupDescription"] { color: #7A6045; font-size: 13px; background: transparent; border: none; }
+  </string></property>
+  <widget class="QPushButton" name="backBtn">
+   <property name="geometry"><rect><x>60</x><y>40</y><width>170</width><height>60</height></rect></property>
+   <property name="text"><string>? Back</string></property>
+   <property name="cursor"><cursorShape>PointingHandCursor</cursorShape></property>
+  </widget>
+  <widget class="QLabel" name="titleLabel">
+   <property name="geometry"><rect><x>300</x><y>35</y><width>1150</width><height>70</height></rect></property>
+   <property name="text"><string>Start Learning</string></property>
+   <property name="alignment"><set>Qt::AlignCenter</set></property>
+  </widget>
+  <widget class="QLabel" name="levelLabel">
+   <property name="geometry"><rect><x>1620</x><y>40</y><width>230</width><height>60</height></rect></property>
+   <property name="text"><string>Level 1/4</string></property>
+   <property name="alignment"><set>Qt::AlignCenter</set></property>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

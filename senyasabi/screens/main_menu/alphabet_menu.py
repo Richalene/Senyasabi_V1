@@ -13,8 +13,7 @@ from PySide6.QtCore import Signal
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QWidget, QPushButton
 
-_HERE = Path(__file__).resolve().parent
-_ROOT = _HERE.parent
+_ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 

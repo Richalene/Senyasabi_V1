@@ -16,8 +16,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QFrame, QScrollArea
 )
 
-_HERE        = Path(__file__).resolve().parent
-_ROOT        = _HERE.parent
+_ROOT        = Path(__file__).resolve().parents[2]
 _LABELS_PATH = _ROOT / "resources" / "data" / "105labels.json"
 _UI_FILE     = _ROOT / "ui" / "designer" / "word_menu.ui"
 

@@ -1,0 +1,28 @@
+QWidget#minigameScreen, QWidget#minigameSelect { background: #C2D076; color: #704833; }
+QWidget { font-family: "Segoe UI"; font-size: 16px; color: #704833; }
+QScrollArea, QScrollArea > QWidget > QWidget, QStackedWidget { background: transparent; border: none; }
+QLabel { background: transparent; }
+QLabel[class="gameTitle"] { font-size: 30px; font-weight: 800; }
+QLabel[class="gameSubtitle"] { font-size: 18px; }
+QFrame[class="gameCard"], QLabel[class="instructionCard"], QLabel[class="resultCard"] {
+ background: #FFF9E9; border: 1px solid #D5C79C; border-radius: 24px; padding: 18px;
+}
+QLabel[class="resultCard"] { font-size: 23px; font-weight: 700; }
+QLabel[class="timer"], QLabel[class="score"] { background: #FFF9E9; border-radius: 20px; padding: 12px; font-size: 22px; font-weight: 700; }
+QLabel[class="timer"][warning="true"] { color: #AC6558; }
+QLabel[class="answerTile"], QLabel[class="progressLetter"] { background: #F5C66D; border: 2px solid transparent; border-radius: 12px; padding: 5px; font-size: 23px; font-weight: 700; }
+QLabel[class="answerTileActive"], QLabel[class="progressLetterCurrent"] { background: #EFB14E; border: 2px solid #936939; border-radius: 12px; padding: 5px; font-size: 23px; font-weight: 700; }
+QLabel[class="answerTileCorrect"], QLabel[class="progressLetterCorrect"] { background: #80984D; color: #FFFDF3; border-radius: 12px; padding: 5px; font-size: 23px; font-weight: 700; }
+QLabel[class="answerTileWrong"] { background: #BA7566; color: #FFFDF3; border-radius: 12px; padding: 5px; font-size: 23px; font-weight: 700; }
+QLabel[class="signImageCard"] { background: #FFF9E9; border: 1px solid #D5C79C; border-radius: 22px; padding: 8px; }
+QLabel[class="cameraFrame"] { background: #EEEAD5; border: 3px solid #65703D; border-radius: 24px; padding: 8px; }
+QPushButton { min-height: 30px; padding: 8px 18px; border-radius: 18px; font-weight: 700; }
+QPushButton[class="primaryButton"], QPushButton[class="controlButton"] { background: #526536; color: #FFF9E9; border: 1px solid #526536; }
+QPushButton[class="primaryButton"]:hover, QPushButton[class="controlButton"]:hover { background: #687D43; }
+QPushButton[class="primaryButton"]:pressed, QPushButton[class="controlButton"]:pressed { background: #3E5029; }
+QPushButton[class="secondaryButton"] { background: #FFF9E9; border: 1px solid #A39B68; }
+QPushButton:disabled { background: #B9BE98; color: #78795D; }
+QLineEdit { background: #FFF9E9; color: #704833; border: 2px solid #CAB16F; border-radius: 18px; padding: 12px; font-size: 21px; }
+QScrollBar:vertical { background: transparent; width: 10px; }
+QScrollBar::handle:vertical { background: #8FA552; border-radius: 5px; min-height: 28px; }
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }

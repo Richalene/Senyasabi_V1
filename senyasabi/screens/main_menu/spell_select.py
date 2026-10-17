@@ -17,8 +17,7 @@ from PySide6.QtWidgets import (
     QVBoxLayout, QHBoxLayout, QFrame, QScrollArea, QSizePolicy
 )
 
-_HERE = Path(__file__).resolve().parent
-_ROOT = _HERE.parent
+_ROOT = Path(__file__).resolve().parents[2]
 if str(_ROOT) not in sys.path:
     sys.path.insert(0, str(_ROOT))
 

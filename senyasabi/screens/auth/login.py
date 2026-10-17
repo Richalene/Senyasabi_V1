@@ -5,10 +5,28 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
 
 
+# TEMPORARY: disable before distributing a production build.
+DEV_MODE = True
+
+
+def add_dev_button(screen):
+    if not DEV_MODE:
+        return
+    button = QPushButton("DEV \u2192", screen)
+    button.setObjectName("devLoginButton")
+    button.setToolTip("Development session only")
+    button.setGeometry(12, 12, 66, 28)
+    button.setStyleSheet("font-size: 11px; padding: 3px 8px;")
+    button.clicked.connect(lambda: screen.dev_login_requested.emit() if DEV_MODE else None)
+    button.raise_()
+    screen.dev_button = button
+
+
 _UI_FILE = Path(__file__).resolve().parents[2] / "ui" / "designer" / "login.ui"
 
 
 class LoginScreen(QWidget):
+    dev_login_requested = Signal()
     continue_requested = Signal()
     register_requested = Signal()
 
@@ -34,6 +52,8 @@ class LoginScreen(QWidget):
         self._ui.findChild(QPushButton, "registerButton").clicked.connect(
             self.register_requested
         )
+
+        add_dev_button(self)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
