@@ -55,6 +55,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: trans
 class LeaderboardWindow(QWidget):
     back_requested = Signal()
     menu_requested = Signal()
+    _scores_changed = Signal()  # emitted from any thread; delivered on the GUI thread
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -84,6 +85,11 @@ class LeaderboardWindow(QWidget):
         self._displayed_user_id = object()
         self._loading_user_id = None
         self._render_entries([])
+        self.board_code = "all_time"
+        self._scores_changed.connect(self._on_scores_changed)
+        self._notify = self._scores_changed.emit
+        leaderboard_service.add_scores_listener(self._notify)
+        self.destroyed.connect(lambda *_, n=self._notify: leaderboard_service.remove_scores_listener(n))
         self._fitted_form = FittedForm(self)
         self.loading = LoadingOverlay(self)
 
@@ -98,6 +104,7 @@ class LeaderboardWindow(QWidget):
             self._render_entries([])
             self._displayed_user_id = user_id
         self._loading_user_id = user_id
+        board_code = self.board_code
 
         def current_session():
             current = auth_service.get_current_user() or {}
@@ -112,7 +119,7 @@ class LeaderboardWindow(QWidget):
                 self._render_entries([], failed=True)
 
         return self.loading.run(
-            lambda: leaderboard_service.get_leaderboard(user_id=user_id), ready, failed,
+            lambda: leaderboard_service.get_leaderboard(user_id=user_id, board_code=board_code), ready, failed,
             message="Loading the leaderboard…")
 
     def _render_entries(self, entries, *, failed=False):
@@ -149,7 +156,7 @@ class LeaderboardWindow(QWidget):
             values = [
                 ("rank", medal or str(rank), 0, Qt.AlignmentFlag.AlignCenter),
                 ("username", "YOU" if current else entry["username"], 0, Qt.AlignmentFlag.AlignLeft),
-                ("streak", f'Streak {entry["current_streak"]}', 160, Qt.AlignmentFlag.AlignCenter),
+                ("points", f'{entry["total_score"]} pts', 130, Qt.AlignmentFlag.AlignCenter),
                 ("badges", f'Badges: {entry["badges_unlocked"]}/20', 180, Qt.AlignmentFlag.AlignRight),
             ]
             for name, text, width, alignment in values:
@@ -171,6 +178,17 @@ class LeaderboardWindow(QWidget):
                 self.ui.lblCurrentStreak.setText(f'{entry["current_streak"]} Days')
         if not entries:
             layout.addWidget(QLabel("No leaderboard entries yet.", self.ui.leaderboardContainer))
+
+    def set_board(self, board_code):
+        """Switch period (all_time, weekly, monthly) and reload."""
+        if board_code not in leaderboard_service.BOARD_CODES:
+            raise ValueError(board_code)
+        self.board_code = board_code
+        return self.refresh()
+
+    def _on_scores_changed(self):
+        if self.isVisible():
+            self.refresh()
 
     def showEvent(self, event):
         self.refresh()

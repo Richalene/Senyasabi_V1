@@ -4,7 +4,7 @@ from pathlib import Path
 
 from PySide6.QtCore import QEvent, QRectF, QSize, Qt
 from PySide6.QtGui import QBitmap, QPainter, QPixmap, QRegion
-from PySide6.QtWidgets import QLabel, QPushButton, QWidget
+from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QWidget
 
 
 ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
@@ -206,3 +206,20 @@ class SenyaSabiHeader(QWidget):
         if event.type() in (QEvent.Type.Resize, QEvent.Type.Show):
             self.fit()
         return super().eventFilter(watched, event)
+
+
+def install_page_menu(widget, *, header=None, canvas_size=None):
+    """Attach the shared header/menu with Camera Settings and Sign Out actions."""
+    if header is None:
+        return None
+    if header.menu_button is not None:
+        if header.menu_button.objectName() == "menuBtn" and hasattr(widget, "menu_requested"):
+            header.menu_button.clicked.connect(widget.menu_requested.emit)
+        else:
+            menu = QMenu(header.menu_button)
+            menu.camera_action = menu.addAction("Camera Settings")
+            menu.sign_out_action = menu.addAction("Sign Out")
+            header.menu_button.setMenu(menu)
+    return header
+
+

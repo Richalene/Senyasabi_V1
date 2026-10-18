@@ -58,3 +58,28 @@ def get_words_for_module(module_code):
 def get_sign(module_code, sign_code):
     return next((sign for sign in get_signs_for_module(module_code)
                  if sign.sign_code == sign_code), None)
+
+
+def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
+    """Resolve (module_code, lesson_order) to lesson_id from local SQLite cache."""
+    try:
+        from .database.session import SessionLocal
+        from .database.models import Lesson, Module
+        with SessionLocal() as db:
+            mod = db.query(Module).filter(Module.module_code == module_code.casefold()).first()
+            if not mod:
+                return None
+            lesson = db.query(Lesson).filter(
+                Lesson.parent_module == mod.module_id,
+                Lesson.lesson_order == lesson_order
+            ).first()
+            return lesson.lesson_id if lesson else None
+    except Exception:
+        # Static fallback if database is not available
+        offset = {"alphabet": 72, "greeting": 76, "survival": 79, "number": 82,
+                  "calendar": 85, "days": 88, "family": 91, "relationships": 94,
+                  "color": 97, "food": 100, "drink": 103}.get(module_code.casefold())
+        if offset is not None:
+            return offset + (lesson_order - 1)
+        return None
+

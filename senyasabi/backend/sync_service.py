@@ -244,19 +244,48 @@ class SyncService:
                     results["failed"] += 1
                     results["errors"].append(f"{item.entity_type}:{item.entity_id} - {e}")
 
+        if results["succeeded"]:
+            from . import leaderboard_service  # lazy: refresh open leaderboards
+            leaderboard_service.notify_scores_changed()
         return results
 
     def _send_to_server(self, item: SyncQueue) -> bool:
         """
-        Placeholder for the HTTP call to the FastAPI backend.
-
-        It must not open its own session: the caller's session is already
-        in a transaction, and a second writer on SQLite can hit
-        "database is locked". Replace the body with the real request.
+        Send sync item to the FastAPI backend.
+        Must not open its own SQLite session to avoid lock contention.
         """
-        payload = json.loads(item.payload)  # validates the stored JSON
-        logger.debug("Would send %s %s: %s", item.entity_type, item.entity_id, payload)
-        return True
+        payload = json.loads(item.payload)
+        from .config import FASTAPI_HOST, FASTAPI_PORT
+        from . import auth_service
+        
+        token = auth_service.get_access_token()
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+            
+        url = f"http://{FASTAPI_HOST}:{FASTAPI_PORT}/api/v1/sync/upload"
+        req_body = {
+            "user_id": str(item.user_id),
+            "sync_items": [
+                {
+                    "entity_type": item.entity_type,
+                    "client_id": str(item.entity_id),
+                    "data": payload,
+                    "operation": item.operation or "upsert",
+                }
+            ],
+        }
+        try:
+            import requests
+            resp = requests.post(url, json=req_body, headers=headers, timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                return data.get("succeeded", 0) > 0
+            logger.warning("Sync upload returned status %s: %s", resp.status_code, resp.text)
+            return False
+        except Exception as exc:
+            logger.warning("Sync upload network error: %s", exc)
+            return False
 
     def get_sync_status(self, user_id: uuid.UUID) -> dict:
         """Get sync queue statistics for a user."""

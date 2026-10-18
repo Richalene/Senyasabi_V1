@@ -123,7 +123,7 @@ def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:
     completion_percentage = data.get("completion_percentage", 0)
     status = data.get("status", "in_progress")
     time_spent_seconds = data.get("time_spent_seconds", 0)
-    client_updated_at = data.get("updated_at")
+    client_updated_at = data.get("client_updated_at") or data.get("updated_at")
     
     # First, get the quiz passing score for this lesson's module
     quiz_passing_score = get_quiz_passing_score(db, lesson_id)
@@ -134,41 +134,38 @@ def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:
     if status == "Completed":
         passed = True  # Always pass if marked completed
     
-    # Smart merge: only update if client has newer data
-    result = db.execute(text("""
-        INSERT INTO lesson_progress (
+    completed_at_sql = "now()" if status == "Completed" else "NULL"
+    result = db.execute(text(f"""
+        INSERT INTO public.lesson_progress AS lp (
             user_id, lesson_id, completion_percentage, status,
-            time_spent_seconds, client_updated_at, updated_at
+            completed_at, time_spent_seconds, client_updated_at, updated_at
         )
         VALUES (
             :user_id, :lesson_id, :completion_percentage, :status,
-            :time_spent_seconds, :client_updated_at, now()
+            {completed_at_sql}, :time_spent_seconds, :client_updated_at, now()
         )
         ON CONFLICT (user_id, lesson_id) DO UPDATE SET
-            completion_percentage = GREATEST(your_table_name.completion_percentage, EXCLUDED.completion_percentage),
-            time_spent_seconds = GREATEST(your_table_name.time_spent_seconds, EXCLUDED.time_spent_seconds),
+            completion_percentage = GREATEST(lp.completion_percentage, EXCLUDED.completion_percentage),
+            time_spent_seconds = GREATEST(lp.time_spent_seconds, EXCLUDED.time_spent_seconds),
             status = CASE
-                WHEN EXCLUDED.status = 'Completed' THEN 'Completed'  -- Never regress Completed
-                WHEN :status = 'Completed' THEN 'Completed'
+                WHEN EXCLUDED.status = 'Completed' OR lp.status = 'Completed' THEN 'Completed'
                 ELSE EXCLUDED.status
             END,
-            passed = CASE
-                WHEN EXCLUDED.status = 'Completed' THEN true  -- Never regress passed if completed
-                WHEN :status = 'Completed' THEN true
-                ELSE GREATEST(EXCLUDED.passed, :passed)
+            completed_at = CASE
+                WHEN lp.completed_at IS NOT NULL THEN lp.completed_at
+                WHEN EXCLUDED.status = 'Completed' THEN now()
+                ELSE NULL
             END,
-            client_updated_at = GREATEST(EXCLUDED.client_updated_at, :client_updated_at),
+            client_updated_at = GREATEST(lp.client_updated_at, EXCLUDED.client_updated_at),
             updated_at = now()
-        WHERE EXCLUDED.client_updated_at < :client_updated_at
-        RETURNING *
+        RETURNING user_id
     """), {
         "user_id": user_id,
         "lesson_id": lesson_id,
         "completion_percentage": completion_percentage,
         "status": status,
         "time_spent_seconds": time_spent_seconds,
-        "client_updated_at": client_updated_at,
-        "passed": passed
+        "client_updated_at": client_updated_at or "now()",
     })
     
     return result.rowcount > 0

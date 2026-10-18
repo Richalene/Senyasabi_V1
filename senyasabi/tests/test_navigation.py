@@ -21,7 +21,7 @@ class NavigationRoutingTests(unittest.TestCase):
         c = AppController()
         user = {"user_id": "nav-user"}
         try:
-            with patch.object(auth_service, "get_current_user", return_value=user), patch.object(auth_service, "authenticate_user", return_value=user):
+            with patch.object(auth_service, "get_current_user", return_value=user), patch.object(auth_service, "authenticate_user", return_value=user), patch("backend.leaderboard_service._repository.get_leaderboard", return_value=[]):
                 c.show_login()
                 c.login_user()
                 for _ in range(300):

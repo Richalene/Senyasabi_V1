@@ -46,7 +46,7 @@ class LeaderboardTests(unittest.TestCase):
             self.wait_for_data()
             self.assertEqual(self.window.ui.leaderboardLayout.count(), 1)
             self.assertEqual(self.window.ui.lblCurrentStreak.text(), "0 Days")
-        with patch.object(auth_service, "get_current_user", return_value=None):
+        with patch.object(auth_service, "get_current_user", return_value=None), patch.object(leaderboard_service._repository, "get_leaderboard", return_value=[]):
             self.assertFalse(any(row["is_current_user"] for row in leaderboard_service.get_leaderboard()))
 
     def test_many_users_order_highlight_scroll_and_refresh(self):

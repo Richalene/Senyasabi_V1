@@ -6,6 +6,7 @@ This provides endpoints for:
 - Leaderboard (all_time, weekly, monthly)
 """
 from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi.encoders import jsonable_encoder
 from typing import Optional, List
 from sqlalchemy import text
 
@@ -14,6 +15,40 @@ from ..security import get_current_user_id
 
 router = APIRouter(prefix="/api/v1/progress", tags=["progress"])
 
+
+_SNAPSHOT_QUERIES = {
+    "lesson_progress": "SELECT user_id, lesson_id, completion_percentage, status, last_accessed, completed_at, "
+                       "time_spent_seconds, client_updated_at, updated_at FROM public.lesson_progress WHERE user_id = :u",
+    "quiz_attempts": "SELECT attempt_id, user_id, quiz_id, started_at, completed_at, score, max_score, percentage, "
+                     "passed, duration_seconds, camera_accuracy, mc_accuracy FROM public.quiz_attempts WHERE user_id = :u",
+    "minigame_attempts": "SELECT game_attempt_id, user_id, minigame_id, started_at, completed_at, score, "
+                         "duration_seconds, accuracy FROM public.minigame_attempts WHERE user_id = :u",
+    "user_badges": "SELECT user_id, badge_id, unlocked_at FROM public.user_badges WHERE user_id = :u",
+    "streaks": "SELECT user_id, current_streak, longest_streak, last_activity_date, updated_at "
+               "FROM public.streaks WHERE user_id = :u",
+    # live view = same scoring rule the leaderboard uses, never a stale cache
+    "user_statistics": "SELECT user_id, lessons_completed, quizzes_completed, minigames_completed, total_quiz_score, "
+                       "total_minigame_score, average_accuracy, total_time_spent_seconds, now() AS updated_at "
+                       "FROM public.v_user_statistics_live WHERE user_id = :u",
+}
+
+
+@router.get("/me/snapshot")
+async def get_my_progress_snapshot(user_id: str = Depends(get_current_user_id)):
+    """The caller's own progress rows, for mirroring into the local SQLite cache.
+
+    The user comes from the verified token only, so one learner can never read another's data.
+    """
+    try:
+        with get_postgres_session() as db:
+            data = {name: [dict(r) for r in db.execute(text(sql), {"u": user_id}).mappings()]
+                    for name, sql in _SNAPSHOT_QUERIES.items()}
+        return jsonable_encoder(data)
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching progress: {str(e)}"
+        )
 
 @router.get("/{user_id}")
 async def get_user_progress(user_id: str):

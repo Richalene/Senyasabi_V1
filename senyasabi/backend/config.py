@@ -15,7 +15,11 @@ there. Server/admin scripts should check for what they need.
 import os
 from pathlib import Path
 
-from dotenv import load_dotenv
+try:
+    from dotenv import load_dotenv
+except ImportError:
+    def load_dotenv(*_args, **_kwargs):
+        return False
 
 BACKEND_DIR = Path(__file__).resolve().parent      # .../senyasabi/backend
 BASE_DIR = BACKEND_DIR.parent                      # .../senyasabi

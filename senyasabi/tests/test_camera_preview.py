@@ -116,6 +116,21 @@ class CameraPreviewTests(unittest.TestCase):
         frame[:] = 0
         self.assertEqual(preview.pixmap().toImage().pixelColor(160, 120), self.COLOR)
 
+    def test_display_is_mirrored_but_frame_and_source_are_not(self):
+        preview = RoundedCameraPreview()
+        preview.resize(400, 300)
+        frame = self.frame(640, 480)
+        frame[:, :320] = 0, 0, 255  # left half red (BGR)
+        frame[:, 320:] = 255, 0, 0  # right half blue
+        original = frame.copy()
+        preview.set_bgr_frame(frame)
+        preview.show()
+        image = self.render(preview)
+        self.assertGreater(image.pixelColor(100, 150).blue(), 200)
+        self.assertGreater(image.pixelColor(300, 150).red(), 200)
+        np.testing.assert_array_equal(frame, original)
+        self.assertGreater(preview.pixmap().toImage().pixelColor(10, 10).red(), 200)
+
     def test_status_text_and_clear_remove_previous_live_image(self):
         preview = RoundedCameraPreview()
         preview.resize(400, 300)

@@ -111,12 +111,17 @@ class StatisticsDashboardWindow(QWidget):
     def _render_stats(self, data):
         stats = data["user_statistics"]
         self.ui.lblCurrentStreak.setText(f'{data["streaks"]["current_streak"]} Days')
-        self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
+        lp_completed = sum(1 for lp in data.get("lesson_progress", []) if lp.get("status") == "Completed")
+        completed_count = max(stats.get("lessons_completed", 0), lp_completed)
+        self.ui.lblLessonsCompleted.setText(str(completed_count))
         self.ui.lblTotalQuizScore.setText(str(stats["total_quiz_score"]))
-        self.ui.lblModuleCount.setText(str(data["module_count"]))
+        module_count = len(data["module_progress"]) if data.get("module_progress") else data.get("module_count", 0)
+        self.ui.lblModuleCount.setText(str(module_count))
+        self.ui.modulesImage.setText(str(module_count))
         badges = data["user_badges"]
         latest = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
-        self.ui.lblLatestBadge.setText(str(latest["badge_id"]) if latest else "No badges yet")
+        named = data.get("latest_badge") or {}
+        self.ui.lblLatestBadge.setText(named.get("badge_name") or (f'Badge {latest["badge_id"]}' if latest else "No badges yet"))
         self.ui.lblMinigamesCompleted.setText(str(stats["minigames_completed"]))
         rank = data["leaderboard"]["rank_position"]
         self.ui.lblLeaderboardRank.setText(f"#{rank}" if rank else "Unranked")
@@ -260,10 +265,13 @@ class DashboardWindow(QWidget):
         badges = data["user_badges"]
         latest_badge = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
         rank = data["leaderboard"]["rank_position"]
+        module_count = len(data["module_progress"]) if data.get("module_progress") else data.get("module_count", 0)
 
         self.ui.streakValue.setText(f'{data["streaks"]["current_streak"]} Days')
-        self.ui.lblLessonsCompleted.setText(str(stats["lessons_completed"]))
-        self.ui.lblModule.setText(str(len(data["module_progress"])))
+        lp_completed = sum(1 for lp in data.get("lesson_progress", []) if lp.get("status") == "Completed")
+        completed_count = max(stats.get("lessons_completed", 0), lp_completed)
+        self.ui.lblLessonsCompleted.setText(str(completed_count))
+        self.ui.lblModule.setText(str(module_count))
         self.ui.lblLatestBadgeValue.setText(
             str(latest_badge["badge_id"]) if latest_badge else "No badges yet"
         )

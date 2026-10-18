@@ -203,6 +203,27 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
         self._skip_btn.clicked.disconnect()
         self._skip_btn.clicked.connect(self._on_back)
 
+        try:
+            from backend import auth_service, sync_service, content_service
+            user = auth_service.get_current_user()
+            if user and user.get("user_id"):
+                import uuid
+                uid = uuid.UUID(str(user["user_id"]))
+                lesson_id = content_service.get_lesson_id(self.module_code, 1)
+                if lesson_id:
+                    sync_service.queue_lesson_progress(
+                        user_id=uid,
+                        lesson_id=lesson_id,
+                        completion_percentage=float(pct),
+                        status="Completed",
+                        time_spent_seconds=60,
+                    )
+                    sync_service.process_pending_syncs(uid)
+        except Exception as exc:
+            import logging
+            logging.getLogger(__name__).warning("Failed to record word lesson progress: %s", exc)
+
+
     # ── camera tick ───────────────────────────────────────────────────────
 
     def _on_tick(self):

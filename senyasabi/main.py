@@ -63,7 +63,7 @@ def main() -> int:
     # Initialize SQLite database on startup
     initialize_database()
 
-    app = QApplication(sys.argv)
+    app = QApplication.instance() or SenyaSabiApplication(sys.argv)
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
     controller.show_welcome()

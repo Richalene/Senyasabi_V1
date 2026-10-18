@@ -101,6 +101,11 @@ class RoundedCameraPreview(QLabel):
                 painter.setClipPath(frame_path)
                 # Round the image too: letterboxing must not expose square video corners.
                 painter.setClipPath(image_path, Qt.ClipOperation.IntersectClip)
+                # Selfie-style mirror applies to display only; frames stay unflipped.
+                cx = image_rect.center().x()
+                painter.translate(cx, 0)
+                painter.scale(-1, 1)
+                painter.translate(-cx, 0)
                 painter.drawPixmap(image_rect, self._source, QRectF(self._source.rect()))
                 painter.restore()
         else:

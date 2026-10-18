@@ -29,9 +29,7 @@ class AppController:
         self.main_menu.ui.btnMinigames.clicked.connect(self.show_minigames)
         self.dashboard._menu = self.main_menu
         self.dashboard.ui.btnBack.clicked.disconnect()
-        self.dashboard.ui.btnMenu.clicked.disconnect()
         self.dashboard.ui.btnBack.clicked.connect(self.show_main_menu)
-        self.dashboard.ui.btnMenu.clicked.connect(self.show_main_menu)
         self.main_menu.stats_requested.connect(self.show_dashboard)
         self.main_menu.logout_requested.connect(self.logout)
         self.main_menu.camera_settings_requested.connect(self.show_camera_settings)
@@ -254,6 +252,10 @@ class AppController:
             screen.deleteLater()
 
     def _lesson_back(self):
+        try:
+            self.main_menu.refresh_home_stats()
+        except Exception:
+            pass
         self.show_module_choices()
 
     def open_module_quiz(self):
