@@ -39,6 +39,12 @@ SQLITE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
 MEDIA_CACHE_DIR = Path(os.getenv("SENYASABI_MEDIA_CACHE") or BASE_DIR / "cache" / "media")
 
+# ---- Client Mode -------------------------------------------------------
+# CLIENT_MODE determines how the app connects to Supabase:
+# - "fastapi" (default): Client uses FastAPI proxy, FastAPI uses service_role
+# - "distributed": Client connects directly to Supabase with anon key
+CLIENT_MODE = os.getenv("SENYESABI_MODE", "fastapi").lower()
+
 # ---- Postgres (Supabase) -----------------------------------------------
 def _normalize_pg_url(url: str | None) -> str | None:
     """Force the psycopg3 driver. Supabase hands out plain postgresql:// URLs,
@@ -51,13 +57,16 @@ def _normalize_pg_url(url: str | None) -> str | None:
     return url
 
 
-POSTGRESQL_URL = _normalize_pg_url(os.getenv("DATABASE_URL"))
+# In distributed mode, we don't need direct PostgreSQL access
+POSTGRESQL_URL = _normalize_pg_url(os.getenv("DATABASE_URL")) if CLIENT_MODE == "fastapi" else None
 
-# ---- Supabase API (server side only) -----------------------------------
+# ---- Supabase API -------------------------------------------------------
+# SUPABASE_URL and SUPABASE_ANON_KEY are PUBLIC and safe to bundle with client
+# SUPABASE_SERVICE_ROLE_KEY and SUPABASE_JWT_SECRET are SECRET and only for FastAPI
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")  # only for legacy HS256 projects
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") if CLIENT_MODE == "fastapi" else None
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET") if CLIENT_MODE == "fastapi" else None
 
 # ---- Supabase Storage, S3 protocol (admin scripts only) ----------------
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")

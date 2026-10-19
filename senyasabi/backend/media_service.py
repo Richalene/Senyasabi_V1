@@ -11,7 +11,7 @@ from typing import Protocol
 import requests
 
 from .api_client import get_api_client
-from .config import MEDIA_CACHE_DIR
+from .config import MEDIA_CACHE_DIR, CLIENT_MODE
 from .content_service import ROOT, get_sign
 from .database import repository as repo
 from .database.models import MediaCache, MediaFile, utcnow
@@ -133,7 +133,12 @@ def _cached_path(media_id: int) -> Path | None:
 
 
 def _download(media_id: int) -> Path | None:
-    info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
+    # Get media info from appropriate source
+    if CLIENT_MODE == "distributed":
+        info = _get_media_info_supabase(media_id)
+    else:
+        info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
+    
     if not info or not info.get("url"):
         return None                              # offline / not found
 
@@ -176,4 +181,53 @@ def _download(media_id: int) -> Path | None:
         db.flush()
         db.merge(MediaCache(media_id=media_id, local_path=name, content_version_id=cv_id,
                             checksum=digest, cached_at=utcnow()))
-    return dest
+    return dest
+
+
+def _get_media_info_supabase(media_id: int) -> dict | None:
+    """Get media info and signed URL from Supabase Storage (distributed mode)."""
+    try:
+        from .supabase_client import get_supabase_client
+        from .database.session import session_scope
+        from .database import repository as repo
+        from .config import SUPABASE_URL
+        
+        supabase = get_supabase_client()
+        
+        # Get media metadata from database
+        with session_scope() as db:
+            media = db.get(MediaFile, media_id)
+            if media is None or media.is_deleted:
+                return None
+            
+            object_key = media.object_key
+            file_name = media.file_name
+            media_type = media.media_type
+            content_version = repo.get_content_version(db, media.content_version_id)
+        
+        if not content_version:
+            return None
+        
+        # Generate public URL from Supabase Storage
+        # Note: For production with private buckets, use signed URLs via Supabase REST API
+        # For now, assuming public bucket or using Supabase's default public access
+        
+        # Construct public URL (assuming bucket is public)
+        storage_url = f"{SUPABASE_URL}/storage/v1/object/public/{object_key}"
+        
+        return {
+            "media_id": media_id,
+            "file_name": file_name,
+            "media_type": media_type,
+            "url": storage_url,
+            "content_version_number": content_version.version_number,
+            "checksum_sha256": media.checksum.hex() if media.checksum else None,
+            "width": media.width,
+            "height": media.height,
+            "duration_seconds": media.duration_seconds,
+            "file_size": media.file_size
+        }
+        
+    except Exception as e:
+        logger.warning("Failed to get media info from Supabase: %s", e)
+        return None

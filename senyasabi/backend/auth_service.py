@@ -14,8 +14,15 @@ from uuid import uuid4
 from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError
 
-from .api import auth_client
-from .api.auth_client import AuthError, NetworkError
+from .config import CLIENT_MODE
+
+# Import appropriate auth client based on mode
+if CLIENT_MODE == "distributed":
+    from .api.auth_client_distributed import AuthError, NetworkError
+    auth_client = __import__('backend.api.auth_client_distributed', fromlist=[''])
+else:
+    from .api import auth_client
+    from .api.auth_client import AuthError, NetworkError
 from .config import (
     OFFLINE_AUTH_LOCKOUT_MINUTES,
     OFFLINE_AUTH_MAX_DAYS,
@@ -240,8 +247,21 @@ def authenticate_user(identifier, password, *, establish_session=True) -> dict:
             _current_user = dict(public_user)
         return public_user
 
+    # In distributed mode, if identifier is username, we need to look up email
+    login_identifier = identifier
+    if CLIENT_MODE == "distributed" and "@" not in identifier:
+        try:
+            from .api.auth_client_distributed import get_user_by_username
+            # Try to get email from username
+            user = get_user_by_username(identifier)
+            if user:
+                login_identifier = user["email"]
+        except Exception:
+            # Fall through to existing logic (will try offline)
+            pass
+
     try:
-        data = auth_client.login(identifier, password)
+        data = auth_client.login(login_identifier, password)
     except NetworkError:
         return authenticate_offline(identifier, password, establish_session=establish_session)
     return _complete_online_login(data, password, establish_session=establish_session)
@@ -376,4 +396,4 @@ def logout_user() -> None:
 
 
 def get_current_user() -> dict | None:
-    return dict(_current_user) if _current_user is not None else None
+    return dict(_current_user) if _current_user is not None else None
