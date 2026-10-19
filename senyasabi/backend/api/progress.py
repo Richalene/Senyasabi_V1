@@ -7,14 +7,19 @@ This provides endpoints for:
 """
 from fastapi import APIRouter, Depends, HTTPException, status
 from fastapi.encoders import jsonable_encoder
-from typing import Optional, List
 from sqlalchemy import text
 
 from ..database.postgre_session import get_postgres_session
 from ..security import get_current_user_id
+from .leaderboard import _LEADERBOARD_SQL, PERIODS
 
 router = APIRouter(prefix="/api/v1/progress", tags=["progress"])
 
+
+def _own(user_id_in_path: str, token_user_id: str) -> str:
+    if user_id_in_path != token_user_id:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your data")
+    return token_user_id
 
 _SNAPSHOT_QUERIES = {
     "lesson_progress": "SELECT user_id, lesson_id, completion_percentage, status, last_accessed, completed_at, "
@@ -32,6 +37,70 @@ _SNAPSHOT_QUERIES = {
                        "FROM public.v_user_statistics_live WHERE user_id = :u",
 }
 
+_LATEST_BADGE_SQL = """
+SELECT b.badge_id, b.badge_code, b.badge_name, b.description, ub.unlocked_at
+FROM public.user_badges ub
+JOIN public.badges b ON b.badge_id = ub.badge_id AND NOT b.is_deleted
+WHERE ub.user_id = :u
+ORDER BY ub.unlocked_at DESC
+LIMIT 1
+"""
+
+# Mirrors repository.get_current_module: most recent in-progress lesson first,
+# otherwise the first module with an incomplete lesson.
+_CURRENT_MODULE_SQL = """
+SELECT module_id, module_code, title FROM (
+    SELECT m.module_id, m.module_code, m.title, 0 AS pri,
+           lp.last_accessed AS sort_key, m.module_order
+    FROM public.lesson_progress lp
+    JOIN public.lessons l ON l.lesson_id = lp.lesson_id
+         AND NOT l.is_deleted AND l.is_active
+    JOIN public.modules m ON m.module_id = l.parent_module
+         AND NOT m.is_deleted AND m.is_active
+    WHERE lp.user_id = :u AND lp.status = 'In Progress'
+    UNION ALL
+    SELECT m.module_id, m.module_code, m.title, 1, NULL, m.module_order
+    FROM public.modules m
+    WHERE NOT m.is_deleted AND m.is_active
+      AND EXISTS (
+        SELECT 1 FROM public.lessons l
+        WHERE l.parent_module = m.module_id AND NOT l.is_deleted AND l.is_active
+          AND NOT EXISTS (
+            SELECT 1 FROM public.lesson_progress lp
+            WHERE lp.lesson_id = l.lesson_id AND lp.user_id = :u
+              AND lp.status = 'Completed'))
+) t
+ORDER BY pri, sort_key DESC NULLS LAST, module_order
+LIMIT 1
+"""
+
+# Q = avg quiz percentage, R = avg camera accuracy (same as get_module_performance)
+_RADAR_SQL = """
+WITH stats AS (
+    SELECT q.module_id,
+           AVG(qa.percentage) AS q_avg,
+           AVG(qa.camera_accuracy) AS r_avg
+    FROM public.quiz_attempts qa
+    JOIN public.quizzes q ON q.quiz_id = qa.quiz_id AND NOT q.is_deleted
+    WHERE qa.user_id = :u AND qa.completed_at IS NOT NULL
+    GROUP BY q.module_id
+)
+SELECT m.module_id, m.module_code, m.title,
+       COALESCE(s.q_avg, 0) AS q,
+       COALESCE(s.r_avg, 0) AS r,
+       ROUND((0.5 * COALESCE(s.q_avg, 0) + 0.5 * COALESCE(s.r_avg, 0))::numeric, 1) AS radar_score
+FROM public.modules m
+LEFT JOIN stats s ON s.module_id = m.module_id
+WHERE m.is_active AND NOT m.is_deleted
+ORDER BY m.module_order
+"""
+
+_RANK_SQL = f"SELECT * FROM ({_LEADERBOARD_SQL.replace('LIMIT :limit', '')}) r WHERE user_id = :u"
+
+def _radar(db, user_id):
+    rows = db.execute(text(_RADAR_SQL), {"u": user_id}).mappings().all()
+    return {"modules": [r["title"] for r in rows],
+            "scores": [float(r["radar_score"]) for r in rows]}
 
 @router.get("/me/snapshot")
 async def get_my_progress_snapshot(user_id: str = Depends(get_current_user_id)):
@@ -41,8 +110,10 @@ async def get_my_progress_snapshot(user_id: str = Depends(get_current_user_id)):
     """
     try:
         with get_postgres_session() as db:
+
             data = {name: [dict(r) for r in db.execute(text(sql), {"u": user_id}).mappings()]
                     for name, sql in _SNAPSHOT_QUERIES.items()}
+            db.commit()
         return jsonable_encoder(data)
     except Exception as e:
         raise HTTPException(
@@ -51,7 +122,7 @@ async def get_my_progress_snapshot(user_id: str = Depends(get_current_user_id)):
         )
 
 @router.get("/{user_id}")
-async def get_user_progress(user_id: str):
+async def get_user_progress(user_id: str, me: str = Depends(get_current_user_id)):
     """
     Get user progress from PostgreSQL.
     
@@ -62,23 +133,20 @@ async def get_user_progress(user_id: str):
         User progress statistics
     """
     try:
+        uid = _own(user_id, me)
         with get_postgres_session() as db:
-            # TODO: Implement progress retrieval
-            # Query lesson_progress, user_statistics, etc.
-            return {
-                "user_id": user_id,
-                "message": "Progress endpoint - to be implemented"
-            }
-            
+            data = {name: [dict(r) for r in db.execute(text(sql), {"u": uid}).mappings()]
+                    for name, sql in _SNAPSHOT_QUERIES.items()}
+        return jsonable_encoder({"user_id": uid, **data})
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching progress: {str(e)}"
+            detail=f"Error fetching statistics: {str(e)}"
         )
 
-
 @router.get("/{user_id}/statistics")
-async def get_user_statistics(user_id: str, force_refresh: bool = False):
+async def get_user_statistics(user_id: str, force_refresh: bool = False,
+                              me: str = Depends(get_current_user_id)):
     """
     Get user statistics from PostgreSQL.
     
@@ -96,33 +164,26 @@ async def get_user_statistics(user_id: str, force_refresh: bool = False):
         - radar_chart (7-point performance visualization)
     """
     try:
+        uid = _own(user_id, me)
+        p = {"u": uid}
         with get_postgres_session() as db:
             if force_refresh:
-                # Call refresh_user_statistics function with UUID
-                db.execute(text("SELECT public.refresh_user_statistics(:user_id)"), {"user_id": user_id})
-            
-            # TODO: Implement comprehensive statistics retrieval
-            # 1. Get leaderboard position
-            # 2. Get latest badge
-            # 3. Get current ongoing module
-            # 4. Count completed lessons
-            # 5. Count completed minigames
-            # 6. Calculate radar chart (0.5Q + 0.5R per module)
-            
-            return {
-                "user_id": user_id,
-                "leaderboard_position": None,
-                "latest_badge": None,
-                "current_module": None,
-                "lessons_completed": 0,
-                "minigames_completed": 0,
-                "radar_chart": {
-                    "modules": [],
-                    "scores": []  # 7 scores, one per module
-                },
-                "message": "Statistics endpoint - to be implemented"
-            }
-            
+                db.execute(text("SELECT public.refresh_user_statistics(:u)"), p)
+                db.commit()
+            stats = db.execute(text(_SNAPSHOT_QUERIES["user_statistics"]), p).mappings().first() or {}
+            badge = db.execute(text(_LATEST_BADGE_SQL), p).mappings().first()
+            module = db.execute(text(_CURRENT_MODULE_SQL), p).mappings().first()
+            rank = db.execute(text(_RANK_SQL), p).mappings().first()
+            radar = _radar(db, uid)
+        return jsonable_encoder({
+            "user_id": uid,
+            "leaderboard_position": rank["rank_position"] if rank else None,
+            "latest_badge": dict(badge) if badge else None,
+            "current_module": dict(module) if module else None,
+            "lessons_completed": stats.get("lessons_completed", 0),
+            "minigames_completed": stats.get("minigames_completed", 0),
+            "radar_chart": radar,
+        })
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
@@ -131,7 +192,7 @@ async def get_user_statistics(user_id: str, force_refresh: bool = False):
 
 
 @router.get("/{user_id}/streak")
-async def get_user_streak(user_id: str):
+async def get_user_streak(user_id: str, me: str = Depends(get_current_user_id)):
     """
     Get user streak information.
     
@@ -141,23 +202,16 @@ async def get_user_streak(user_id: str):
     Returns:
         User streak information
     """
-    try:
-        with get_postgres_session() as db:
-            # TODO: Implement streak retrieval
-            return {
-                "user_id": user_id,
-                "message": "Streak endpoint - to be implemented"
-            }
-            
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching streak: {str(e)}"
-        )
+    uid = _own(user_id, me)
+    with get_postgres_session() as db:
+        row = db.execute(text(_SNAPSHOT_QUERIES["streaks"]), {"u": uid}).mappings().first()
+    return jsonable_encoder({"user_id": uid, **(row or
+        {"current_streak": 0, "longest_streak": 0, "last_activity_date": None})})
+
 
 
 @router.get("/{user_id}/radar-chart")
-async def get_radar_chart(user_id: str):
+async def get_radar_chart(user_id: str, me: str = Depends(get_current_user_id)):
     """
     Get user's radar chart data for module performance.
     
@@ -174,34 +228,11 @@ async def get_radar_chart(user_id: str):
         Radar chart data with module names and scores
     """
     try:
+        uid = _own(user_id, me)
         with get_postgres_session() as db:
-            # TODO: Implement radar chart calculation
-            # 1. Get all 7 modules
-            # 2. For each module:
-            #    - Calculate Q: average quiz score for that module
-            #    - Calculate R: average camera recognition accuracy for that module
-            #    - Calculate score: 0.5 * Q + 0.5 * R
-            # 3. Return array of 7 module names and scores
-            
-            modules = [
-                "Manual Alphabet",
-                "Numbers",
-                "Family Members",
-                "Basic Communication",
-                "Days of the Week",
-                "Months of the Year",
-                "Action Words"
-            ]
-            
-            return {
-                "user_id": user_id,
-                "modules": modules,
-                "scores": [0.0] * 7,  # Placeholder: 7 scores
-                "message": "Radar chart endpoint - to be implemented"
-            }
-            
+            return {"user_id": uid, **_radar(db, uid)}
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching radar chart: {str(e)}"
+            detail=f"Error fetching statistics: {str(e)}"
         )

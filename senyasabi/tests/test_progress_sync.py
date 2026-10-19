@@ -39,7 +39,7 @@ class ProgressSyncTests(unittest.TestCase):
                 raise
             finally:
                 s.close()
-        p = patch.object(progress_sync, "session_scope", scope)
+        p = patch.object(progress_sync, "sync_content_if_due", return_value=True)
         p.start()
         self.addCleanup(p.stop)
         with scope() as db:

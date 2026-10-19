@@ -26,6 +26,10 @@ from .database.repository import (
     upsert_minigame_attempt,
 )
 from .database.models import SyncQueue
+from .database import models as m
+
+from sqlalchemy import select
+
 
 logger = logging.getLogger(__name__)
 
@@ -41,12 +45,27 @@ def _iso_utc(dt: datetime) -> str:
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
 
+# FK-safe apply order for upserts (parents before children).
+_CONTENT_TABLES = (
+    ("modules", m.Module),
+    ("lessons", m.Lesson),
+    ("signs", m.Sign),
+    ("media_files", m.MediaFile),
+    ("lesson_signs", m.LessonSign),
+    ("sign_media", m.SignMedia),
+    ("quizzes", m.Quiz),
+    ("quiz_signs", m.QuizSign),
+    ("minigames", m.Minigame),
+    ("minigame_signs", m.MinigameSign),
+)
+_SYNCED_VERSION_KEY = "content/synced_version"
 
 class SyncService:
     """Service for idempotent client-initiated synchronization."""
 
-    def __init__(self) -> None:
+    def __init__(self, settings=None) -> None:
         self.client_version = "1.0.0"
+        self._qsettings = settings   # QSettings; created lazily so tests can inject one
 
     def queue_quiz_attempt(
         self,
@@ -292,28 +311,123 @@ class SyncService:
         with session_scope() as db:
             return get_sync_queue_stats(db, user_id)
 
-    def sync_content_from_server(self, content_version: int) -> dict:
-        """
-        Sync content from the server to the local cache (placeholder).
+    # ------------------------------------------------------------------
+    # Content sync (server -> local cache)
+    # ------------------------------------------------------------------
 
-        In production this would fetch content from the server API and upsert
-        it using server-assigned IDs (db.merge), leaving local user data
-        untouched.
-        """
+    def _settings(self):
+        if self._qsettings is None:
+            from PySide6.QtCore import QSettings
+            self._qsettings = QSettings("SenyaSabi", "SenyaSabi")
+        return self._qsettings
+
+    def _local_synced_version(self) -> int:
         with session_scope() as db:
-            version = get_content_version_by_number(db, content_version)
-            if version is None:
-                return {
-                    "success": False,
-                    "error": f"Content version {content_version} not found locally",
-                }
+            if db.scalar(select(m.Module.module_id).limit(1)) is None:
+                return 0   # empty/rebuilt DB: ignore a stale marker
+        try:
+            return max(0, int(self._settings().value(_SYNCED_VERSION_KEY, 0)))
+        except (TypeError, ValueError):
+            return 0
 
-        return {
-            "success": True,
-            "message": f"Content version {content_version} is already synced",
-            "version": content_version,
-        }
+    def sync_content_from_server(self, since_version: int | None = None) -> dict:
+        """
+        Pull the published content delta and merge it into SQLite.
 
+        Blocking (network + DB): call from a worker thread, e.g. LoadingOverlay.run.
+        Local user data, progress and the sync queue are never touched.
+        """
+        if since_version is None:
+            since_version = self._local_synced_version()
+
+        from .api_client import get_api_client
+        delta = get_api_client().sync_content(since_version)
+        if not isinstance(delta, dict) or not isinstance(delta.get("version"), int):
+            return {"success": False, "error": "Content server unreachable or returned bad data"}
+
+        try:
+            applied = self.apply_content_delta(delta)
+        except Exception as exc:
+            logger.exception("Content delta could not be applied")
+            return {"success": False, "error": str(exc)}
+
+        settings = self._settings()
+        settings.setValue(_SYNCED_VERSION_KEY, delta["version"])
+        settings.sync()
+        return {"success": True, "version": delta["version"],
+                "since_version": since_version, "applied": applied}
+
+    def apply_content_delta(self, delta: dict) -> dict:
+        """Merge one /api/v1/content/sync response in a single transaction."""
+        counts: dict[str, int] = {}
+        version_ids: dict[int, int] = {}   # server version_number -> local content_version_id
+
+        def local_version_id(db, number: int) -> int:
+            if number not in version_ids:
+                cv = db.scalar(select(m.ContentVersion)
+                               .where(m.ContentVersion.version_number == number))
+                if cv is None:
+                    cv = m.ContentVersion(version_number=number, changelog="Synced from server",
+                                          is_published=True, is_deleted=False)
+                    db.add(cv)
+                    db.flush()
+                version_ids[number] = cv.content_version_id
+            return version_ids[number]
+
+        with session_scope() as db:
+            local_version_id(db, delta["version"])
+
+            # 1. Soft deletes first (never violate FKs; frees lesson_order slots).
+            for name, model in _CONTENT_TABLES:
+                for key in (delta.get(name) or {}).get("delete", []):
+                    pk = tuple(key[col.key] for col in model.__mapper__.primary_key)
+                    row = db.get(model, pk if len(pk) > 1 else pk[0])
+                    if row is not None and not row.is_deleted:
+                        row.is_deleted = True
+                        counts[f"{name}_deleted"] = counts.get(f"{name}_deleted", 0) + 1
+                db.flush()
+
+            # 2. Upserts, parents before children.
+            for name, model in _CONTENT_TABLES:
+                rows = (delta.get(name) or {}).get("upsert", [])
+                if not rows:
+                    continue
+                if model is m.Lesson:
+                    # Park existing lessons so a reorder can't trip the partial unique index.
+                    ids = [r["lesson_id"] for r in rows]
+                    for lesson in db.scalars(select(m.Lesson).where(m.Lesson.lesson_id.in_(ids))):
+                        lesson.lesson_order = -lesson.lesson_id
+                    db.flush()
+                columns = {a.key for a in model.__mapper__.column_attrs}
+                for row in rows:
+                    data = {k: v for k, v in row.items()
+                            if k in columns and k not in ("updated_at", "content_version_id")}
+                    data["content_version_id"] = local_version_id(db, row["content_version_number"])
+                    data["is_deleted"] = False
+                    if model is m.MediaFile:
+                        sha = row.get("checksum_sha256")
+                        data["checksum"] = bytes.fromhex(sha) if sha else None
+                        data["object_key"] = f"media/{row['media_id']}"  # real key stays server-side
+                    if "config" in columns:
+                        data["config"] = row.get("config") or {}
+                    db.merge(model(**data))
+                db.flush()
+                counts[f"{name}_upserted"] = len(rows)
+
+            # 3. Badges: the server sends the full list every time.
+            badges = delta.get("badges") or []
+            for b in badges:
+                db.merge(m.Badge(badge_id=b["badge_id"], badge_code=b["badge_code"],
+                                 badge_name=b["badge_name"], description=b.get("description"),
+                                 is_deleted=False))
+            if badges:  # an empty list is more likely a server bug than "delete everything"
+                keep = {b["badge_id"] for b in badges}
+                for badge in db.scalars(select(m.Badge).where(m.Badge.is_deleted.is_(False))):
+                    if badge.badge_id not in keep:
+                        badge.is_deleted = True
+            counts["badges_upserted"] = len(badges)
+        return counts
+    
     def handle_server_response(self, sync_id: uuid.UUID, server_response: dict) -> bool:
         """
         Handle the server's response for a sync operation.
@@ -404,6 +518,6 @@ def get_sync_status(user_id: uuid.UUID) -> dict:
     return _sync_service.get_sync_status(user_id)
 
 
-def sync_content_from_server(content_version: int) -> dict:
-    """Sync content from server to local cache."""
-    return _sync_service.sync_content_from_server(content_version)
+def sync_content_from_server(since_version: int | None = None) -> dict:
+    """Sync content from server to local cache (blocking; use a worker thread)."""
+    return _sync_service.sync_content_from_server(since_version)

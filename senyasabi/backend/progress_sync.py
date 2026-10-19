@@ -8,7 +8,8 @@ session, content not cached locally) returns False and the dashboard keeps its c
 import logging
 import uuid
 from datetime import date, datetime
-
+import threading
+import time
 import requests
 
 from backend import auth_service, config
@@ -17,6 +18,9 @@ from backend.database.session import session_scope
 
 _log = logging.getLogger(__name__)
 TIMEOUT = 8  # seconds; single attempt so an offline app stays responsive
+CONTENT_SYNC_INTERVAL = 600  # seconds between content checks
+_content_lock = threading.Lock()
+_last_content_sync = 0.0
 
 # FK order
 _TABLES = {
@@ -71,18 +75,39 @@ def apply_snapshot(snapshot):
             counts[name] = len(rows)
     return counts
 
+def sync_content_if_due(force=False):
+    """Best effort content delta pull. Never raises. Returns True if content is current."""
+    global _last_content_sync
+    if not _content_lock.acquire(blocking=False):
+        return False  # another worker is already syncing
+    try:
+        if not force and time.monotonic() - _last_content_sync < CONTENT_SYNC_INTERVAL:
+            return True
+        from backend import sync_service
+        result = sync_service.sync_content_from_server()
+        if result.get("success"):
+            _last_content_sync = time.monotonic()
+            return True
+        _log.warning("Content sync failed: %s", result.get("error"))
+        return False
+    except Exception as error:
+        _log.warning("Content sync failed: %s", error)
+        return False
+    finally:
+        _content_lock.release()
 
 def pull_user_progress():
-    """Refresh local progress (and the leaderboard cache) for the current session. Never raises."""
+    """Refresh local content, then progress (and the leaderboard cache). Never raises."""
     try:
         token = auth_service.get_access_token()
         if not token:
             return False
+        sync_content_if_due()  # failure is fine: progress merge falls back to whatever is cached
         snapshot = fetch_snapshot(token)
         if snapshot is None:
             return False
         apply_snapshot(snapshot)
-    except Exception as error:  # missing local content (FK), bad data, etc.
+    except Exception as error:
         _log.warning("Progress sync failed: %s", error)
         return False
     try:  # keeps the dashboard rank in step with the leaderboard
