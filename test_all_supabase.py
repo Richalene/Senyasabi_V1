@@ -11,7 +11,7 @@ Usage:
 
 Requirements:
     - SUPABASE_URL and SUPABASE_ANON_KEY in .env
-    - SENYESABI_MODE=distributed in .env
+    - SYSTEM_MODE=distributed in .env
     - Python 3.8+
 """
 import sys

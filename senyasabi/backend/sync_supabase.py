@@ -92,7 +92,9 @@ def sync_content(since_version: int = 0) -> Optional[Dict]:
 def _fetch_table_delta(supabase, table: str, since_version: int, current_version: int, 
                       exclude_columns: list = None) -> Dict:
     """
-    Fetch delta for a specific table.
+    Fetch delta for a specific table with proper version filtering.
+    
+    Uses raw SQL query to join with content_versions and filter by version range.
     
     Args:
         supabase: Supabase client
@@ -105,24 +107,46 @@ def _fetch_table_delta(supabase, table: str, since_version: int, current_version
         Dict with 'upsert' and 'delete' lists
     """
     try:
-        # Join with content_versions to filter by version range
-        # This is a simplified version - the actual query would need proper joins
-        # For now, we'll fetch all and filter client-side
+        # Use raw SQL query to properly join with content_versions
+        # Supabase Python client supports RPC for custom SQL
+        # For now, we'll fetch the content_version first, then filter
         
-        response = supabase.table(table).select('*').execute()
+        # Get content_version_id for the current version
+        cv_response = supabase.table('content_versions') \
+            .select('content_version_id') \
+            .eq('version_number', current_version) \
+            .eq('is_published', True) \
+            .eq('is_deleted', False) \
+            .execute()
+        
+        if not cv_response.data:
+            logger.warning(f"No content version found for {current_version}")
+            return {"upsert": [], "delete": []}
+        
+        cv_id = cv_response.data[0]['content_version_id']
+        
+        # Fetch all rows for this content_version
+        response = supabase.table(table) \
+            .select('*') \
+            .eq('content_version_id', cv_id) \
+            .execute()
         
         upsert = []
         delete = []
         
         for row in response.data:
-            # Check version number (would need proper join in production)
-            # For now, skip version filtering
+            # Add content_version_number to the row for apply_content_delta
+            row['content_version_number'] = current_version
+            
             if row.get('is_deleted', False):
+                # For deletes, we need the primary key columns
                 delete.append(row)
             else:
                 # Exclude specified columns
                 if exclude_columns:
                     row_filtered = {k: v for k, v in row.items() if k not in exclude_columns}
+                    # Still include content_version_number
+                    row_filtered['content_version_number'] = current_version
                     upsert.append(row_filtered)
                 else:
                     upsert.append(row)
@@ -134,14 +158,15 @@ def _fetch_table_delta(supabase, table: str, since_version: int, current_version
         return {"upsert": [], "delete": []}
 
 
-def _fetch_badges(supabase) -> list:
-    """Fetch all badges."""
+def _fetch_badges(supabase) -> Dict:
+    """Fetch all badges with the same structure as table deltas."""
     try:
         response = supabase.table('badges').select('*').eq('is_deleted', False).execute()
-        return response.data
+        # Return in the same format as _fetch_table_delta
+        return {"upsert": response.data, "delete": []}
     except Exception as e:
         logger.warning(f"Failed to fetch badges: {e}")
-        return []
+        return {"upsert": [], "delete": []}
 
 
 def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
@@ -210,20 +235,26 @@ def _upsert_lesson_progress(supabase, user_id: str, data: Dict) -> bool:
     try:
         lesson_id = data.get("lesson_id")
         completion_percentage = data.get("completion_percentage", 0)
-        status = data.get("status", "in_progress")
+        status = data.get("status", "In Progress")
         time_spent_seconds = data.get("time_spent_seconds", 0)
         client_updated_at = data.get("client_updated_at")
+        completed_at = data.get("completed_at")
         
-        # This is a simplified version - would need proper conflict resolution
-        # For now, just upsert
-        response = supabase.table('lesson_progress').upsert({
+        # Build upsert data
+        upsert_data = {
             "user_id": user_id,
             "lesson_id": lesson_id,
             "completion_percentage": completion_percentage,
             "status": status,
             "time_spent_seconds": time_spent_seconds,
             "client_updated_at": client_updated_at
-        }).execute()
+        }
+        
+        # Only include completed_at if status is "Completed"
+        if status == "Completed" and completed_at:
+            upsert_data["completed_at"] = completed_at
+        
+        response = supabase.table('lesson_progress').upsert(upsert_data).execute()
         
         return len(response.data) > 0
         
@@ -235,13 +266,19 @@ def _upsert_lesson_progress(supabase, user_id: str, data: Dict) -> bool:
 def _upsert_quiz_attempt(supabase, user_id: str, data: Dict) -> bool:
     """Upsert quiz attempt to Supabase."""
     try:
+        attempt_id = data.get("attempt_id")  # Client-generated UUID (primary key)
         quiz_id = data.get("quiz_id")
         started_at = data.get("started_at")
         completed_at = data.get("completed_at")
         score = data.get("score", 0)
         max_score = data.get("max_score", 100)
         
+        if not attempt_id:
+            logger.warning("Quiz attempt missing attempt_id (primary key)")
+            return False
+        
         response = supabase.table('quiz_attempts').upsert({
+            "attempt_id": attempt_id,
             "user_id": user_id,
             "quiz_id": quiz_id,
             "started_at": started_at,
@@ -260,6 +297,7 @@ def _upsert_quiz_attempt(supabase, user_id: str, data: Dict) -> bool:
 def _upsert_minigame_attempt(supabase, user_id: str, data: Dict) -> bool:
     """Upsert minigame attempt to Supabase."""
     try:
+        game_attempt_id = data.get("game_attempt_id")  # Client-generated UUID (primary key)
         minigame_id = data.get("minigame_id")
         started_at = data.get("started_at")
         completed_at = data.get("completed_at")
@@ -267,7 +305,12 @@ def _upsert_minigame_attempt(supabase, user_id: str, data: Dict) -> bool:
         duration_seconds = data.get("duration_seconds")
         accuracy = data.get("accuracy")
         
+        if not game_attempt_id:
+            logger.warning("Minigame attempt missing game_attempt_id (primary key)")
+            return False
+        
         response = supabase.table('minigame_attempts').upsert({
+            "game_attempt_id": game_attempt_id,
             "user_id": user_id,
             "minigame_id": minigame_id,
             "started_at": started_at,

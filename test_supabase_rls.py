@@ -11,7 +11,7 @@ Usage:
 
 Requirements:
     - SUPABASE_URL and SUPABASE_ANON_KEY in .env
-    - SENYESABI_MODE=distributed in .env
+    - SYSTEM_MODE=distributed in .env
 """
 import os
 import sys
@@ -21,7 +21,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set distributed mode for testing
-os.environ["SENYESABI_MODE"] = "distributed"
+os.environ["SYSTEM_MODE"] = "distributed"
 
 from senyasabi.backend.supabase_client import get_supabase_client, is_supabase_available
 
@@ -161,6 +161,15 @@ def test_authenticated_read_own_data():
         print("\nAuthenticating...")
         from senyasabi.backend.api.auth_client_distributed import login
         result = login(email, password)
+
+        print("Session fields:", result["session"].keys())
+        print("Has access token:", bool(result["session"].get("access_token")))
+        print("Has refresh token:", bool(result["session"].get("refresh_token")))
+
+        session = result["session"]
+        
+        if session:
+            print("Session keys:", session.keys())
         
         if not result or "session" not in result:
             print(f"❌ FAILED: Authentication failed")
@@ -170,10 +179,19 @@ def test_authenticated_read_own_data():
         print(f"✅ Authenticated as user: {result['profile']['username']} ({user_id})")
         
         # Set the session on the client
-        access_token = result["session"]["access_token"]
+        access_token = session["access_token"]
+        refresh_token = session["refresh_token"]
+
+        if not refresh_token:
+            raise RuntimeError("Login returned an empty refresh token")
+
         client = get_supabase_client()
-        client.auth.set_session(access_token)
-        
+
+        if client is None:
+            raise RuntimeError("Supabase client is unavailable in fastapi mode")
+
+        client.auth.set_session(access_token, refresh_token)       
+
         # Try to read own lesson_progress
         print("\nReading own lesson_progress...")
         response = client.table('lesson_progress').select('*').eq('user_id', user_id).execute()
@@ -230,7 +248,7 @@ def main():
     print("\n" + "=" * 60)
     print("SUPABASE RLS AND CONNECTION TESTS")
     print("=" * 60)
-    print(f"Mode: {os.getenv('SENYESABI_MODE', 'not set')}")
+    print(f"Mode: {os.getenv('SYSTEM_MODE', 'not set')}")
     print(f"Supabase URL: {os.getenv('SUPABASE_URL', 'not set')}")
     print(f"Anon Key: {'set' if os.getenv('SUPABASE_ANON_KEY') else 'not set'}")
     

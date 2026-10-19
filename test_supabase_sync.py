@@ -11,7 +11,7 @@ Usage:
 
 Requirements:
     - SUPABASE_URL and SUPABASE_ANON_KEY in .env
-    - SENYESABI_MODE=distributed in .env
+    - SYSTEM_MODE=distributed in .env
     - Valid user credentials for authenticated tests
 """
 import os
@@ -24,7 +24,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set distributed mode for testing
-os.environ["SENYESABI_MODE"] = "distributed"
+os.environ["SYSTEM_MODE"] = "distributed"
 
 from senyasabi.backend.supabase_client import get_supabase_client, is_supabase_available
 from senyasabi.backend.sync_supabase import sync_content, upload_sync
@@ -69,8 +69,14 @@ def test_content_sync():
         
         # Count rows in each table
         for table in ['modules', 'lessons', 'signs', 'media_files', 'quizzes', 'minigames', 'badges']:
-            upserts = len(delta.get(table, {}).get('upsert', []))
-            deletes = len(delta.get(table, {}).get('delete', []))
+            table_data = delta.get(table, {})
+            if isinstance(table_data, dict):
+                upserts = len(table_data.get('upsert', []))
+                deletes = len(table_data.get('delete', []))
+            else:
+                # Handle case where it might be a list (legacy)
+                upserts = len(table_data) if isinstance(table_data, list) else 0
+                deletes = 0
             print(f"   {table}: {upserts} upserts, {deletes} deletes")
         
         # Validate structure
@@ -121,10 +127,11 @@ def test_progress_upload():
         user_id = result["profile"]["user_id"]
         print(f"✅ Authenticated as user: {result['profile']['username']} ({user_id})")
         
-        # Set the session on the client
+        # Set the session on the client (requires both access_token and refresh_token)
         access_token = result["session"]["access_token"]
+        refresh_token = result["session"]["refresh_token"]
         client = get_supabase_client()
-        client.auth.set_session(access_token)
+        client.auth.set_session(access_token, refresh_token)
         
         # Test lesson progress upload
         print("\nUploading lesson progress...")
@@ -192,10 +199,12 @@ def test_quiz_attempt_upload():
         user_id = result["profile"]["user_id"]
         print(f"✅ Authenticated as user: {result['profile']['username']} ({user_id})")
         
-        # Set the session on the client
+        # Set the session on the client (requires both access_token and refresh_token)
         access_token = result["session"]["access_token"]
+        refresh_token = result["session"]["refresh_token"]
+        
         client = get_supabase_client()
-        client.auth.set_session(access_token)
+        client.auth.set_session(access_token, refresh_token)
         
         # Test quiz attempt upload
         print("\nUploading quiz attempt...")
@@ -203,6 +212,7 @@ def test_quiz_attempt_upload():
             "entity_type": "quiz_attempt",
             "client_id": str(uuid.uuid4()),
             "data": {
+                "attempt_id": str(uuid.uuid4()),  # Required primary key
                 "quiz_id": 1,  # Use a real quiz_id in production
                 "started_at": datetime.now(timezone.utc).isoformat(),
                 "completed_at": datetime.now(timezone.utc).isoformat(),
@@ -272,7 +282,7 @@ def main():
     print("\n" + "=" * 60)
     print("SUPABASE SYNC OPERATIONS TESTS")
     print("=" * 60)
-    print(f"Mode: {os.getenv('SENYESABI_MODE', 'not set')}")
+    print(f"Mode: {os.getenv('SYSTEM_MODE', 'not set')}")
     print(f"Supabase URL: {os.getenv('SUPABASE_URL', 'not set')}")
     
     results = []

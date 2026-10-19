@@ -1,7 +1,7 @@
 """Supabase client for direct anon access (distributed client mode).
 
 This provides a Supabase client for direct database/auth access when running
-in distributed mode (SENYESABI_MODE=distributed). In fastapi mode, this
+in distributed mode (SYSTEM_MODE=distributed). In fastapi mode, this
 returns None and the app uses the FastAPI proxy instead.
 """
 from .config import SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE

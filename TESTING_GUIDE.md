@@ -18,7 +18,7 @@ Before running tests, ensure:
    cp .env.dist .env
    # Edit .env with your Supabase credentials
    # Required: SUPABASE_URL, SUPABASE_ANON_KEY
-   # Required: SENYESABI_MODE=distributed
+   # Required: SYSTEM_MODE=distributed
    ```
 
 2. **RLS policies are applied to database:**
@@ -129,7 +129,7 @@ cat .env
 # Should have:
 # SUPABASE_URL=https://your-project.supabase.co
 # SUPABASE_ANON_KEY=your-anon-key
-# SENYESABI_MODE=distributed
+# SYSTEM_MODE=distributed
 ```
 
 #### Issue: "permission denied" or RLS errors
@@ -219,7 +219,7 @@ python -c "
 from dotenv import load_dotenv
 import os
 load_dotenv()
-os.environ['SENYESABI_MODE'] = 'distributed'
+os.environ['SYSTEM_MODE'] = 'distributed'
 from senyasabi.backend.sync_supabase import sync_content
 delta = sync_content(0)
 print(f'Content sync: {\"PASS\" if delta else \"FAIL\"}')"

@@ -121,7 +121,7 @@ def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:
     data = item.data
     lesson_id = data.get("lesson_id")
     completion_percentage = data.get("completion_percentage", 0)
-    status = data.get("status", "in_progress")
+    status = data.get("status", "In Progress")
     time_spent_seconds = data.get("time_spent_seconds", 0)
     client_updated_at = data.get("client_updated_at") or data.get("updated_at")
     

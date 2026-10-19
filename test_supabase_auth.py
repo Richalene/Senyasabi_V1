@@ -12,7 +12,7 @@ Usage:
 
 Requirements:
     - SUPABASE_URL and SUPABASE_ANON_KEY in .env
-    - SENYESABI_MODE=distributed in .env
+    - SYSTEM_MODE=distributed in .env
 """
 import os
 import sys
@@ -22,7 +22,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 # Set distributed mode for testing
-os.environ["SENYESABI_MODE"] = "distributed"
+os.environ["SYSTEM_MODE"] = "distributed"
 
 from senyasabi.backend.supabase_client import get_supabase_client, is_supabase_available
 from senyasabi.backend.api.auth_client_distributed import (
@@ -256,7 +256,7 @@ def main():
     print("\n" + "=" * 60)
     print("SUPABASE AUTH INTEGRATION TESTS")
     print("=" * 60)
-    print(f"Mode: {os.getenv('SENYESABI_MODE', 'not set')}")
+    print(f"Mode: {os.getenv('SYSTEM_MODE', 'not set')}")
     print(f"Supabase URL: {os.getenv('SUPABASE_URL', 'not set')}")
     
     results = []

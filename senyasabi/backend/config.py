@@ -43,7 +43,7 @@ MEDIA_CACHE_DIR = Path(os.getenv("SENYASABI_MEDIA_CACHE") or BASE_DIR / "cache" 
 # CLIENT_MODE determines how the app connects to Supabase:
 # - "fastapi" (default): Client uses FastAPI proxy, FastAPI uses service_role
 # - "distributed": Client connects directly to Supabase with anon key
-CLIENT_MODE = os.getenv("SENYESABI_MODE", "fastapi").lower()
+CLIENT_MODE = os.getenv("SYSTEM_MODE", "fastapi").lower()
 
 # ---- Postgres (Supabase) -----------------------------------------------
 def _normalize_pg_url(url: str | None) -> str | None:
@@ -61,8 +61,6 @@ def _normalize_pg_url(url: str | None) -> str | None:
 POSTGRESQL_URL = _normalize_pg_url(os.getenv("DATABASE_URL")) if CLIENT_MODE == "fastapi" else None
 
 # ---- Supabase API -------------------------------------------------------
-# SUPABASE_URL and SUPABASE_ANON_KEY are PUBLIC and safe to bundle with client
-# SUPABASE_SERVICE_ROLE_KEY and SUPABASE_JWT_SECRET are SECRET and only for FastAPI
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") if CLIENT_MODE == "fastapi" else None

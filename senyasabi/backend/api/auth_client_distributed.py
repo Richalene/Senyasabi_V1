@@ -1,7 +1,7 @@
 """Direct Supabase Auth client for distributed mode.
 
 This module provides direct Supabase Auth API calls when running in
-distributed mode (SENYESABI_MODE=distributed). It bypasses the FastAPI proxy
+distributed mode (SYSTEM_MODE=distributed). It bypasses the FastAPI proxy
 and talks directly to Supabase Auth using the anon key.
 """
 import time
@@ -19,7 +19,7 @@ class NetworkError(Exception):
     """Server unreachable or failing (5xx) - the caller may fall back to offline."""
 
 
-def _ensure_supabase():
+def _ensure_supabase_client():
     """Ensure Supabase client is available."""
     client = get_supabase_client()
     if client is None:
@@ -45,7 +45,7 @@ def register(username, email, password, display_name=None) -> dict:
         NetworkError: If Supabase is unreachable
     """
     try:
-        supabase = _ensure_supabase()
+        supabase = _ensure_supabase_client()
         
         # Prepare user metadata
         metadata = {"username": username}
@@ -117,6 +117,9 @@ def login(identifier, password) -> dict:
         })
         
         # Extract session data
+        if response.session is None:
+            raise RuntimeError("Login succeeded without a session")
+        
         session = response.session
         tokens = {
             "access_token": session.access_token,
