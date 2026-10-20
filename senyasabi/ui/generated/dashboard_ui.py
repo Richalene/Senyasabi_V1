@@ -23,7 +23,7 @@ class Ui_Dashboard(object):
     def setupUi(self, Dashboard):
         if not Dashboard.objectName():
             Dashboard.setObjectName(u"Dashboard")
-        Dashboard.resize(1439, 782)
+        Dashboard.resize(1920, 1080)
         Dashboard.setMinimumSize(QSize(800, 480))
         Dashboard.setStyleSheet(u"\n"
 "QWidget#Dashboard { background-color: #C2D076; }\n"

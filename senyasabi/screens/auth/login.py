@@ -1,10 +1,11 @@
 from pathlib import Path
 
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
-from screens.auth.common import AuthForm
-from screens.navigation import BackButton
+from screens.loading import LoadingOverlay
+from screens.startup import FittedForm
 
 
 # TEMPORARY: disable before distributing a production build.
@@ -43,27 +44,56 @@ class LoginScreen(QWidget):
         self._ui.resize(self.size())
         self.setWindowTitle("SenyaSabi — Sign In")
 
+        # Load styling
+        root = Path(__file__).resolve().parents[2]
+        style = (root / "resources/styles/common.qss").read_text() + (root / "resources/styles/auth.qss").read_text()
+        self.setStyleSheet(style)
+
+        # Explicitly set background and logo pixmaps so they load reliably
+        bg_label = self._ui.findChild(QLabel, "imageBg")
+        if bg_label:
+            bg_pixmap = QPixmap(str(root / "resources/img/login_bg.png"))
+            if not bg_pixmap.isNull():
+                bg_label.setPixmap(bg_pixmap)
+                bg_label.setScaledContents(True)
+
+        logo_label = self._ui.findChild(QLabel, "logoLabel")
+        if logo_label:
+            logo_pixmap = QPixmap(str(root / "resources/img/ui/logo_black.png"))
+            if not logo_pixmap.isNull():
+                logo_label.setPixmap(logo_pixmap)
+                logo_label.setScaledContents(True)
+
         self.email_input: QLineEdit = self._ui.findChild(QLineEdit, "emailInput")
         self.password_input: QLineEdit = self._ui.findChild(QLineEdit, "passwordInput")
+
+        # Error label positioned directly above buttons
         self.error_label = QLabel(self._ui)
         self.error_label.setObjectName('authError')
         self.error_label.setWordWrap(True)
-        self._ui.layout().insertWidget(8, self.error_label)
+        self.error_label.setGeometry(870, 672, 840, 36)
+        self.error_label.raise_()
+
         self.password_input.returnPressed.connect(self.continue_requested)
-        self._ui.findChild(QPushButton, "continueButton").clicked.connect(
-            self.continue_requested
-        )
-        self._ui.findChild(QPushButton, "registerButton").clicked.connect(
-            self.register_requested
-        )
+
+        continue_btn = self._ui.findChild(QPushButton, "continueButton")
+        if continue_btn:
+            continue_btn.clicked.connect(self.continue_requested)
+
+        register_btn = self._ui.findChild(QPushButton, "registerButton")
+        if register_btn:
+            register_btn.clicked.connect(self.register_requested)
+
+        back_btn = self._ui.findChild(QPushButton, "backButton")
+        if back_btn:
+            back_btn.clicked.connect(self.back_requested)
 
         add_dev_button(self)
-        self.back_button = BackButton(self._ui)
-        self.back_button.clicked.connect(self.back_requested.emit)
-        self._ui.layout().insertWidget(0, self.back_button, 0, Qt.AlignmentFlag.AlignLeft)
-        self._auth_form = AuthForm(self)
+
+        self.loading = LoadingOverlay(self)
+        self._fitted_form = FittedForm(self)
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, '_auth_form'):
-            self._auth_form.fit()
+        if hasattr(self, '_ui') and self._ui:
+            self._ui.resize(self.size())

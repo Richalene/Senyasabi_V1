@@ -2,7 +2,8 @@
 <ui version="4.0">
  <class>ModuleSelect</class>
  <widget class="QWidget" name="ModuleSelect">
-  <property name="geometry"><rect><x>0</x><y>0</y><width>1920</width><height>1080</height></rect></property>
+  <property name="geometry"><rect><x>0</x><y>0</y><width>1920</width>
+    <height>1080</height></rect></property>
   <property name="windowTitle"><string>SenyaSabi ? Module Map</string></property>
   <property name="styleSheet"><string notr="true">
 QWidget#ModuleSelect { background: #C2D076; }

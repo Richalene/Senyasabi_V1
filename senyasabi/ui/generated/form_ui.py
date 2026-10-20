@@ -22,7 +22,7 @@ class Ui_main(object):
     def setupUi(self, main):
         if not main.objectName():
             main.setObjectName(u"main")
-        main.resize(1306, 753)
+        main.resize(1920, 1080)
         main.setMinimumSize(QSize(1306, 753))
         main.setMaximumSize(QSize(1306, 753))
         main.setStyleSheet(u"QWidget#main { background-color: #c5d27b; color: #684b38; font-family: \"Segoe UI\"; }")

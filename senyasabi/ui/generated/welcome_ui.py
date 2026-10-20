@@ -22,12 +22,13 @@ class Ui_Welcome(object):
     def setupUi(self, Welcome):
         if not Welcome.objectName():
             Welcome.setObjectName(u"Welcome")
-        Welcome.resize(1440, 900)
+        Welcome.resize(1920, 1080)
         Welcome.setMinimumSize(QSize(1440, 900))
         Welcome.setMaximumSize(QSize(1440, 900))
         self.imgBackground = QLabel(Welcome)
         self.imgBackground.setObjectName(u"imgBackground")
         self.imgBackground.setGeometry(QRect(0, -10, 1521, 900))
+        self.imgBackground.setAutoFillBackground(True)
         self.imgBackground.setStyleSheet(u"")
         self.imgBackground.setFrameShape(QFrame.Shape.NoFrame)
         self.imgBackground.setPixmap(QPixmap(u"../resources/img/welcome.png"))

@@ -22,7 +22,7 @@ class Ui_Landing(object):
     def setupUi(self, Landing):
         if not Landing.objectName():
             Landing.setObjectName(u"Landing")
-        Landing.resize(1440, 900)
+        Landing.resize(1920, 1080)
         Landing.setMinimumSize(QSize(1440, 900))
         Landing.setMaximumSize(QSize(1440, 900))
         self.imgBackground = QLabel(Landing)

@@ -23,7 +23,7 @@ class Ui_LessonSelect(object):
     def setupUi(self, LessonSelect):
         if not LessonSelect.objectName():
             LessonSelect.setObjectName(u"LessonSelect")
-        LessonSelect.resize(1306, 735)
+        LessonSelect.resize(1920, 1080)
         LessonSelect.setStyleSheet(u"\n"
 "QWidget#LessonSelect { background: #C2D076; }\n"
 "QLabel { background: transparent; color: #72513D; }\n"

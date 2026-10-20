@@ -22,7 +22,7 @@ class Ui_LoginPage(object):
     def setupUi(self, LoginPage):
         if not LoginPage.objectName():
             LoginPage.setObjectName(u"LoginPage")
-        LoginPage.resize(720, 560)
+        LoginPage.resize(1920, 1080)
         self.pageLayout = QVBoxLayout(LoginPage)
         self.pageLayout.setObjectName(u"pageLayout")
         self.pageLayout.setContentsMargins(180, 64, 180, 64)

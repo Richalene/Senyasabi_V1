@@ -1,7 +1,129 @@
-QWidget#LoginPage, QWidget#RegisterPage { background: #fff9e9; border-radius: 24px; color: #704833; font-family: "Segoe UI"; font-size: 15px; }
-QLabel#titleLabel { color: #526536; font-size: 26px; font-weight: 700; }
-QLabel#subtitleLabel { color: #80644d; font-size: 15px; }
-QLabel#authError { color: #8c453b; font-size: 14px; }
-QScrollArea, QScrollArea > QWidget { background: transparent; border: none; }
-QLineEdit:focus { border: 2px solid #80984d; }
-QPushButton#devLoginButton { background: #fff6d2; font-size: 11px; padding: 3px 8px; min-height: 18px; }
+/* Auth screens (Login & Register) */
+QWidget#LoginPage, QWidget#RegisterPage {
+    background: transparent;
+    font-family: "Segoe UI", sans-serif;
+}
+
+/* Big titles */
+QLabel#titleLabel {
+    color: #010100;
+    font-size: 46px;
+    font-weight: 700;
+    background: transparent;
+}
+
+/* Subtitle description */
+QLabel#subtitleLabel {
+    color: #4a4332;
+    font-size: 20px;
+    font-weight: 400;
+    background: transparent;
+}
+
+/* Horizontal line separator */
+Line#line {
+    background-color: #8c9656;
+    color: #8c9656;
+    height: 1px;
+    border: none;
+}
+
+/* Field labels */
+QLabel#emailLabel, QLabel#passwordLabel {
+    color: #4a4332;
+    font-size: 18px;
+    font-weight: 600;
+    background: transparent;
+}
+
+/* Pill input boxes with dark outline */
+QLineEdit#emailInput, QLineEdit#passwordInput {
+    background-color: transparent;
+    color: #010100;
+    border: 2.5px solid #010100;
+    border-radius: 26px;
+    font-size: 18px;
+    font-style: italic;
+    padding: 0px 24px;
+}
+
+QLineEdit#emailInput:focus, QLineEdit#passwordInput:focus {
+    border: 2.5px solid #082b08;
+    background-color: rgba(255, 255, 255, 0.15);
+}
+
+/* Error message label */
+QLabel#authError {
+    color: #8c2018;
+    font-size: 16px;
+    font-weight: 600;
+    background: transparent;
+}
+
+/* Primary actions - Sign In / Sign Up */
+QPushButton#continueButton, QPushButton#createAccountButton {
+    background-color: #082b08;
+    color: #ffffff;
+    border: none;
+    border-radius: 24px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+QPushButton#continueButton:hover, QPushButton#createAccountButton:hover {
+    background-color: #124212;
+}
+
+QPushButton#continueButton:pressed, QPushButton#createAccountButton:pressed {
+    background-color: #041704;
+}
+
+/* Secondary actions - Go Back button */
+QPushButton#backButton {
+    background-color: #704833;
+    color: #ffffff;
+    border: none;
+    border-radius: 24px;
+    font-size: 22px;
+    font-weight: 600;
+}
+
+QPushButton#backButton:hover {
+    background-color: #82553d;
+}
+
+QPushButton#backButton:pressed {
+    background-color: #553422;
+}
+
+/* Footer link button ("Don't have an account? Sign Up") */
+QPushButton#registerButton, QPushButton#signInButton {
+    background: transparent;
+    border: none;
+    color: #3b421a;
+    font-size: 18px;
+    font-weight: 500;
+    text-align: left;
+    padding: 0px;
+}
+
+QPushButton#registerButton:hover, QPushButton#signInButton:hover {
+    color: #010100;
+}
+
+/* Version watermark */
+QLabel#versionLabel {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 14px;
+    background: transparent;
+}
+
+/* Development button */
+QPushButton#devLoginButton {
+    background: #fff6d2;
+    color: #704833;
+    font-size: 11px;
+    padding: 3px 8px;
+    min-height: 18px;
+    border-radius: 4px;
+}
