@@ -128,21 +128,16 @@ class LeaderboardWindow(QWidget):
             self.ui.imageBg.setPixmap(gen_bg_pixmap)
             self.ui.imageBg.setScaledContents(True)
 
-        # Title Banner using cloud.png with Cherry Bomb One font
+        # Cloud background
         cloud_pixmap = QPixmap(str(root / "resources/img/ui/cloud.png"))
         if not cloud_pixmap.isNull():
-            # Composite "leaderboards" in Cherry Bomb One over cloud.png
-            from PySide6.QtGui import QPainter, QColor
-            title_img = cloud_pixmap.toImage()
-            p = QPainter(title_img)
-            p.setRenderHint(QPainter.Antialiasing)
-            p.setRenderHint(QPainter.TextAntialiasing)
-            p.setFont(QFont("Cherry Bomb One", 26))
-            p.setPen(QColor("#6A5037"))
-            p.drawText(title_img.rect(), Qt.AlignCenter, "leaderboards")
-            p.end()
-            self.ui.titleBanner.setPixmap(QPixmap.fromImage(title_img))
-            self.ui.titleBanner.setScaledContents(True)
+            self.ui.cloudBg.setPixmap(cloud_pixmap)
+            self.ui.cloudBg.setScaledContents(True)
+
+        # Style title label directly with vector font (no image generation)
+        self.ui.titleLabel.setStyleSheet(
+            "QLabel#titleLabel { color: #6A5037; font-family: 'Cherry Bomb One'; font-size: 52px; background: transparent; }"
+        )
 
         # Cache medal pixmaps
         self._medals = {

@@ -32,7 +32,7 @@
     <bool>true</bool>
    </property>
   </widget>
-  <widget class="QLabel" name="titleBanner">
+  <widget class="QLabel" name="cloudBg">
    <property name="geometry">
     <rect>
      <x>105</x>
@@ -45,10 +45,26 @@
     <string/>
    </property>
    <property name="pixmap">
-    <pixmap>../../resources/img/ui/leaderboards_title.png</pixmap>
+    <pixmap>../../resources/img/ui/cloud.png</pixmap>
    </property>
    <property name="scaledContents">
     <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="titleLabel">
+   <property name="geometry">
+    <rect>
+     <x>110</x>
+     <y>90</y>
+     <width>550</width>
+     <height>160</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Leaderboards</string>
+   </property>
+   <property name="alignment">
+    <set>Qt::AlignmentFlag::AlignCenter</set>
    </property>
   </widget>
   <widget class="QPushButton" name="btnBack">
@@ -140,7 +156,8 @@
    </property>
   </widget>
   <zorder>imageBg</zorder>
-  <zorder>titleBanner</zorder>
+  <zorder>cloudBg</zorder>
+  <zorder>titleLabel</zorder>
   <zorder>btnBack</zorder>
   <zorder>scrollLeaderboard</zorder>
  </widget>
