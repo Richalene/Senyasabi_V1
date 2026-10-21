@@ -87,3 +87,6 @@ CMakeLists.txt.user*
 .env
 _test_cache
 **/__pycache__/
+
+# Local video assets (keep videos out of Git pushes)
+/senyasabi/resources/videos/clips_labeled/

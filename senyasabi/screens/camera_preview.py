@@ -7,9 +7,10 @@ from PySide6.QtWidgets import QLabel
 class RoundedCameraPreview(QLabel):
     """Keep the full source image and fit/clip it again on every paint/resize."""
 
-    def __init__(self, text="", parent=None, *, radius=28):
+    def __init__(self, text="", parent=None, *, radius=28, fill_crop=False):
         super().__init__(text, parent)
         self.radius = radius
+        self.fill_crop = fill_crop
         self._source = QPixmap()
         self.setObjectName("roundedCameraPreview")
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -90,8 +91,12 @@ class RoundedCameraPreview(QLabel):
         if not self._source.isNull():
             available = frame_rect.adjusted(2, 2, -2, -2)
             if not available.isEmpty():
-                scale = min(available.width() / self._source.width(),
-                            available.height() / self._source.height())
+                if self.fill_crop:
+                    scale = max(available.width() / self._source.width(),
+                                available.height() / self._source.height())
+                else:
+                    scale = min(available.width() / self._source.width(),
+                                available.height() / self._source.height())
                 width, height = self._source.width() * scale, self._source.height() * scale
                 image_rect = QRectF(available.center().x() - width / 2,
                                     available.center().y() - height / 2, width, height)

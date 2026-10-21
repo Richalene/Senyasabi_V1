@@ -1,0 +1,12 @@
+{
+  "0": "YES",
+  "1": "NO",
+  "2": "UNDERSTAND",
+  "3": "DON'T UNDERSTAND",
+  "4": "KNOW",
+  "5": "DON'T KNOW",
+  "6": "CORRECT",
+  "7": "WRONG",
+  "8": "SLOW",
+  "9": "FAST"
+}

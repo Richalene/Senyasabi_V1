@@ -1,9 +1,10 @@
+from pathlib import Path
 # This Python file uses the following encoding: utf-8
 import sys
 
 from PySide6.QtCore import Qt, Signal
 import os
-from PySide6.QtGui import QCloseEvent, QFontDatabase
+from PySide6.QtGui import QPixmap, QCloseEvent, QFontDatabase
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMessageBox, QPushButton, QWidget
 
 from screens.loading import LoadingOverlay
@@ -55,6 +56,10 @@ class StatisticsDashboardWindow(QWidget):
         _ensure_cherry_bomb_font()
         self.ui = Ui_Dashboard()
         self.ui.setupUi(self)
+        root = Path(__file__).resolve().parents[2]
+        if hasattr(self.ui, "imageBg"):
+            self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/ui/dashboard_bg.png")))
+            self.ui.imageBg.setScaledContents(True)
         self.ui.titlePanel.hide()
         self.ui.btnBack = BackButton.replace(self.ui.btnBack)
         self.ui.streakPanel.hide()
@@ -187,6 +192,10 @@ class DashboardWindow(QWidget):
         _ensure_cherry_bomb_font()
         self.ui = Ui_main()
         self.ui.setupUi(self)
+        root = Path(__file__).resolve().parents[2]
+        if hasattr(self.ui, "imageBg"):
+            self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/home_bg.png")))
+            self.ui.imageBg.setScaledContents(True)
         self.ui.streakCard.hide()
         self.ui.streakValue.setObjectName("replacedStreakValue")
         self.ui.btnHamburger.hide()

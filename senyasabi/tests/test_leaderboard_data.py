@@ -3,6 +3,7 @@ import sys
 import tempfile
 import unittest
 import uuid
+from datetime import datetime, timezone
 from pathlib import Path
 from unittest.mock import patch
 
@@ -88,25 +89,75 @@ class ServiceTests(unittest.TestCase):
         data = [row(0, "Ana", 500, 1), row(1, "Ben", 300, 2)]
         with self.fetch(api(data)):
             svc.get_leaderboard(user_id=None)
-        with self.fetch(None):
+        with self.fetch(None) as api_fetch:
             out = svc.get_leaderboard(user_id=IDS[0])
+        api_fetch.assert_not_called()
         self.assertEqual([(e["username"], e["total_score"]) for e in out], [("Ana", 500), ("Ben", 300)])
         self.assertTrue(out[0]["is_current_user"])
         with self.Session() as s:
             self.assertTrue(all(u.email is None for u in s.query(models.User)))
 
     def test_cache_is_replaced_not_accumulated(self):
-        with self.fetch(api([row(0, "Ana", 5, 1), row(1, "Ben", 3, 2)])):
-            svc.get_leaderboard(user_id=None)
-        with self.fetch(api([row(1, "Ben", 9, 1)])):
-            svc.get_leaderboard(user_id=None)
-        with self.fetch(None):
+        svc._repository._store("all_time", [
+            dict(user_id=IDS[0], username="Ana", total_score=5, rank_position=1,
+                 current_streak=0, badges_unlocked=0),
+            dict(user_id=IDS[1], username="Ben", total_score=3, rank_position=2,
+                 current_streak=0, badges_unlocked=0),
+        ])
+        svc._repository._store("all_time", [
+            dict(user_id=IDS[1], username="Ben", total_score=9, rank_position=1,
+                 current_streak=0, badges_unlocked=0),
+        ])
+        with self.fetch(None) as api_fetch:
             out = svc.get_leaderboard(user_id=None)
+        api_fetch.assert_not_called()
         self.assertEqual([(e["username"], e["total_score"]) for e in out], [("Ben", 9)])
 
     def test_unavailable_when_offline_and_uncached(self):
         with self.fetch(None), self.assertRaises(svc.LeaderboardUnavailable):
             svc.get_leaderboard(user_id=None)
+
+    def test_local_attempts_build_board_without_api(self):
+        now = datetime.now(timezone.utc)
+        with self.Session() as db:
+            db.add(models.ContentVersion(version_number=1))
+            db.flush()
+            db.add(models.Module(module_id=1, module_code="test", title="Test", module_order=1,
+                                 content_version_id=1))
+            db.add_all([
+                models.User(user_id=uuid.UUID(IDS[0]), username="Ana", display_name="Ana"),
+                models.User(user_id=uuid.UUID(IDS[1]), username="Ben", display_name="Ben"),
+            ])
+            db.add(models.Quiz(quiz_id=1, quiz_code="quiz", module_id=1, title="Quiz",
+                               content_version_id=1))
+            db.add(models.Minigame(minigame_id=1, minigame_code="game", game_name="Game",
+                                   game_type="test", module_id=1, content_version_id=1))
+            db.flush()
+            db.add_all([
+                models.QuizAttempt(attempt_id=uuid.uuid4(), user_id=uuid.UUID(IDS[0]),
+                                   quiz_id=1, completed_at=now, score=20),
+                models.MinigameAttempt(game_attempt_id=uuid.uuid4(), user_id=uuid.UUID(IDS[0]),
+                                       minigame_id=1, completed_at=now, score=30),
+                models.QuizAttempt(attempt_id=uuid.uuid4(), user_id=uuid.UUID(IDS[1]),
+                                   quiz_id=1, completed_at=now, score=10),
+            ])
+            db.commit()
+
+        svc._repository._store("all_time", [
+            dict(user_id=IDS[0], username="Ana", total_score=40, rank_position=1,
+                 current_streak=4, badges_unlocked=2),
+            dict(user_id=IDS[2], username="Kai", total_score=40, rank_position=2,
+                 current_streak=1, badges_unlocked=1),
+        ])
+        with self.fetch(None) as api_fetch:
+            out = svc.get_leaderboard(user_id=IDS[0])
+
+        api_fetch.assert_not_called()
+        self.assertEqual([(entry["username"], entry["total_score"], entry["rank_position"])
+                          for entry in out], [("Ana", 50, 1), ("Kai", 40, 2), ("Ben", 10, 3)])
+        self.assertEqual(out[0]["current_streak"], 4)
+        self.assertEqual(out[0]["badges_unlocked"], 2)
+        self.assertTrue(out[0]["is_current_user"])
 
     def test_periods_validated_and_boards_cached_separately(self):
         with self.assertRaises(ValueError):
@@ -195,4 +246,3 @@ class WindowTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
-

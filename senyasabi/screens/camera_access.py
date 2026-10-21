@@ -101,6 +101,13 @@ class LessonCameraMixin:
         self.loading.run(prepare, self._camera_ready, self._camera_failed,
                          dispose=lambda engine: engine.close(), message='Preparing sign recognition…')
 
+    def _set_cam_dot(self, active: bool):
+        if hasattr(self, "layout_comp") and hasattr(self.layout_comp, "set_camera_active"):
+            self.layout_comp.set_camera_active(active)
+        elif hasattr(self, "camDot"):
+            color = "#4ade80" if active else "#ef4444"
+            self.camDot.setStyleSheet(f"background-color: {color}; border-radius: 6px;")
+
     def _camera_ready(self, engine):
         self._engine = engine
         self._camera_misses = 0

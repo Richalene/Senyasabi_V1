@@ -1,1 +1,73 @@
-{}
+{
+  "greeting": {
+    "good_morning": "clips_labeled/0_GOOD_MORNING/0.MOV",
+    "good_afternoon": "clips_labeled/1_GOOD_AFTERNOON/0.MOV",
+    "good_evening": "clips_labeled/2_GOOD_EVENING/0.MOV",
+    "hello": "clips_labeled/3_HELLO/0.MOV",
+    "how_are_you": "clips_labeled/4_HOW_ARE_YOU/0.MOV",
+    "im_fine": "clips_labeled/5_IM_FINE/0.MOV",
+    "nice_to_meet_you": "clips_labeled/6_NICE_TO_MEET_YOU/0.MOV",
+    "thank_you": "clips_labeled/7_THANK_YOU/0.MOV",
+    "youre_welcome": "clips_labeled/8_YOURE_WELCOME/0.MOV",
+    "see_you_tomorrow": "clips_labeled/9_SEE_YOU_TOMORROW/0.MOV"
+  },
+  "survival": {
+    "understand": "clips_labeled/10_UNDERSTAND/0.MOV",
+    "know": "clips_labeled/12_KNOW/0.MOV",
+    "no": "clips_labeled/14_NO/0.MOV",
+    "yes": "clips_labeled/15_YES/0.MOV",
+    "wrong": "clips_labeled/16_WRONG/0.MOV",
+    "correct": "clips_labeled/17_CORRECT/0.MOV",
+    "slow": "clips_labeled/18_SLOW/0.MOV",
+    "fast": "clips_labeled/19_FAST/0.MOV",
+    "dont_understand": "clips_labeled/11_DON\u2019T_UNDERSTAND/0.MOV",
+    "dont_know": "clips_labeled/13_DON\u2019T_KNOW/0.MOV"
+  },
+  "number": {
+    "one": "clips_labeled/20_ONE/0.MOV",
+    "two": "clips_labeled/21_TWO/0.MOV",
+    "three": "clips_labeled/22_THREE/0.MOV",
+    "four": "clips_labeled/23_FOUR/0.MOV",
+    "five": "clips_labeled/24_FIVE/0.MOV",
+    "six": "clips_labeled/25_SIX/0.MOV",
+    "seven": "clips_labeled/26_SEVEN/0.MOV",
+    "eight": "clips_labeled/27_EIGHT/0.MOV",
+    "nine": "clips_labeled/28_NINE/0.MOV",
+    "ten": "clips_labeled/29_TEN/0.MOV"
+  },
+  "calendar": {
+    "january": "clips_labeled/30_JANUARY/0.MOV",
+    "february": "clips_labeled/31_FEBRUARY/0.MOV",
+    "march": "clips_labeled/32_MARCH/0.MOV",
+    "april": "clips_labeled/33_APRIL/0.MOV",
+    "may": "clips_labeled/34_MAY/0.MOV",
+    "june": "clips_labeled/35_JUNE/0.MOV",
+    "july": "clips_labeled/36_JULY/0.MOV",
+    "august": "clips_labeled/37_AUGUST/0.MOV",
+    "september": "clips_labeled/38_SEPTEMBER/0.MOV",
+    "october": "clips_labeled/39_OCTOBER/0.MOV",
+    "november": "clips_labeled/40_NOVEMBER/0.MOV",
+    "december": "clips_labeled/41_DECEMBER/0.MOV"
+  },
+  "days": {
+    "monday": "clips_labeled/42_MONDAY/0.MOV",
+    "tuesday": "clips_labeled/43_TUESDAY/0.MOV",
+    "wednesday": "clips_labeled/44_WEDNESDAY/0.MOV",
+    "thursday": "clips_labeled/45_THURSDAY/0.MOV",
+    "friday": "clips_labeled/46_FRIDAY/0.MOV",
+    "saturday": "clips_labeled/47_SATURDAY/0.MOV",
+    "sunday": "clips_labeled/48_SUNDAY/0.MOV"
+  },
+  "family": {
+    "father": "clips_labeled/52_FATHER/0.MOV",
+    "mother": "clips_labeled/53_MOTHER/0.MOV",
+    "son": "clips_labeled/54_SON/0.MOV",
+    "daughter": "clips_labeled/55_DAUGHTER/0.MOV",
+    "grandfather": "clips_labeled/56_GRANDFATHER/0.MOV",
+    "grandmother": "clips_labeled/57_GRANDMOTHER/0.MOV",
+    "uncle": "clips_labeled/58_UNCLE/0.MOV",
+    "auntie": "clips_labeled/59_AUNTIE/0.MOV",
+    "cousin": "clips_labeled/60_COUSIN/0.MOV",
+    "parents": "clips_labeled/61_PARENTS/0.MOV"
+  }
+}

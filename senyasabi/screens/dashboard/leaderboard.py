@@ -260,6 +260,13 @@ class LeaderboardWindow(QWidget):
             name_label.setToolTip(entry["username"])
             columns.addWidget(name_label, 1)
 
+            score_label = QLabel(f"{entry['total_score']} pts", row)
+            score_label.setObjectName("score")
+            score_label.setProperty("currentUser", current)
+            score_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            score_label.setFixedWidth(190)
+            columns.addWidget(score_label)
+
             # Streak column ("Streak 284")
             streak_val = entry.get("current_streak", 0)
             streak_label = QLabel(f"Streak {streak_val}", row)

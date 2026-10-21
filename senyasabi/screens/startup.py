@@ -156,7 +156,6 @@ class LandingScreen(StartupScreen):
         self._fitted_form = FittedForm(self)
 
     def show_about(self):
-        QMessageBox.information(self, 'About SenyaSabi',
-            'Learn Filipino Sign Language through lessons, quizzes, and three spelling games. '
-            'Camera recognition runs only when you choose a camera-based activity. '
-            'You can explore the other activities without a camera.')
+        from screens.dialogs import ComingSoonDialog
+        dialog = ComingSoonDialog(self)
+        dialog.exec()

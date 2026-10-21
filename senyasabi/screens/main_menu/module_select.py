@@ -13,11 +13,18 @@ from screens.navigation import BackButton, install_page_menu
 
 ROOT = Path(__file__).resolve().parents[2]
 # Positions are canvas fractions, independent of desktop resolution.
-POSITIONS = ((.29,.74), (.71,.74), (.24,.60), (.76,.60), (.29,.46),
-             (.71,.46), (.24,.32), (.76,.32), (.33,.19), (.67,.19))
+# Trajectory along horizontal branch leading to golden walnut cache matching reference mockup
+POSITIONS = (
+    (.140, .650),  # 1: Number (on leaves branch)
+    (.255, .820),  # 2: Family
+    (.360, .580),  # 3: Greeting (crest)
+    (.470, .780),  # 4: Survival
+    (.590, .590),  # 5: Days (crest)
+    (.705, .710),  # 6: Calendar (approaching golden walnuts)
+)
 MODULE_NODES = [dict(module_code="alphabet", title="FSL Alphabet",
                      description="Learn the FSL alphabet", count=sum(map(len, LESSON_LETTERS.values())),
-                     x=.50, y=.86)] + [
+                     x=.050, y=.908)] + [
     dict(module_code=code.casefold(), title=code.title(), description="Learn FSL words and phrases",
          count=len(words), x=position[0], y=position[1])
     for (code, words), position in zip(_load_categories().items(), POSITIONS)
@@ -38,18 +45,40 @@ class FireflyButton(QPushButton):
         super().leaveEvent(event)
 
 
-class BranchBackground(QLabel):
+class DashedTrailOverlay(QWidget):
+    """Draws the glowing dashed flight path connecting the fireflies along the tree branch."""
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
         painter.setRenderHint(QPainter.RenderHint.Antialiasing)
-        pen = QPen(QColor("#916237"), max(2, self.width()/1920*12))
+
+        w, h = self.width(), self.height()
+        # Rich gold-amber dashed flight trail
+        pen = QPen(QColor(210, 165, 85, 230), max(2.5, 4.0 * (w / 1920)))
+        pen.setStyle(Qt.PenStyle.CustomDashLine)
+        pen.setDashPattern([3, 4])
         pen.setCapStyle(Qt.PenCapStyle.RoundCap)
         painter.setPen(pen)
-        def point(x, y): return QPointF(x*self.width(), y*self.height())
-        painter.drawLine(point(.5,.94), point(.5,.18))
-        for node in MODULE_NODES[1:]:
-            painter.drawLine(point(.5,min(.88,node["y"]+.085)), point(node["x"],node["y"]))
+
+        from PySide6.QtGui import QPainterPath
+        path = QPainterPath()
+        # Connect nodes from bottom-left through each module to the golden walnut cache
+        pts = [QPointF(node["x"] * w, node["y"] * h) for node in MODULE_NODES]
+        # Append golden walnut destination
+        pts.append(QPointF(0.789 * w, 0.633 * h))
+
+        if len(pts) >= 2:
+            path.moveTo(pts[0])
+            for i in range(len(pts) - 1):
+                p0 = pts[i]
+                p1 = pts[i + 1]
+                dx = (p1.x() - p0.x()) * 0.55
+                # Alternate vertical control offsets for a natural wavy flight pattern
+                dy = -35 * (h / 1080) if (i % 2 == 0) else 35 * (h / 1080)
+                c1 = QPointF(p0.x() + dx, p0.y() + dy)
+                c2 = QPointF(p1.x() - dx, p1.y() - dy)
+                path.cubicTo(c1, c2, p1)
+            painter.drawPath(path)
 
 
 class ModuleSelectWidget(QWidget):
@@ -65,16 +94,32 @@ class ModuleSelectWidget(QWidget):
         # This screen owns proportional fitting, including its dynamic overlays.
         self._fitted_form = self
         self.resize(1306,735)
-        self.background = BranchBackground(self._ui)
-        self.background.setPixmap(QPixmap(str(ROOT / "resources/img/bgempty.png")))
+        self.background = self._ui.findChild(QLabel, "bgLabel")
+        if self.background is None:
+            self.background = QLabel(self._ui)
+        self.background.setPixmap(QPixmap(str(ROOT / "resources/img/mod_tree.png")))
         self.background.setScaledContents(True)
         self.background.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.background.lower()
-        self.back_button = BackButton.replace(self._ui.findChild(QPushButton,"backBtn"))
-        self.back_button.setGeometry(60,40,60,60)
-        self.back_button.clicked.connect(self.go_back)
-        # Keep the level text clear of the shared top-right menu artwork.
-        self._ui.findChild(QLabel, "levelLabel").setGeometry(1480, 40, 230, 60)
+
+        self.trail_overlay = DashedTrailOverlay(self._ui)
+        self.trail_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.trail_overlay.show()
+
+        self.logo = self._ui.findChild(QLabel, "logoLabel")
+        if self.logo is not None:
+            self.logo.setPixmap(QPixmap(str(ROOT / "resources/img/ui/senyasabi_logo_header.png")))
+            self.logo.setScaledContents(True)
+
+        self.walnut_pile = self._ui.findChild(QLabel, "walnutPileLabel")
+        if self.walnut_pile is not None:
+            self.walnut_pile.setPixmap(QPixmap(str(ROOT / "resources/img/ui/WALNUTS.png")))
+            self.walnut_pile.setScaledContents(True)
+
+        self.back_button = self._ui.findChild(QPushButton, "backBtn")
+        if self.back_button is not None:
+            self.back_button.setIcon(QIcon(str(ROOT / "resources/img/ui/mod_back_btn.png")))
+            self.back_button.clicked.connect(self.go_back)
         self._fixed = [(child, child.geometry(), child.styleSheet())
                        for child in self._ui.findChildren(QWidget)
                        if child is not self.background]
@@ -100,6 +145,21 @@ class ModuleSelectWidget(QWidget):
             button.hovered.connect(self.hover_node)
             button.clicked.connect(lambda checked=False, code=node["module_code"]: self.choose(code))
             self.buttons.append(button)
+        # Bottom Level Badge matching Wireframe Pages 27, 28, 36, 54, 55, 64, 65
+        self.level_badge = QLabel("Level 1/4", self._ui)
+        self.level_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.level_badge.setStyleSheet(
+            "background-color: #FFFDF0; "
+            "color: #555555; "
+            "border: 2px solid #D6DFA0; "
+            "border-radius: 20px; "
+            "font-family: 'Segoe UI', sans-serif; "
+            "font-size: 18px; "
+            "font-style: italic; "
+            "font-weight: 500;"
+        )
+        self.level_badge.show()
+
         self.popup = QFrame(self._ui)
         self.popup.setProperty("class", "modulePopup")
         self.popup.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
@@ -135,6 +195,10 @@ class ModuleSelectWidget(QWidget):
         self.popup_detail.setText(f'{node["description"]}\n{node["count"]} Signs')
         self.position_popup()
         self.popup.show()
+        if hasattr(self, "level_badge"):
+            bw, bh = round(210 * scale), round(46 * scale)
+            self.level_badge.setGeometry((width - bw) // 2, round(height * 0.88), bw, bh)
+            self.level_badge.raise_()
         self.popup.raise_()
 
     def position_popup(self):
@@ -162,15 +226,29 @@ class ModuleSelectWidget(QWidget):
         width,height = round(1920*scale),round(1080*scale)
         self._ui.setGeometry((self.width()-width)//2,(self.height()-height)//2,width,height)
         self.background.setGeometry(self._ui.rect())
+        self.background.lower()
+        if hasattr(self, "trail_overlay"):
+            self.trail_overlay.setGeometry(self._ui.rect())
+            self.trail_overlay.raise_()
         self._ui.setStyleSheet(re.sub(r"(\d+)px",lambda m:f"{max(1,round(int(m[1])*scale))}px",self._base_style))
         for child,rect,_ in self._fixed:
-            child.setGeometry(QRect(round(rect.x()*scale),round(rect.y()*scale),
-                                    round(rect.width()*scale),round(rect.height()*scale)))
-        size = max(30,round(115*scale))
+            if child is not getattr(self, "trail_overlay", None):
+                child.setGeometry(QRect(round(rect.x()*scale),round(rect.y()*scale),
+                                        round(rect.width()*scale),round(rect.height()*scale)))
+                child.raise_()
+        if hasattr(self, "walnut_pile") and self.walnut_pile is not None:
+            self.walnut_pile.raise_()
+        size = max(35, round(125 * scale))
         for button,node in zip(self.buttons,MODULE_NODES):
             button.setGeometry(round(node["x"]*width-size/2),round(node["y"]*height-size/2),size,size)
             button.setIconSize(QSize(size,size))
             button.graphicsEffect().setBlurRadius(max(12,32*scale))
+            button.raise_()
+        if hasattr(self, "level_badge"):
+            bw, bh = round(210 * scale), round(46 * scale)
+            self.level_badge.setGeometry((width - bw) // 2, round(height * 0.88), bw, bh)
+            self.level_badge.raise_()
+        self.popup.raise_()
         self.position_popup()
 
     def resizeEvent(self,event):

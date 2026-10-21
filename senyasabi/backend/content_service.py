@@ -6,8 +6,7 @@ import re
 from typing import Protocol
 from .recognition_labels import normalize_label
 
-MODULE_CODES = ("greeting", "survival", "number", "calendar", "days", "family",
-                "relationships", "color", "food", "drink")
+MODULE_CODES = ("number", "family", "greeting", "survival", "days", "calendar")
 ROOT = Path(__file__).resolve().parents[1]
 
 

@@ -1,11 +1,77 @@
-from PySide6.QtCore import Signal, QTimer, Qt
-from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout, QHBoxLayout
-from backend.minigame_service import CONFIG, MinigameContext
-from screens.navigation import BackButton, install_page_menu
-from .common import GameCanvas, button, label
+from pathlib import Path
+from PySide6.QtCore import Signal, QTimer, Qt, QSize
+from PySide6.QtGui import QFontDatabase, QPixmap
+from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout
+from backend.minigame_service import ROOT, CONFIG, MinigameContext
+from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
+from screens.startup import FittedForm
+from ui.generated.minigame_select_ui import Ui_MinigameSelect
+from .common import GameCanvas
 from .sign_sprint import SignSprint
 from .sign_detective import SignDetective
 from .fingerspell_quest import FingerSpellQuest
+
+
+class MinigameMenuWidget(QWidget):
+    """The hub screen displaying the 3 minigame buttons based on Figma mockup."""
+    sprint_requested = Signal()
+    quest_requested = Signal()
+    detective_requested = Signal()
+    back_requested = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.resize(1920, 1080)
+        self.ui = Ui_MinigameSelect()
+        self.ui.setupUi(self)
+
+        # Ensure Cherry Bomb One font is loaded
+        font_path = ROOT / "resources/font/CherryBombOne-Regular.ttf"
+        if font_path.exists():
+            QFontDatabase.addApplicationFont(str(font_path))
+
+        # Runtime absolute asset resolution
+        self.ui.imageBg.setPixmap(QPixmap(str(ROOT / "resources/img/gen_bg.png")))
+
+        b16 = str(ROOT / "resources/img/ui/button_16.png").replace("\\", "/")
+        b17 = str(ROOT / "resources/img/ui/button_17.png").replace("\\", "/")
+
+        self.ui.btnSprint.setStyleSheet(
+            f"QPushButton#btnSprint {{ background: transparent; border: none; border-image: url({b16}) 0 0 0 0 stretch stretch; }}"
+        )
+        self.ui.btnQuest.setStyleSheet(
+            f"QPushButton#btnQuest {{ background: transparent; border: none; border-image: url({b17}) 0 0 0 0 stretch stretch; }}"
+        )
+        self.ui.btnDetective.setStyleSheet(
+            f"QPushButton#btnDetective {{ background: transparent; border: none; border-image: url({b16}) 0 0 0 0 stretch stretch; }}"
+        )
+
+        star_pix = QPixmap(str(ROOT / "resources/img/ui/star.png"))
+        for star in (self.ui.starSprint1, self.ui.starQuest1, self.ui.starQuest2,
+                     self.ui.starDet1, self.ui.starDet2, self.ui.starDet3):
+            star.setPixmap(star_pix)
+            star.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+
+        self.ui.lblSprintText.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.ui.lblQuestText.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self.ui.lblDetectiveText.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+
+        # Replace btnBack with stylized circular BackButton
+        self.back_button = BackButton.replace(self.ui.btnBack)
+        self.back_button.clicked.connect(self.back_requested.emit)
+
+        # Header with streak and menu
+        self.header = SenyaSabiHeader(self)
+        self.header.anchor_to_canvas(QSize(1920, 1080))
+        install_page_menu(self, header=self.header)
+
+        # FittedForm for proportional scaling to any resolution
+        self._fitted_form = FittedForm(self)
+
+        # Button signals
+        self.ui.btnSprint.clicked.connect(self.sprint_requested.emit)
+        self.ui.btnQuest.clicked.connect(self.quest_requested.emit)
+        self.ui.btnDetective.clicked.connect(self.detective_requested.emit)
 
 
 class MinigameSelect(GameCanvas):
@@ -15,35 +81,31 @@ class MinigameSelect(GameCanvas):
         super().__init__()
         self.setObjectName("minigameSelect")
         self.setWindowTitle("SenyaSabi Minigames")
+        self.resize(1920, 1080)
         self.context = MinigameContext()
         self.game = None
         self.stack = QStackedWidget()
         layout = QVBoxLayout(self)
+        layout.setContentsMargins(0, 0, 0, 0)
+        layout.setSpacing(0)
         layout.addWidget(self.stack)
-        self.menu = QWidget()
-        choices = QVBoxLayout(self.menu)
-        choices.setContentsMargins(60, 30, 60, 30)
-        self.back_button = BackButton()
-        self.back_button.clicked.connect(self.back_requested.emit)
-        navigation_row = QHBoxLayout()
-        navigation_row.addWidget(self.back_button, alignment=Qt.AlignmentFlag.AlignLeft)
-        navigation_row.addStretch()
-        navigation_row.addSpacing(76)
-        choices.addLayout(navigation_row)
-        choices.addWidget(label("Global Minigames", "gameTitle"))
-        choices.addWidget(label("Practice words and phrases from all word modules.", "gameSubtitle"))
-        self.game_buttons = {}
-        for kind in CONFIG:
-            title, difficulty, _ = CONFIG[kind]
-            choice = button(f"{title}\n{difficulty}",
-                            lambda checked=False, selected=kind: self.open_game(
-                                selected, scope="global", module_code=None), "primaryButton")
-            self.game_buttons[kind] = choice
-            choices.addWidget(choice)
-        choices.addStretch()
+
+        self.menu = MinigameMenuWidget()
+        self.menu.sprint_requested.connect(lambda: self.open_game("sprint"))
+        self.menu.quest_requested.connect(lambda: self.open_game("quest"))
+        self.menu.detective_requested.connect(lambda: self.open_game("detective"))
+        self.menu.back_requested.connect(self.back_requested.emit)
+
+        # Expose legacy attributes for backwards-compatibility
+        self.back_button = self.menu.back_button
+        self.game_buttons = {
+            "sprint": self.menu.ui.btnSprint,
+            "quest": self.menu.ui.btnQuest,
+            "detective": self.menu.ui.btnDetective,
+        }
+        self.navigation_header = self.menu.header
+
         self.stack.addWidget(self.menu)
-        # Each stacked activity owns its header; the hub header belongs only to this page.
-        self.navigation_header = install_page_menu(self.menu)
 
     @property
     def scope(self):
@@ -72,13 +134,9 @@ class MinigameSelect(GameCanvas):
         QTimer.singleShot(0, lambda: self.start_game(game))
 
     def start_game(self, game):
-        if self.game is not game or not self.isVisible():
-            return
-        if isinstance(game, FingerSpellQuest):
-            if game.engine is None and not game.loading.busy:
-                game.open_camera()
-        elif not game.countdown.isActive():
-            game.start()
+        # Games now begin at their respective How-To instructions screen,
+        # so game.start_game() is triggered when the player clicks "Let's Go!"
+        pass
 
     def game_back(self):
         self.return_menu()

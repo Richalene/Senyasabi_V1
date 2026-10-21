@@ -95,4 +95,4 @@ if __name__ == "__main__":
     print(f"Debug mode: {FASTAPI_DEBUG}")
     print(f"API docs available at http://{FASTAPI_HOST}:{FASTAPI_PORT}/docs")
     
-    uvicorn.run("backend.main:app", host=FASTAPI_HOST, port=FASTAPI_PORT, reload=FASTAPI_DEBUG)
+    uvicorn.run("senyasabi.backend.main:app", host=FASTAPI_HOST, port=FASTAPI_PORT, reload=FASTAPI_DEBUG)

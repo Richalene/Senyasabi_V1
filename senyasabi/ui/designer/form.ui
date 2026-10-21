@@ -109,14 +109,14 @@
    <property name="text"><string></string></property>
   </widget>
 
-  <!-- Action Buttons: Start Learning & Minigames with Hover States -->
+  <!-- Action Buttons: Start Learning & Minigames -->
   <widget class="QPushButton" name="btnStartLearning">
    <property name="geometry">
     <rect>
-     <x>860</x>
+     <x>880</x>
      <y>180</y>
-     <width>530</width>
-     <height>230</height>
+     <width>500</width>
+     <height>215</height>
     </rect>
    </property>
    <property name="cursor">
@@ -134,18 +134,34 @@ QPushButton#btnStartLearning:hover {
 }
     </string>
    </property>
-   <property name="text">
-    <string></string>
-   </property>
+   <widget class="QLabel" name="lblStartLearningText">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>25</y>
+      <width>410</width>
+      <height>155</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 46px; color: #5c3b28; background: transparent;</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="text">
+     <string>Start&#10;learning</string>
+    </property>
+   </widget>
   </widget>
 
   <widget class="QPushButton" name="btnMinigames">
    <property name="geometry">
     <rect>
-     <x>1340</x>
+     <x>1360</x>
      <y>220</y>
-     <width>430</width>
-     <height>185</height>
+     <width>400</width>
+     <height>175</height>
     </rect>
    </property>
    <property name="cursor">
@@ -161,20 +177,42 @@ QPushButton#btnMinigames {
 QPushButton#btnMinigames:hover {
     border-image: url(senyasabi/resources/img/ui/button_mg_hover.png) 0 0 0 0 stretch stretch;
 }
+QPushButton#btnMinigames QLabel#lblMinigamesText {
+    color: #729b1e;
+}
+QPushButton#btnMinigames:hover QLabel#lblMinigamesText {
+    color: #5c3b28;
+}
     </string>
    </property>
-   <property name="text">
-    <string></string>
-   </property>
+   <widget class="QLabel" name="lblMinigamesText">
+    <property name="geometry">
+     <rect>
+      <x>35</x>
+      <y>25</y>
+      <width>330</width>
+      <height>115</height>
+     </rect>
+    </property>
+    <property name="styleSheet">
+     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 38px; background: transparent;</string>
+    </property>
+    <property name="alignment">
+     <set>Qt::AlignCenter</set>
+    </property>
+    <property name="text">
+     <string>Minigames</string>
+    </property>
+   </widget>
   </widget>
 
   <!-- MyStatus Divider -->
   <widget class="QFrame" name="statusLineLeft">
    <property name="geometry">
     <rect>
-     <x>930</x>
-     <y>470</y>
-     <width>230</width>
+     <x>960</x>
+     <y>455</y>
+     <width>215</width>
      <height>4</height>
     </rect>
    </property>
@@ -186,14 +224,14 @@ QPushButton#btnMinigames:hover {
   <widget class="QLabel" name="lblMyStatusTitle">
    <property name="geometry">
     <rect>
-     <x>1180</x>
-     <y>440</y>
-     <width>240</width>
-     <height>60</height>
+     <x>1190</x>
+     <y>425</y>
+     <width>230</width>
+     <height>55</height>
     </rect>
    </property>
    <property name="styleSheet">
-    <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 34px; color: #5c3b28; background: transparent;</string>
+    <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 32px; color: #5c3b28; background: transparent;</string>
    </property>
    <property name="alignment">
     <set>Qt::AlignCenter</set>
@@ -206,9 +244,9 @@ QPushButton#btnMinigames:hover {
   <widget class="QFrame" name="statusLineRight">
    <property name="geometry">
     <rect>
-     <x>1440</x>
-     <y>470</y>
-     <width>330</width>
+     <x>1435</x>
+     <y>455</y>
+     <width>315</width>
      <height>4</height>
     </rect>
    </property>
@@ -218,17 +256,17 @@ QPushButton#btnMinigames:hover {
   </widget>
 
   <!-- ═════════════════════════════════════════════════════════════════ -->
-  <!-- STAT CARDS (Home Page)                                           -->
+  <!-- STAT CARDS (Home Page - Rescaled nicely)                         -->
   <!-- ═════════════════════════════════════════════════════════════════ -->
 
-  <!-- Card 1: Lessons Completed (Clickable) -->
+  <!-- Card 1: Lessons Completed (db_lessoncomplete.png) -->
   <widget class="QPushButton" name="btnLessonsCompleted">
    <property name="geometry">
     <rect>
-     <x>930</x>
-     <y>535</y>
-     <width>250</width>
-     <height>235</height>
+     <x>955</x>
+     <y>515</y>
+     <width>210</width>
+     <height>204</height>
     </rect>
    </property>
    <property name="cursor">
@@ -239,43 +277,24 @@ QPushButton#btnMinigames:hover {
 QPushButton#btnLessonsCompleted {
     background: transparent;
     border: none;
-    border-image: url(senyasabi/resources/img/ui/les_prog_bg.png) 0 0 0 0 stretch stretch;
+    border-image: url(senyasabi/resources/img/ui/db_lessoncomplete.png) 0 0 0 0 stretch stretch;
 }
 QPushButton#btnLessonsCompleted:hover {
     transform: scale(1.02);
 }
     </string>
    </property>
-   <widget class="QLabel" name="lblLessonsTop">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>42</y>
-      <width>210</width>
-      <height>35</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 24px; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="text">
-     <string>Lessons</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="lblLessonsCompleted">
     <property name="geometry">
      <rect>
-      <x>20</x>
-      <y>82</y>
-      <width>210</width>
-      <height>60</height>
+      <x>15</x>
+      <y>65</y>
+      <width>180</width>
+      <height>75</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 42px; font-weight: bold; color: #5c3b28; background: transparent;</string>
+     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 40px; font-weight: bold; color: #5c3b28; background: transparent;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -284,35 +303,16 @@ QPushButton#btnLessonsCompleted:hover {
      <string>2/7</string>
     </property>
    </widget>
-   <widget class="QLabel" name="lblLessonsBottom">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>147</y>
-      <width>210</width>
-      <height>35</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 20px; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="text">
-     <string>Completed</string>
-    </property>
-   </widget>
   </widget>
 
-  <!-- Card 2: Module (Clickable) -->
+  <!-- Card 2: Module (db_module.png) -->
   <widget class="QPushButton" name="btnModule">
    <property name="geometry">
     <rect>
-     <x>1175</x>
-     <y>610</y>
-     <width>290</width>
-     <height>290</height>
+     <x>1160</x>
+     <y>580</y>
+     <width>245</width>
+     <height>240</height>
     </rect>
    </property>
    <property name="cursor">
@@ -323,40 +323,21 @@ QPushButton#btnLessonsCompleted:hover {
 QPushButton#btnModule {
     background: transparent;
     border: none;
-    border-image: url(senyasabi/resources/img/ui/module_bg.png) 0 0 0 0 stretch stretch;
+    border-image: url(senyasabi/resources/img/ui/db_module.png) 0 0 0 0 stretch stretch;
 }
     </string>
    </property>
-   <widget class="QLabel" name="lblModuleTop">
-    <property name="geometry">
-     <rect>
-      <x>30</x>
-      <y>55</y>
-      <width>230</width>
-      <height>45</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 32px; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="text">
-     <string>Module</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="lblModule">
     <property name="geometry">
      <rect>
-      <x>30</x>
-      <y>110</y>
-      <width>230</width>
+      <x>25</x>
+      <y>95</y>
+      <width>195</width>
       <height>100</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 78px; font-weight: bold; color: #5c3b28; background: transparent;</string>
+     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 72px; font-weight: bold; color: #5c3b28; background: transparent;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
@@ -367,14 +348,14 @@ QPushButton#btnModule {
    </widget>
   </widget>
 
-  <!-- Card 3: Latest Badge (Clickable) -->
+  <!-- Card 3: Latest Badge (db_badges.png) -->
   <widget class="QPushButton" name="btnLatestBadge">
    <property name="geometry">
     <rect>
-     <x>925</x>
-     <y>780</y>
-     <width>255</width>
-     <height>255</height>
+     <x>955</x>
+     <y>735</y>
+     <width>210</width>
+     <height>206</height>
     </rect>
    </property>
    <property name="cursor">
@@ -385,43 +366,21 @@ QPushButton#btnModule {
 QPushButton#btnLatestBadge {
     background: transparent;
     border: none;
-    border-image: url(senyasabi/resources/img/ui/badge_bg.png) 0 0 0 0 stretch stretch;
+    border-image: url(senyasabi/resources/img/ui/db_badges.png) 0 0 0 0 stretch stretch;
 }
     </string>
    </property>
-   <widget class="QLabel" name="lblLatestBadgeTitle">
-    <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>28</y>
-      <width>215</width>
-      <height>35</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 22px; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="text">
-     <string>Latest Badge</string>
-    </property>
-   </widget>
    <widget class="QLabel" name="lblLatestBadgeIcon">
     <property name="geometry">
      <rect>
-      <x>67</x>
-      <y>68</y>
-      <width>120</width>
-      <height>125</height>
+      <x>55</x>
+      <y>50</y>
+      <width>100</width>
+      <height>105</height>
      </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">background: transparent;</string>
-    </property>
-    <property name="pixmap">
-     <pixmap>../../resources/img/ui/badge_shield.png</pixmap>
     </property>
     <property name="scaledContents">
      <bool>true</bool>
@@ -429,33 +388,21 @@ QPushButton#btnLatestBadge {
    </widget>
    <widget class="QLabel" name="lblLatestBadgeValue">
     <property name="geometry">
-     <rect>
-      <x>20</x>
-      <y>198</y>
-      <width>215</width>
-      <height>35</height>
-     </rect>
+     <rect><x>0</x><y>0</y><width>0</width><height>0</height></rect>
     </property>
-    <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 16px; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="text">
-     <string>Level 1 Badge</string>
-    </property>
+    <property name="visible"><bool>false</bool></property>
+    <property name="text"><string></string></property>
    </widget>
   </widget>
 
-  <!-- Card 4: Leaderboard Trophy (Clickable) -->
+  <!-- Card 4: Leaderboard Trophy (db_leaderboards.png) -->
   <widget class="QPushButton" name="btnLeaderboardRank">
    <property name="geometry">
     <rect>
-     <x>1420</x>
-     <y>540</y>
-     <width>360</width>
-     <height>440</height>
+     <x>1385</x>
+     <y>515</y>
+     <width>290</width>
+     <height>365</height>
     </rect>
    </property>
    <property name="cursor">
@@ -466,46 +413,27 @@ QPushButton#btnLatestBadge {
 QPushButton#btnLeaderboardRank {
     background: transparent;
     border: none;
-    border-image: url(senyasabi/resources/img/ui/lead_brd_bg.png) 0 0 0 0 stretch stretch;
+    border-image: url(senyasabi/resources/img/ui/db_leaderboards.png) 0 0 0 0 stretch stretch;
 }
     </string>
    </property>
    <widget class="QLabel" name="lblLeaderboardRank">
     <property name="geometry">
      <rect>
-      <x>70</x>
-      <y>288</y>
-      <width>220</width>
+      <x>45</x>
+      <y>235</y>
+      <width>200</width>
       <height>55</height>
      </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 38px; color: #fdfae5; background: transparent;</string>
+     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 34px; color: #fdfae5; background: transparent;</string>
     </property>
     <property name="alignment">
      <set>Qt::AlignCenter</set>
     </property>
     <property name="text">
      <string>#3</string>
-    </property>
-   </widget>
-   <widget class="QLabel" name="lblLeaderboardBtn">
-    <property name="geometry">
-     <rect>
-      <x>70</x>
-      <y>350</y>
-      <width>220</width>
-      <height>45</height>
-     </rect>
-    </property>
-    <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 24px; color: #fdfae5; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
-    </property>
-    <property name="text">
-     <string>Leaderboard</string>
     </property>
    </widget>
   </widget>

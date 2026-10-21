@@ -1,0 +1,302 @@
+{
+  "project": "Senyasabi",
+  "version": "1.0",
+  "description": "Curriculum alignment plan comparing target modules against current system datasets and assets.",
+  "summary": {
+    "total_target_modules": 7,
+    "active_in_db": {
+      "modules": ["alphabet", "greeting", "survival", "number", "calendar", "days", "family"],
+      "extra_unaligned_modules": ["relationships", "color", "food", "drink"]
+    }
+  },
+  "modules": [
+    {
+      "module_id": "module_1",
+      "module_code": "alphabet",
+      "title": "Module 1: The Manual Alphabet",
+      "status": "ready",
+      "lessons": [
+        {
+          "lesson_code": "alphabet_lesson_1",
+          "title": "Letters A - F",
+          "keep_existing": ["A", "B", "C", "D", "E", "F"],
+          "to_add": [],
+          "status": "complete"
+        },
+        {
+          "lesson_code": "alphabet_lesson_2",
+          "title": "Letters G - L",
+          "keep_existing": ["G", "H", "I", "J", "K", "L"],
+          "to_add": [],
+          "status": "complete"
+        },
+        {
+          "lesson_code": "alphabet_lesson_3",
+          "title": "Letters M - R",
+          "keep_existing": ["M", "N", "O", "P", "Q", "R"],
+          "to_add": [],
+          "status": "complete"
+        },
+        {
+          "lesson_code": "alphabet_lesson_4",
+          "title": "Letters S - Z",
+          "keep_existing": ["S", "T", "U", "V", "W", "X", "Y", "Z"],
+          "to_add": [],
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "module_id": "module_2",
+      "module_code": "numbers",
+      "title": "Module 2: Numbers",
+      "status": "partially_available",
+      "lessons": [
+        {
+          "lesson_code": "numbers_lesson_1",
+          "title": "One to Five",
+          "keep_existing": ["ONE", "TWO", "THREE", "FOUR", "FIVE"],
+          "to_add": [],
+          "status": "ready_to_reorganize"
+        },
+        {
+          "lesson_code": "numbers_lesson_2",
+          "title": "Six to Ten",
+          "keep_existing": ["SIX", "SEVEN", "EIGHT", "NINE", "TEN"],
+          "to_add": [],
+          "status": "ready_to_reorganize"
+        },
+        {
+          "lesson_code": "numbers_lesson_3",
+          "title": "Double Digits Pt. 1",
+          "keep_existing": [],
+          "to_add": ["11", "12", "13", "14", "15"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "numbers_lesson_4",
+          "title": "Double Digits Pt. 2",
+          "keep_existing": [],
+          "to_add": ["16", "17", "18", "19", "20"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "numbers_lesson_5",
+          "title": "Multiples of 10",
+          "keep_existing": [],
+          "to_add": ["30", "40", "50", "60", "70", "80", "90"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "numbers_lesson_6",
+          "title": "Hundreds",
+          "keep_existing": [],
+          "to_add": ["100", "200", "300", "400", "500", "600", "700", "800", "900", "1000"],
+          "status": "needs_dataset"
+        }
+      ]
+    },
+    {
+      "module_id": "module_3",
+      "module_code": "family",
+      "title": "Module 3: Family Members",
+      "status": "partially_available",
+      "lessons": [
+        {
+          "lesson_code": "family_lesson_1",
+          "title": "Family Overview",
+          "keep_existing": ["PARENTS"],
+          "to_add": ["family", "husband", "wife"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "family_lesson_2",
+          "title": "Immediate Family",
+          "keep_existing": ["FATHER", "MOTHER"],
+          "to_add": ["brother", "sister"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "family_lesson_3",
+          "title": "Children & Young Family",
+          "keep_existing": ["SON", "DAUGHTER"],
+          "to_add": ["child", "children", "baby"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "family_lesson_4",
+          "title": "Older Generation",
+          "keep_existing": ["GRANDFATHER", "GRANDMOTHER", "UNCLE", "AUNTIE"],
+          "to_add": [],
+          "status": "complete"
+        },
+        {
+          "lesson_code": "family_lesson_5",
+          "title": "Same / Younger Generation",
+          "keep_existing": ["COUSIN"],
+          "to_add": ["nephew", "niece"],
+          "status": "needs_dataset"
+        }
+      ]
+    },
+    {
+      "module_id": "module_4",
+      "module_code": "basic_communication",
+      "title": "Module 4: Basic Communication",
+      "status": "partially_available",
+      "note": "Merges existing Greeting and Survival DB modules with the target basic communication plan.",
+      "lessons": [
+        {
+          "lesson_code": "comm_lesson_1",
+          "title": "Daily Greetings & Farewells",
+          "keep_existing": ["GOOD MORNING", "GOOD AFTERNOON", "GOOD EVENING", "HELLO", "SEE YOU TOMORROW"],
+          "to_add": ["Good night", "Goodbye"],
+          "status": "mostly_ready"
+        },
+        {
+          "lesson_code": "comm_lesson_2",
+          "title": "Introductions & Small Talk",
+          "keep_existing": ["HOW ARE YOU", "IM FINE", "NICE TO MEET YOU"],
+          "to_add": ["What is your name?"],
+          "status": "mostly_ready"
+        },
+        {
+          "lesson_code": "comm_lesson_3",
+          "title": "Courtesy",
+          "keep_existing": ["THANK YOU", "YOURE WELCOME"],
+          "to_add": ["Sorry", "Please", "Excuse Me", "Okay"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "comm_lesson_4",
+          "title": "Responses & Clarifications",
+          "keep_existing": ["YES", "NO", "UNDERSTAND", "DON’T UNDERSTAND", "KNOW", "DON’T KNOW", "CORRECT", "WRONG", "SLOW", "FAST"],
+          "to_add": ["Maybe", "Wait"],
+          "status": "mostly_ready"
+        },
+        {
+          "lesson_code": "comm_lesson_5",
+          "title": "Holidays & Celebrations",
+          "keep_existing": [],
+          "to_add": ["Happy birthday", "Happy anniversary", "Happy Valentine's Day", "Merry Christmas", "Happy New Year", "Happy Easter"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "comm_lesson_6",
+          "title": "Personal Info Questions",
+          "keep_existing": [],
+          "to_add": ["How old are you?", "Where do you live?", "Where do you study?"],
+          "status": "needs_dataset"
+        }
+      ]
+    },
+    {
+      "module_id": "module_5",
+      "module_code": "days",
+      "title": "Module 5: Days of the Week",
+      "status": "ready",
+      "lessons": [
+        {
+          "lesson_code": "days_lesson_1",
+          "title": "Sunday to Saturday",
+          "keep_existing": ["SUNDAY", "MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY"],
+          "optional_extras_in_db": ["TODAY", "TOMORROW", "YESTERDAY"],
+          "to_add": [],
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "module_id": "module_6",
+      "module_code": "calendar",
+      "title": "Module 6: Months of the Year",
+      "status": "ready",
+      "lessons": [
+        {
+          "lesson_code": "calendar_lesson_1",
+          "title": "January to April",
+          "keep_existing": ["JANUARY", "FEBRUARY", "MARCH", "APRIL"],
+          "to_add": [],
+          "status": "complete"
+        },
+        {
+          "lesson_code": "calendar_lesson_2",
+          "title": "May to August",
+          "keep_existing": ["MAY", "JUNE", "JULY", "AUGUST"],
+          "to_add": [],
+          "status": "complete"
+        },
+        {
+          "lesson_code": "calendar_lesson_3",
+          "title": "September to December",
+          "keep_existing": ["SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"],
+          "to_add": [],
+          "status": "complete"
+        }
+      ]
+    },
+    {
+      "module_id": "module_7",
+      "module_code": "action_words",
+      "title": "Module 7: Action Words",
+      "status": "needs_dataset",
+      "lessons": [
+        {
+          "lesson_code": "action_lesson_1",
+          "title": "Daily Living",
+          "keep_existing": [],
+          "to_add": ["cook", "eat", "drink", "clean", "pray", "sleep"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "action_lesson_2",
+          "title": "Communication",
+          "keep_existing": [],
+          "to_add": ["read", "write", "draw", "listen", "talk"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "action_lesson_3",
+          "title": "Leisure",
+          "keep_existing": [],
+          "to_add": ["play", "dance", "sing"],
+          "status": "needs_dataset"
+        },
+        {
+          "lesson_code": "action_lesson_4",
+          "title": "Outdoors & Errands",
+          "keep_existing": [],
+          "to_add": ["run", "drive", "buy", "pay", "walk", "plant"],
+          "status": "needs_dataset"
+        }
+      ]
+    }
+  ],
+  "existing_modules_outside_target_scope": [
+    {
+      "module_code": "relationships",
+      "title": "Relationships & Community",
+      "signs": ["BOY", "GIRL", "MAN", "WOMAN", "MARRIED", "DEAF", "HARD OF HEARING", "WEELCHAIR PERSON", "BLIND", "DEAF BLIND"],
+      "action_recommendation": "Archive or keep in optional Advanced Vocabulary"
+    },
+    {
+      "module_code": "color",
+      "title": "Colors",
+      "signs": ["BLUE", "GREEN", "RED", "BROWN", "BLACK", "WHITE", "YELLOW", "ORANGE", "GRAY", "PINK", "VIOLET", "LIGHT", "DARK"],
+      "action_recommendation": "Archive or keep in optional Advanced Vocabulary"
+    },
+    {
+      "module_code": "food",
+      "title": "Food",
+      "signs": ["BREAD", "EGG", "FISH", "MEAT", "CHICKEN", "SPAGHETTI", "RICE", "LONGANISA", "SHRIMP", "CRAB"],
+      "action_recommendation": "Archive or keep in optional Advanced Vocabulary"
+    },
+    {
+      "module_code": "drink",
+      "title": "Beverages",
+      "signs": ["HOT", "COLD", "JUICE", "MILK", "COFFEE", "TEA", "BEER", "WINE", "SUGAR", "NO SUGAR"],
+      "action_recommendation": "Archive or keep in optional Advanced Vocabulary"
+    }
+  ]
+}
+
