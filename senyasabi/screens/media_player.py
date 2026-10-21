@@ -69,6 +69,10 @@ class SignVideoPlayer(QWidget):
         if self.player:
             self.player.stop()
 
+    def pause(self):
+        if self.player:
+            self.player.pause()
+
     def hideEvent(self, event):
         self.stop()
         super().hideEvent(event)

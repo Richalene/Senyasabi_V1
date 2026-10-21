@@ -1,8 +1,10 @@
+from pathlib import Path
 # This Python file uses the following encoding: utf-8
 import sys
 
 from PySide6.QtCore import Qt, Signal
-from PySide6.QtGui import QCloseEvent
+import os
+from PySide6.QtGui import QPixmap, QCloseEvent, QFontDatabase
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMessageBox, QPushButton, QWidget
 
 from screens.loading import LoadingOverlay
@@ -11,6 +13,15 @@ from screens.startup import FittedForm
 from ui.generated.ui_form import Ui_main
 from ui.generated.dashboard_ui import Ui_Dashboard
 from backend import auth_service, dashboard_service
+
+def _ensure_cherry_bomb_font():
+    font_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "resources", "font", "CherryBombOne-Regular.ttf"
+    )
+    if os.path.exists(font_path):
+        QFontDatabase.addApplicationFont(font_path)
+
 
 
 class _DataStatus(QWidget):
@@ -42,10 +53,14 @@ class StatisticsDashboardWindow(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
+        _ensure_cherry_bomb_font()
         self.ui = Ui_Dashboard()
         self.ui.setupUi(self)
-        self.ui.titlePanel.resize(300, 60)
-        self.ui.btnBack.setGeometry(1280, 150, 110, 42)
+        root = Path(__file__).resolve().parents[2]
+        if hasattr(self.ui, "imageBg"):
+            self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/ui/dashboard_bg.png")))
+            self.ui.imageBg.setScaledContents(True)
+        self.ui.titlePanel.hide()
         self.ui.btnBack = BackButton.replace(self.ui.btnBack)
         self.ui.streakPanel.hide()
         self.ui.lblCurrentStreak.setObjectName("replacedCurrentStreak")
@@ -59,20 +74,7 @@ class StatisticsDashboardWindow(QWidget):
         self.ui.btnMenu = self.header.menu_button
         self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
         self.ui.btnMenu.setObjectName("btnMenu")
-        self.ui.badgeCard.resize(240, 180)
-        self.ui.badgeTitle.setGeometry(9, 67, 220, 24)
-        self.ui.lblLatestBadge.setGeometry(9, 100, 220, 60)
         self.ui.lblLatestBadge.setWordWrap(True)
-        icons = {'quizImage': '?', 'lessonsImage': 'Aa', 'modulesImage': '10',
-                 'leaderboardImage': '1', 'minigamesImage': 'Play', 'badgeImage': '★'}
-        for name, text in icons.items():
-            label = getattr(self.ui, name)
-            label.setText(text)
-            label.setToolTip('')
-        self.ui.imgStatsChart.setText('Your progress will appear here as you complete learning activities.')
-        self.ui.imgStatsChart.setWordWrap(True)
-        for name in ('legendDot1', 'legendDot2', 'legendDot3', 'legendDot4', 'legendDot5', 'legendDot6'):
-            getattr(self.ui, name).hide()
         self._menu = None
         self._leaderboard = None
         self.ui.btnBack.clicked.connect(self._open_menu)
@@ -113,7 +115,7 @@ class StatisticsDashboardWindow(QWidget):
         self.ui.lblCurrentStreak.setText(f'{data["streaks"]["current_streak"]} Days')
         lp_completed = sum(1 for lp in data.get("lesson_progress", []) if lp.get("status") == "Completed")
         completed_count = max(stats.get("lessons_completed", 0), lp_completed)
-        self.ui.lblLessonsCompleted.setText(str(completed_count))
+        self.ui.lblLessonsCompleted.setText(f"{completed_count}/7")
         self.ui.lblTotalQuizScore.setText(str(stats["total_quiz_score"]))
         module_count = len(data["module_progress"]) if data.get("module_progress") else data.get("module_count", 0)
         self.ui.lblModuleCount.setText(str(module_count))
@@ -187,8 +189,13 @@ class DashboardWindow(QWidget):
         self._word_lesson = None
         self._closing = False
 
+        _ensure_cherry_bomb_font()
         self.ui = Ui_main()
         self.ui.setupUi(self)
+        root = Path(__file__).resolve().parents[2]
+        if hasattr(self.ui, "imageBg"):
+            self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/home_bg.png")))
+            self.ui.imageBg.setScaledContents(True)
         self.ui.streakCard.hide()
         self.ui.streakValue.setObjectName("replacedStreakValue")
         self.ui.btnHamburger.hide()
@@ -270,7 +277,7 @@ class DashboardWindow(QWidget):
         self.ui.streakValue.setText(f'{data["streaks"]["current_streak"]} Days')
         lp_completed = sum(1 for lp in data.get("lesson_progress", []) if lp.get("status") == "Completed")
         completed_count = max(stats.get("lessons_completed", 0), lp_completed)
-        self.ui.lblLessonsCompleted.setText(str(completed_count))
+        self.ui.lblLessonsCompleted.setText(f"{completed_count}/7")
         self.ui.lblModule.setText(str(module_count))
         self.ui.lblLatestBadgeValue.setText(
             str(latest_badge["badge_id"]) if latest_badge else "No badges yet"

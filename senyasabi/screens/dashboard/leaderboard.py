@@ -1,5 +1,7 @@
-"""Controller for the existing leaderboard.ui form."""
+"""Controller for the leaderboard screen."""
+from pathlib import Path
 from PySide6.QtCore import Qt, Signal
+from PySide6.QtGui import QFont, QFontDatabase, QPixmap
 from PySide6.QtWidgets import QFrame, QHBoxLayout, QLabel, QLayout, QPushButton, QWidget
 
 from backend import auth_service, leaderboard_service
@@ -9,79 +11,160 @@ from screens.startup import FittedForm
 from ui.generated.leaderboard_ui import Ui_Leaderboard
 
 
-# Based on the supplied leaderboard QSS; scoped to the scrolling list.
 LEADERBOARD_QSS = """
 QScrollArea#leaderboardScrollArea,
 QScrollArea#leaderboardScrollArea > QWidget,
 QWidget#leaderboardContainer {
-    background: transparent; border: none;
+    background: transparent;
+    border: none;
 }
+
 QFrame#leaderboardEntry {
-    background-color: #F1F1F1; border: none; border-radius: 28px;
-    min-height: 58px; max-height: 58px;
+    background-color: #D8D8D8;
+    border: none;
+    border-radius: 46px;
+    min-height: 92px;
+    max-height: 92px;
 }
-QFrame#leaderboardEntry[class="leaderboardRank1"] { background-color: #FFC548; }
-QFrame#leaderboardEntry[class="leaderboardRank2"] { background-color: #F7E6B9; }
-QFrame#leaderboardEntry[class="leaderboardRank3"] { background-color: #BC8C55; }
-QFrame#leaderboardEntry[class="leaderboardNormal"] { background-color: #F1F1F1; }
-QFrame#leaderboardEntry[class="leaderboardCurrentUser"] { background-color: #CDAA55; }
+
+QFrame#leaderboardEntry[class="leaderboardRank1"] {
+    background-color: #FFC646;
+}
+
+QFrame#leaderboardEntry[class="leaderboardRank2"] {
+    background-color: #F9E6BD;
+}
+
+QFrame#leaderboardEntry[class="leaderboardRank3"] {
+    background-color: #C9A657;
+}
+
+QFrame#leaderboardEntry[class="leaderboardNormal"] {
+    background-color: #D8D8D8;
+}
+
 QLabel {
-    background: transparent; border: none; color: #754B3B;
-    font-size: 15px; font-style: italic; padding: 0px 8px;
+    background: transparent;
+    border: none;
+    color: #704833;
+    font-family: "Segoe UI", sans-serif;
+    font-size: 26px;
+    font-style: italic;
+    padding: 0px 10px;
 }
+
 QLabel[class="leaderboardMedal"] {
-    font-family: "Segoe UI Emoji"; font-size: 25px; font-style: normal;
-    min-width: 46px; max-width: 46px; padding: 0px;
+    font-family: "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif;
+    font-size: 38px;
+    font-style: normal;
+    min-width: 70px;
+    max-width: 70px;
+    padding: 0px;
 }
+
 QLabel[class="leaderboardRank"] {
-    font-size: 16px; font-weight: 700; font-style: normal;
-    min-width: 46px; max-width: 46px; padding: 0px;
+    font-size: 24px;
+    font-weight: 700;
+    font-style: normal;
+    min-width: 70px;
+    max-width: 70px;
+    padding: 0px;
 }
+
 QLabel[currentUser="true"] {
-    color: #38451F; font-weight: 700; font-style: normal;
+    color: #FFFFFF;
+    font-weight: 800;
+    font-style: normal;
 }
+
+/* Smooth vertical scrollbar */
 QScrollBar:vertical {
-    background: transparent; width: 10px; margin: 4px 1px 4px 1px;
+    background: rgba(0, 0, 0, 0.08);
+    width: 14px;
+    margin: 8px 2px 8px 2px;
+    border-radius: 7px;
 }
+
 QScrollBar::handle:vertical {
-    background-color: #A9BD43; border-radius: 5px; min-height: 30px;
+    background-color: #8C9656;
+    border-radius: 7px;
+    min-height: 40px;
 }
-QScrollBar::handle:vertical:hover { background-color: #8FA52E; }
-QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical { height: 0px; }
-QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical { background: transparent; }
+
+QScrollBar::handle:vertical:hover {
+    background-color: #6E783E;
+}
+
+QScrollBar::add-line:vertical, QScrollBar::sub-line:vertical {
+    height: 0px;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: transparent;
+}
 """
 
 
 class LeaderboardWindow(QWidget):
     back_requested = Signal()
     menu_requested = Signal()
-    _scores_changed = Signal()  # emitted from any thread; delivered on the GUI thread
+    _scores_changed = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         self.ui = Ui_Leaderboard()
         self.ui.setupUi(self)
-        self.ui.btnBack.setGeometry(1110, 125, 100, 36)
+
+        root = Path(__file__).resolve().parents[2]
+
+        # Register custom font
+        font_path = root / "resources/font/CherryBombOne-Regular.ttf"
+        if font_path.is_file():
+            QFontDatabase.addApplicationFont(str(font_path))
+
+        # Explicitly assign backgrounds and images
+        gen_bg_pixmap = QPixmap(str(root / "resources/img/gen_bg.png"))
+        if not gen_bg_pixmap.isNull():
+            self.ui.imageBg.setPixmap(gen_bg_pixmap)
+            self.ui.imageBg.setScaledContents(True)
+
+        # Cloud background
+        cloud_pixmap = QPixmap(str(root / "resources/img/ui/cloud.png"))
+        if not cloud_pixmap.isNull():
+            self.ui.cloudBg.setPixmap(cloud_pixmap)
+            self.ui.cloudBg.setScaledContents(True)
+
+        # Style title label directly with vector font (no image generation)
+        self.ui.titleLabel.setStyleSheet(
+            "QLabel#titleLabel { color: #6A5037; font-family: 'Cherry Bomb One'; font-size: 52px; background: transparent; }"
+        )
+
+        # Cache medal pixmaps
+        self._medals = {
+            1: QPixmap(str(root / "resources/img/ui/medal_gold.png")),
+            2: QPixmap(str(root / "resources/img/ui/medal_silver.png")),
+            3: QPixmap(str(root / "resources/img/ui/medal_bronze.png")),
+        }
+
+        # Back button
+        self.ui.btnBack.setGeometry(1760, 150, 74, 74)
         self.ui.btnBack = BackButton.replace(self.ui.btnBack)
-        self.ui.lblCurrentStreak.hide()
-        self.ui.lblCurrentStreak.setObjectName("replacedCurrentStreak")
-        self.ui.btnMenu.hide()
-        self.ui.btnMenu.setEnabled(False)
-        self.ui.btnMenu.setObjectName("replacedMenu")
+        self.ui.btnBack.clicked.connect(self.back_requested.emit)
+
+        # Header with streak and hamburger menu
         self.header = SenyaSabiHeader(self)
         self.header.anchor_to_canvas(self.size())
         install_page_menu(self, header=self.header)
         self.ui.lblCurrentStreak = self.header.streak_label
         self.ui.btnMenu = self.header.menu_button
-        self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
-        self.ui.btnMenu.setObjectName("btnMenu")
-        self.ui.btnBack.clicked.connect(self.back_requested.emit)
+
         self.ui.scrollLeaderboard.setObjectName("leaderboardScrollArea")
         self.ui.scrollLeaderboard.setStyleSheet(LEADERBOARD_QSS)
-        self.ui.leaderboardLayout.setSpacing(8)
+        self.ui.leaderboardLayout.setSpacing(16)
         self.ui.leaderboardLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.ui.leaderboardLayout.setSizeConstraint(QLayout.SizeConstraint.SetMinAndMaxSize)
         self.ui.scrollLeaderboard.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
+
         self._displayed_user_id = object()
         self._loading_user_id = None
         self._render_entries([])
@@ -129,58 +212,89 @@ class LeaderboardWindow(QWidget):
             if widget is not None:
                 widget.hide()
                 widget.deleteLater()
-        self.ui.lblCurrentStreak.setText("0 Days")
+        if hasattr(self, "ui") and hasattr(self.ui, "lblCurrentStreak") and self.ui.lblCurrentStreak:
+            self.ui.lblCurrentStreak.setText("0 Days")
+
         if failed:
             layout.addWidget(QLabel("We couldn't load the leaderboard. Please try again.",
                                    self.ui.leaderboardContainer))
             retry = QPushButton("Retry", self.ui.leaderboardContainer)
             retry.setCursor(Qt.CursorShape.PointingHandCursor)
-            retry.setStyleSheet("QPushButton { background: #f7f7dc; color: #526021; border: 1px solid #a9bd43; border-radius: 12px; padding: 8px 18px; }")
+            retry.setStyleSheet("QPushButton { background: #f7f7dc; color: #526021; border: 1px solid #a9bd43; border-radius: 12px; padding: 8px 18px; font-size: 18px; }")
             retry.clicked.connect(self.refresh)
             layout.addWidget(retry)
             return
+
         for entry in entries:
             rank = entry["rank_position"]
             current = entry["is_current_user"]
             row = QFrame(self.ui.leaderboardContainer)
             row.setObjectName("leaderboardEntry")
-            row.setProperty("class", f"leaderboardRank{rank}" if rank in (1, 2, 3)
-                            else "leaderboardCurrentUser" if current else "leaderboardNormal")
+            row.setProperty("class", f"leaderboardRank{rank}" if rank in (1, 2, 3) else "leaderboardNormal")
             row.setProperty("user_id", entry["user_id"])
             row.setProperty("rank_position", rank)
             row.setProperty("currentUser", current)
+
             columns = QHBoxLayout(row)
-            columns.setContentsMargins(20, 4, 20, 4)
-            columns.setSpacing(12)
-            medal = {1: "\U0001f947", 2: "\U0001f948", 3: "\U0001f949"}.get(rank)
-            values = [
-                ("rank", medal or str(rank), 0, Qt.AlignmentFlag.AlignCenter),
-                ("username", "YOU" if current else entry["username"], 0, Qt.AlignmentFlag.AlignLeft),
-                ("points", f'{entry["total_score"]} pts', 130, Qt.AlignmentFlag.AlignCenter),
-                ("badges", f'Badges: {entry["badges_unlocked"]}/20', 180, Qt.AlignmentFlag.AlignRight),
-            ]
-            for name, text, width, alignment in values:
-                label = QLabel(text, row)
-                label.setObjectName(name)
-                label.setProperty("class", ("leaderboardMedal" if medal else "leaderboardRank")
-                                  if name == "rank" else f"leaderboard{name.title()}")
-                label.setProperty("currentUser", current)
-                label.setTextFormat(Qt.TextFormat.PlainText)
-                if name == 'username':
-                    label.setWordWrap(True)
-                    label.setToolTip(entry['username'])
-                label.setAlignment(alignment | Qt.AlignmentFlag.AlignVCenter)
-                if width:
-                    label.setFixedWidth(width)
-                columns.addWidget(label, 1 if name == "username" else 0)
+            columns.setContentsMargins(40, 12, 48, 12)
+            columns.setSpacing(24)
+
+            # Medal / Rank column with emojis
+            rank_label = QLabel(row)
+            rank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            medal_emojis = {1: "\U0001F947", 2: "\U0001F948", 3: "\U0001F949"}  # 🥇, 🥈, 🥉
+            if rank in medal_emojis:
+                rank_label.setText(medal_emojis[rank])
+                rank_label.setProperty("class", "leaderboardMedal")
+            else:
+                rank_label.setText(str(rank))
+                rank_label.setProperty("class", "leaderboardRank")
+            rank_label.setProperty("currentUser", current)
+            columns.addWidget(rank_label)
+
+            # Username column
+            name_label = QLabel("YOU" if current else entry["username"], row)
+            name_label.setObjectName("username")
+            name_label.setProperty("currentUser", current)
+            name_label.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            name_label.setToolTip(entry["username"])
+            columns.addWidget(name_label, 1)
+
+            score_label = QLabel(f"{entry['total_score']} pts", row)
+            score_label.setObjectName("score")
+            score_label.setProperty("currentUser", current)
+            score_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            score_label.setFixedWidth(190)
+            columns.addWidget(score_label)
+
+            # Streak column ("Streak 284")
+            streak_val = entry.get("current_streak", 0)
+            streak_label = QLabel(f"Streak {streak_val}", row)
+            streak_label.setObjectName("streak")
+            streak_label.setProperty("currentUser", current)
+            streak_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)
+            streak_label.setFixedWidth(240)
+            columns.addWidget(streak_label)
+
+            # Badges column ("Badges: 18/20")
+            badges_val = entry.get("badges_unlocked", 0)
+            badges_label = QLabel(f"Badges: {badges_val}/20", row)
+            badges_label.setObjectName("badges")
+            badges_label.setProperty("currentUser", current)
+            badges_label.setAlignment(Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+            badges_label.setFixedWidth(260)
+            columns.addWidget(badges_label)
+
             layout.addWidget(row)
-            if entry["is_current_user"]:
-                self.ui.lblCurrentStreak.setText(f'{entry["current_streak"]} Days')
+            if current and self.ui.lblCurrentStreak:
+                self.ui.lblCurrentStreak.setText(f"{streak_val} Days")
+
         if not entries:
-            layout.addWidget(QLabel("No leaderboard entries yet.", self.ui.leaderboardContainer))
+            empty_label = QLabel("No leaderboard entries yet.", self.ui.leaderboardContainer)
+            empty_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            layout.addWidget(empty_label)
 
     def set_board(self, board_code):
-        """Switch period (all_time, weekly, monthly) and reload."""
         if board_code not in leaderboard_service.BOARD_CODES:
             raise ValueError(board_code)
         self.board_code = board_code

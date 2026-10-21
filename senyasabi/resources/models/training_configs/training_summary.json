@@ -1,0 +1,19 @@
+{
+  "num_categories": 7,
+  "total_classes": 85,
+  "categories": {
+    "ALPHABET": 26,
+    "NUMBER": 10,
+    "FAMILY": 10,
+    "GREETING": 10,
+    "SURVIVAL": 10,
+    "DAYS": 7,
+    "CALENDAR": 12
+  },
+  "excluded": [
+    "COLOR",
+    "FOOD",
+    "DRINK",
+    "RELATIONSHIPS"
+  ]
+}

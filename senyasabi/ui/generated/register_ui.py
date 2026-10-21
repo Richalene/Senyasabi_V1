@@ -22,7 +22,7 @@ class Ui_RegisterPage(object):
     def setupUi(self, RegisterPage):
         if not RegisterPage.objectName():
             RegisterPage.setObjectName(u"RegisterPage")
-        RegisterPage.resize(720, 740)
+        RegisterPage.resize(1920, 1080)
         self.pageLayout = QVBoxLayout(RegisterPage)
         self.pageLayout.setObjectName(u"pageLayout")
         self.pageLayout.setContentsMargins(180, 48, 180, 48)

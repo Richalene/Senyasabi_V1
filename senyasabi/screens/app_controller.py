@@ -39,6 +39,7 @@ class AppController:
         self.login.continue_requested.connect(self.login_user)
         self.login.register_requested.connect(self.show_register)
         self.login.back_requested.connect(self.show_landing)
+        self.register.back_requested.connect(self.show_landing)
         self.register.sign_in_requested.connect(self.show_login)
         self.register.create_account_requested.connect(self.register_user)
         self.welcome.ui.btnContinue.clicked.connect(self.show_landing)
@@ -69,7 +70,8 @@ class AppController:
     def _clear_passwords(self):
         self.login.password_input.clear()
         self.register.password_input.clear()
-        self.register.confirm_password_input.clear()
+        if hasattr(self.register, 'confirm_password_input'):
+            self.register.confirm_password_input.clear()
 
     def dev_login(self):
         if not dev_config.DEV_MODE:
@@ -118,23 +120,38 @@ class AppController:
         if screen.loading.busy:
             return
         password = screen.password_input.text()
-        confirmation = screen.confirm_password_input.text()
-        username, email, name = screen.username_input.text(), screen.email_input.text(), screen.name_input.text()
+        email = screen.email_input.text().strip()
         screen.error_label.clear()
         self._clear_passwords()
-        if password != confirmation:
-            screen.error_label.setText("Passwords do not match.")
+
+        if not email:
+            screen.error_label.setText("Please enter your email.")
             return
 
+        if not (any(c.isupper() for c in password) and any(c.isdigit() for c in password)):
+            screen.error_label.setText("Password must include 1 uppercase letter and a number.")
+            return
+
+        username = getattr(screen, "username_input", None)
+        username = username.text().strip() if username else email.split("@")[0]
+        # Clean username to match regex ^[a-z0-9_.-]{3,30}$
+        import re
+        username = re.sub(r"[^a-z0-9_.-]", "_", username.lower())
+        if len(username) < 3:
+            username = (username + "_user")[:30]
+
+        name = getattr(screen, "name_input", None)
+        name = name.text().strip() if name else username
+
         def registered(user):
-            self.login.email_input.setText(user["username"])
+            self.login.email_input.setText(email)
             self.show_login()
             self.login.error_label.setText(
                 "Account created. Check your email to confirm it, then sign in."
                 if user.get("needs_confirmation")
                 else "Account created. Sign in to continue.")
-            for field in (screen.username_input, screen.email_input, screen.name_input):
-                field.clear()
+            screen.email_input.clear()
+            screen.password_input.clear()
 
         screen.loading.run(lambda: auth_service.register_user(username, email, password, name),
                            registered, lambda error: self._auth_failed(screen, error, "create your account"),

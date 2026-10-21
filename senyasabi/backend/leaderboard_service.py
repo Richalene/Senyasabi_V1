@@ -1,19 +1,22 @@
 """Leaderboard data boundary.
 
-Online: GET /api/v1/leaderboard (Supabase/PostgreSQL, computed from real attempts) and the
-result is mirrored into the SQLite ``leaderboard_cache``. Offline/unreachable: the last cached
-board is shown. If neither is available a ``LeaderboardUnavailable`` error is raised so the UI
-can show its error state (an empty list means "no scored activity yet").
+Completed quiz and minigame attempts in SQLite are the primary local source. They are already
+queued for upload by the sync service. Local results are merged with the last server leaderboard
+snapshot so cached global entries remain visible. The API is queried only when neither local
+source has data.
 Only public display data (display name, points, streak, badge count) is ever handled here.
 """
 import logging
 import threading
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timedelta, timezone
+
+from sqlalchemy import func
 
 from backend import auth_service
 
 BOARD_CODES = ("all_time", "weekly", "monthly")
+BOARD_PERIODS = {"all_time": None, "weekly": timedelta(days=7), "monthly": timedelta(days=30)}
 _log = logging.getLogger(__name__)
 
 
@@ -28,9 +31,22 @@ def _entry(user_id, name, points, rank, streak=0, badges=0):
 
 
 class SyncedLeaderboardRepository:
-    """API first (refreshing the SQLite cache), cached rows when offline."""
+    """Build the board from local attempts and cached server entries."""
 
     def get_leaderboard(self, board_code="all_time"):
+        local = self._load_local_attempts(board_code)
+        cached = self._load(board_code)
+        if local is not None or cached is not None:
+            entries = {entry["user_id"]: entry for entry in cached or []}
+            for entry in local or []:
+                cached_entry = entries.get(entry["user_id"])
+                if cached_entry is None:
+                    entries[entry["user_id"]] = entry
+                else:
+                    cached_entry.update(username=entry["username"],
+                                        total_score=entry["total_score"])
+            return _rank_entries(list(entries.values()))
+
         payload = self._fetch(board_code)
         if payload is not None:
             entries = [_entry(e["user_id"], e.get("display_name") or "Learner", e.get("total_score"),
@@ -38,10 +54,39 @@ class SyncedLeaderboardRepository:
                        for e in payload.get("entries", [])]
             self._store(board_code, entries)
             return entries
-        cached = self._load(board_code)
-        if cached is None:
-            raise LeaderboardUnavailable("Leaderboard server unreachable and nothing cached")
-        return cached
+        raise LeaderboardUnavailable("No local leaderboard data and server is unreachable")
+
+    @staticmethod
+    def _load_local_attempts(board_code):
+        from backend.database.models import MinigameAttempt, QuizAttempt, User
+        from backend.database.session import session_scope
+
+        cutoff = BOARD_PERIODS[board_code]
+        completed_after = datetime.now(timezone.utc) - cutoff if cutoff is not None else None
+        scores = {}
+        try:
+            with session_scope() as db:
+                for model in (QuizAttempt, MinigameAttempt):
+                    query = db.query(model.user_id, func.sum(model.score)).filter(
+                        model.completed_at.is_not(None), model.score.is_not(None))
+                    if completed_after is not None:
+                        query = query.filter(model.completed_at >= completed_after)
+                    for user_id, score in query.group_by(model.user_id).all():
+                        scores[str(user_id)] = scores.get(str(user_id), 0) + int(score or 0)
+
+                if not scores:
+                    return None
+
+                users = db.query(User).filter(User.user_id.in_(
+                    [uuid.UUID(user_id) for user_id in scores])).all()
+                entries = [
+                    _entry(user.user_id, user.display_name or user.username, scores[str(user.user_id)], 0)
+                    for user in users
+                ]
+                return _rank_entries(entries)
+        except Exception as error:
+            _log.warning("Local leaderboard read failed: %s", error)
+            return None
 
     @staticmethod
     def _fetch(board_code):
@@ -93,6 +138,19 @@ class SyncedLeaderboardRepository:
             return None
 
 
+def _rank_entries(entries):
+    ordered = sorted(entries, key=lambda e: (-e["total_score"], str(e["username"]).casefold(),
+                                            str(e["user_id"])))
+    previous_score = None
+    rank = 0
+    for position, entry in enumerate(ordered, start=1):
+        if entry["total_score"] != previous_score:
+            rank = position
+            previous_score = entry["total_score"]
+        entry["rank_position"] = rank
+    return ordered
+
+
 _repository = SyncedLeaderboardRepository()
 _CURRENT_USER = object()
 _listeners = []
@@ -134,8 +192,7 @@ def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time"):
         user = auth_service.get_current_user()
         user_id = user["user_id"] if user else None
     try:
-        entries = _repository.get_leaderboard() if board_code == "all_time" \
-            else _repository.get_leaderboard(board_code)
+        entries = _repository.get_leaderboard(board_code)
     except (OSError, ConnectionError, TimeoutError) as error:
         raise LeaderboardUnavailable(str(error)) from error
     entries = entries or []

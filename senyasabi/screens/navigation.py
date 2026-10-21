@@ -216,10 +216,28 @@ def install_page_menu(widget, *, header=None, canvas_size=None):
         if header.menu_button.objectName() == "menuBtn" and hasattr(widget, "menu_requested"):
             header.menu_button.clicked.connect(widget.menu_requested.emit)
         else:
-            menu = QMenu(header.menu_button)
-            menu.camera_action = menu.addAction("Camera Settings")
-            menu.sign_out_action = menu.addAction("Sign Out")
-            header.menu_button.setMenu(menu)
+            from screens.dialogs import MenuCalloutPopup
+            popup = MenuCalloutPopup(header.menu_button)
+            header.menu_button.clicked.connect(popup.toggle_popup)
+            # Retain backwards-compatible mock actions for screens listening to camera / logout
+            class _MockAction:
+                def __init__(self, name):
+                    self.name = name
+                    self._callbacks = []
+                def connect(self, cb):
+                    self._callbacks.append(cb)
+                def emit(self):
+                    for cb in self._callbacks: cb()
+                @property
+                def triggered(self):
+                    return self
+            class _MockMenu:
+                def __init__(self):
+                    self.camera_action = _MockAction("camera")
+                    self.sign_out_action = _MockAction("sign_out")
+            header.menu_button._menu_compat = _MockMenu()
+            header.menu_button.menu = lambda: header.menu_button._menu_compat
+            popup.sign_out_requested.connect(header.menu_button._menu_compat.sign_out_action.emit)
     return header
 
 
