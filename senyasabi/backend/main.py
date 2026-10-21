@@ -76,15 +76,38 @@ async def root():
 async def get_user_profile(user_id: str = Depends(get_current_user_id)):
     """
     Get user profile.
-    
-    This endpoint validates the Supabase JWT token and returns user info.
-    user_id is a UUID from the JWT sub claim, no database lookup needed.
+
+    This endpoint validates the Supabase JWT token and returns user info from PostgreSQL.
+    user_id is a UUID from the JWT sub claim.
     """
-    # TODO: Implement user profile retrieval from PostgreSQL if needed
-    return {
-        "user_id": user_id,
-        "message": "User profile endpoint - to be implemented"
-    }
+    from .database.postgre_session import get_postgres_session
+    from sqlalchemy import text
+
+    try:
+        with get_postgres_session() as db:
+            result = db.execute(text("""
+                SELECT user_id::text AS user_id,
+                       COALESCE(NULLIF(btrim(display_name), ''), username) AS display_name,
+                       username,
+                       created_at,
+                       updated_at
+                FROM public.users
+                WHERE user_id = :user_id
+            """), {"user_id": user_id}).mappings().first()
+
+            if not result:
+                return {
+                    "user_id": user_id,
+                    "message": "User profile not found in database"
+                }
+
+            return dict(result)
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching user profile: {str(e)}"
+        )
 
 
 if __name__ == "__main__":

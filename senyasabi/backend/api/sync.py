@@ -290,19 +290,60 @@ def get_quiz_passing_score_for_quiz(db, quiz_id: int) -> Optional[int]:
 async def get_sync_queue(user_id: str):
     """
     Get pending sync queue items for a user.
-    
+
+    Returns recent quiz attempts, minigame attempts, and lesson progress
+    that might need to be synced to the client.
+
     Args:
         user_id: The user ID (UUID)
-        
+
     Returns:
-        Pending sync items
+        Pending sync items organized by entity type
     """
-    # TODO: Implement sync queue retrieval
-    return {
-        "user_id": user_id,
-        "items": [],
-        "message": "Sync queue endpoint - to be implemented"
-    }
+    try:
+        with get_postgres_session() as db:
+            # Get recent quiz attempts
+            quiz_attempts = db.execute(text("""
+                SELECT qa.attempt_id::text, qa.quiz_id, qa.started_at, qa.completed_at,
+                       qa.score, qa.max_score, qa.percentage, qa.passed
+                FROM quiz_attempts qa
+                WHERE qa.user_id = :user_id
+                ORDER BY qa.started_at DESC
+                LIMIT 50
+            """), {"user_id": user_id}).mappings().all()
+
+            # Get recent minigame attempts
+            minigame_attempts = db.execute(text("""
+                SELECT ma.game_attempt_id::text, ma.minigame_id, ma.started_at, ma.completed_at,
+                       ma.score, ma.duration_seconds, ma.accuracy
+                FROM minigame_attempts ma
+                WHERE ma.user_id = :user_id
+                ORDER BY ma.started_at DESC
+                LIMIT 50
+            """), {"user_id": user_id}).mappings().all()
+
+            # Get lesson progress
+            lesson_progress = db.execute(text("""
+                SELECT lp.lesson_id, lp.completion_percentage, lp.status,
+                       lp.completed_at, lp.time_spent_seconds, lp.updated_at
+                FROM lesson_progress lp
+                WHERE lp.user_id = :user_id
+                ORDER BY lp.updated_at DESC
+                LIMIT 50
+            """), {"user_id": user_id}).mappings().all()
+
+            return {
+                "user_id": user_id,
+                "quiz_attempts": [dict(r) for r in quiz_attempts],
+                "minigame_attempts": [dict(r) for r in minigame_attempts],
+                "lesson_progress": [dict(r) for r in lesson_progress]
+            }
+
+    except Exception as e:
+        raise HTTPException(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            detail=f"Error fetching sync queue: {str(e)}"
+        )
 
 
 @router.post("/reorder-lessons")

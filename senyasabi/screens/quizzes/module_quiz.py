@@ -81,7 +81,7 @@ class ModuleQuiz(GameCanvas):
         grid = QGridLayout(canvas)
         grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
         row, col = 0, 0
-        for char in self.session.current.label.upper():
+        for char in self.session.sequence:
             if char == " ":
                 row, col = row+1, 0
             elif "A" <= char <= "Z":

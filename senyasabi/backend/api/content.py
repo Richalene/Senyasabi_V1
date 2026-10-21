@@ -20,6 +20,8 @@ _DELTA_TABLES = {
     "lesson_signs": (("lesson_id", "sign_id", "display_order"), ("lesson_id", "sign_id")),
     "sign_media": (("sign_id", "media_id", "media_role", "display_order"),
                    ("sign_id", "media_id", "media_role")),
+    "lesson_media": (("lesson_id", "media_id", "media_role", "display_order"),
+                     ("lesson_id", "media_id", "media_role")),
     "quizzes": (("quiz_id", "quiz_code", "module_id", "category_code", "title",
                  "passing_score", "time_limit_seconds", "config"), ("quiz_id",)),
     "quiz_signs": (("quiz_id", "sign_id", "display_order"), ("quiz_id", "sign_id")),

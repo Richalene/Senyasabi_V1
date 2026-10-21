@@ -3,7 +3,7 @@ import random
 from dataclasses import dataclass
 from pathlib import Path
 from time import monotonic
-from .content_service import MODULE_CODES, get_words_for_module as module_words
+from .content_service import MODULE_CODES, fingerspell_text, get_words_for_module as module_words
 
 ROOT = Path(__file__).resolve().parents[1]
 CONFIG = {
@@ -34,6 +34,17 @@ def letters(label):
     return [char for char in label.upper() if "A" <= char <= "Z"]
 
 
+def playable_words(labels):
+    """Labels -> unique fingerspellable words ('100' -> 'ONE HUNDRED')."""
+    seen, words = set(), []
+    for label in labels:
+        word = fingerspell_text(label)
+        if word and word not in seen:
+            seen.add(word)
+            words.append(word)
+    return words
+
+
 def load_vocabulary(module_code=None):
     if module_code is not None:
         return get_words_for_module(module_code)
@@ -41,7 +52,7 @@ def load_vocabulary(module_code=None):
 
 
 def get_all_minigame_words():
-    """Use the centralized word modules; Alphabet has its own scoped activities."""
+    """Labels from every word module; Alphabet has its own scoped activities."""
     return [word for code in MODULE_CODES for word in module_words(code)]
 
 
@@ -63,8 +74,9 @@ class GameSession:
             scope if scope is not None else ("module" if module_code is not None else "global"),
             module_code)
         self.scope, self.module_code = self.context.scope, self.context.module_code
-        pool = (get_all_minigame_words() if self.scope == "global"
-                else get_words_for_module(self.module_code))
+        labels = (get_all_minigame_words() if self.scope == "global"
+                  else get_words_for_module(self.module_code))
+        pool = playable_words(labels)
         if kind in ("sprint", "quest"):
             pool = [word for word in pool if len(letters(word)) <= (12 if kind == "sprint" else 14)]
         if not pool:

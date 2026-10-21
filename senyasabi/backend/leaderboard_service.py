@@ -2,14 +2,15 @@
 
 Completed quiz and minigame attempts in SQLite are the primary local source. They are already
 queued for upload by the sync service. Local results are merged with the last server leaderboard
-snapshot so cached global entries remain visible. The API is queried only when neither local
-source has data.
+snapshot so cached global entries remain visible. The API is queried in the background to refresh
+the cache without blocking the UI.
 Only public display data (display name, points, streak, badge count) is ever handled here.
 """
 import logging
 import threading
 import uuid
 from datetime import datetime, timedelta, timezone
+import concurrent.futures
 
 from sqlalchemy import func
 
@@ -17,7 +18,11 @@ from backend import auth_service
 
 BOARD_CODES = ("all_time", "weekly", "monthly")
 BOARD_PERIODS = {"all_time": None, "weekly": timedelta(days=7), "monthly": timedelta(days=30)}
+CACHE_TTL_SECONDS = 900  # 15 minutes
 _log = logging.getLogger(__name__)
+
+# Thread pool for background fetches
+_fetch_executor = concurrent.futures.ThreadPoolExecutor(max_workers=3, thread_name_prefix="lb_fetch")
 
 
 class LeaderboardUnavailable(Exception):
@@ -33,9 +38,12 @@ def _entry(user_id, name, points, rank, streak=0, badges=0):
 class SyncedLeaderboardRepository:
     """Build the board from local attempts and cached server entries."""
 
-    def get_leaderboard(self, board_code="all_time"):
+    def get_leaderboard(self, board_code="all_time", force_refresh=False):
+        """Get leaderboard, returning cached data immediately and fetching fresh data in background."""
         local = self._load_local_attempts(board_code)
         cached = self._load(board_code)
+
+        # Merge local attempts with cached server data
         if local is not None or cached is not None:
             entries = {entry["user_id"]: entry for entry in cached or []}
             for entry in local or []:
@@ -45,8 +53,15 @@ class SyncedLeaderboardRepository:
                 else:
                     cached_entry.update(username=entry["username"],
                                         total_score=entry["total_score"])
-            return _rank_entries(list(entries.values()))
+            merged = _rank_entries(list(entries.values()))
 
+            # Check if cache is stale and trigger background refresh
+            if not force_refresh and self._is_cache_stale(board_code):
+                self._fetch_background(board_code)
+
+            return merged
+
+        # No cache at all - fetch synchronously on first load
         payload = self._fetch(board_code)
         if payload is not None:
             entries = [_entry(e["user_id"], e.get("display_name") or "Learner", e.get("total_score"),
@@ -55,6 +70,42 @@ class SyncedLeaderboardRepository:
             self._store(board_code, entries)
             return entries
         raise LeaderboardUnavailable("No local leaderboard data and server is unreachable")
+
+    def _is_cache_stale(self, board_code):
+        """Check if cache is older than CACHE_TTL_SECONDS."""
+        from backend.database.repository import list_leaderboard_cache
+        from backend.database.session import session_scope
+        try:
+            with session_scope() as db:
+                rows = list_leaderboard_cache(db, board_code, 1)  # Get one entry to check timestamp
+                if not rows:
+                    return True  # No cache = stale
+                cache = rows[0]
+                if cache.fetched_at is None:
+                    return True
+                cache_age = (datetime.now(timezone.utc) - cache.fetched_at).total_seconds()
+                return cache_age > CACHE_TTL_SECONDS
+        except Exception as error:
+            _log.warning("Cache staleness check failed: %s", error)
+            return True  # On error, treat as stale
+
+    def _fetch_background(self, board_code):
+        """Fetch fresh data in background thread and notify listeners."""
+        def fetch_and_store():
+            try:
+                payload = self._fetch(board_code)
+                if payload is not None:
+                    entries = [_entry(e["user_id"], e.get("display_name") or "Learner", e.get("total_score"),
+                                      e["rank_position"], e.get("current_streak"), e.get("badge_count"))
+                               for e in payload.get("entries", [])]
+                    self._store(board_code, entries)
+                    # Notify listeners that fresh data is available
+                    notify_scores_changed()
+                    _log.info("Background leaderboard refresh completed for %s", board_code)
+            except Exception as error:
+                _log.warning("Background leaderboard fetch failed for %s: %s", board_code, error)
+
+        _fetch_executor.submit(fetch_and_store)
 
     @staticmethod
     def _load_local_attempts(board_code):
@@ -179,8 +230,11 @@ def notify_scores_changed():
             _log.exception("Leaderboard listener failed")
 
 
-def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time"):
+def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time", force_refresh=False):
     """Return ranked entries with session-specific highlighting, without mutation.
+
+    Returns cached data immediately for fast UI response. Triggers background refresh
+    if cache is stale (older than 5 minutes) or force_refresh is True.
 
     Order is deterministic: rank_position, then display name (case-insensitive), then user_id.
     Equal scores share a rank_position. Raises LeaderboardUnavailable on a hard failure.
@@ -192,7 +246,7 @@ def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time"):
         user = auth_service.get_current_user()
         user_id = user["user_id"] if user else None
     try:
-        entries = _repository.get_leaderboard(board_code)
+        entries = _repository.get_leaderboard(board_code, force_refresh=force_refresh)
     except (OSError, ConnectionError, TimeoutError) as error:
         raise LeaderboardUnavailable(str(error)) from error
     entries = entries or []
@@ -200,3 +254,14 @@ def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time"):
              **entry, "is_current_user": user_id is not None and str(entry["user_id"]) == str(user_id)}
             for entry in sorted(entries, key=lambda e: (e["rank_position"],
                                                        str(e["username"]).casefold(), str(e["user_id"])))]
+
+
+def refresh_leaderboard(board_code="all_time"):
+    """Force refresh the leaderboard cache from the server.
+
+    This is useful for pull-to-refresh functionality or when the user explicitly
+    wants fresh data. Returns immediately; the actual refresh happens in background.
+    """
+    if board_code not in BOARD_CODES:
+        raise ValueError(f"Unknown leaderboard: {board_code}")
+    _repository._fetch_background(board_code)

@@ -111,7 +111,10 @@ class CategoryModelRegistry:
         spec = dict(manifest.get(code, {}))
         if spec.get("enabled", "auto") is False:
             raise ModelValidationError("Recognition is disabled in the model manifest.")
-        folder = self.root / "word_categories" / code
+        folder_name = spec.get("folder", code)
+        if not isinstance(folder_name, str) or Path(folder_name).name != folder_name:
+            raise ModelValidationError("manifest 'folder' must be a plain folder name.")
+        folder = self.root / "word_categories" / folder_name
         local = folder / "model_manifest.json"
         if local.is_file():
             spec.update(json.loads(local.read_text(encoding="utf-8-sig")))

@@ -1,8 +1,8 @@
-"""One module quiz, generated from content. UAT identification needs no camera/model."""
+"""One module quiz, generated from content. Identification needs no camera/model."""
 from dataclasses import dataclass
 import json
 import random
-from .content_service import ROOT, get_signs_for_module
+from .content_service import ROOT, fingerspell_text, get_module, get_signs_for_module
 from .minigame_service import normalize
 
 
@@ -16,11 +16,12 @@ class QuizDefinition:
 
 def get_quiz(module_code):
     code = module_code.casefold()
-    get_signs_for_module(code)  # Validate; never widen to another module.
-    entries = json.loads((ROOT / "resources/data/quizzes/quizzes.json").read_text(encoding="utf-8-sig"))["quizzes"]
-    item = next((item for item in entries if item["module_code"].casefold() == code), {})
+    module = get_module(code)                 # raises ValueError for unknown modules
+    path = ROOT / "resources/data/quizzes/quizzes.json"
+    entries = json.loads(path.read_text(encoding="utf-8-sig"))["quizzes"] if path.is_file() else []
+    item = next((i for i in entries if i["module_code"].casefold() == code), {})
     return QuizDefinition(item.get("quiz_code", f"{code}_quiz"), code,
-                          item.get("title", f"{code.title()} Quiz"), item.get("passing_score", 70))
+                          item.get("title", f"{module.title} Quiz"), item.get("passing_score", 70))
 
 
 class QuizSession:
@@ -40,10 +41,16 @@ class QuizSession:
     def current(self):
         return None if self.complete else self.questions[self.index]
 
+    @property
+    def sequence(self):
+        """The A-Z text the learner decodes from the fingerspelling images."""
+        return fingerspell_text(self.current.label) if not self.complete else ""
+
     def answer(self, answer):
         if self.complete or self.answered:
             return False
-        correct = normalize(answer) == normalize(self.current.label)
+        accepted = {normalize(self.current.label), normalize(self.sequence)}
+        correct = normalize(answer) in accepted
         self.score += int(correct)
         self.answered = True
         return correct

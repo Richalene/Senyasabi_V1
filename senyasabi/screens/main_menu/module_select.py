@@ -10,25 +10,40 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QFrame,
 from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.main_menu.word_menu import _load_categories
 from screens.navigation import BackButton, install_page_menu
+from backend.content_service import ALPHABET, get_modules
 
 ROOT = Path(__file__).resolve().parents[2]
 # Positions are canvas fractions, independent of desktop resolution.
 # Trajectory along horizontal branch leading to golden walnut cache matching reference mockup
 POSITIONS = (
-    (.140, .650),  # 1: Number (on leaves branch)
-    (.255, .820),  # 2: Family
-    (.360, .580),  # 3: Greeting (crest)
-    (.470, .780),  # 4: Survival
-    (.590, .590),  # 5: Days (crest)
-    (.705, .710),  # 6: Calendar (approaching golden walnuts)
+    (.140, .650),  # 1: Numbers
+    (.255, .820),  # 2: Family Members
+    (.360, .580),  # 3: Basic Communication (crest)
+    (.470, .780),  # 4: Days of the Week
+    (.590, .590),  # 5: Months of the Year (crest)
+    (.705, .710),  # 6: Action Words (approaching golden walnuts)
 )
-MODULE_NODES = [dict(module_code="alphabet", title="FSL Alphabet",
-                     description="Learn the FSL alphabet", count=sum(map(len, LESSON_LETTERS.values())),
-                     x=.050, y=.908)] + [
-    dict(module_code=code.casefold(), title=code.title(), description="Learn FSL words and phrases",
-         count=len(words), x=position[0], y=position[1])
-    for (code, words), position in zip(_load_categories().items(), POSITIONS)
-]
+ALPHABET_POSITION = (.050, .908)
+DISPLAY_TITLES = {ALPHABET: "FSL Alphabet"}
+
+def _build_nodes():
+    modules = sorted(get_modules(), key=lambda m: m.module_code != ALPHABET)  # alphabet first
+    words = [m for m in modules if m.module_code != ALPHABET]
+    if len(words) > len(POSITIONS):
+        raise ValueError(f"{len(words)} word modules but only {len(POSITIONS)} map positions")
+    nodes = []
+    for module in modules:
+        x, y = (ALPHABET_POSITION if module.module_code == ALPHABET
+                else POSITIONS[words.index(module)])
+        lessons = len(module.lessons)
+        nodes.append(dict(
+            module_code=module.module_code,
+            title=DISPLAY_TITLES.get(module.module_code, module.title),
+            description=f"{lessons} lesson{'s' if lessons != 1 else ''}",
+            count=len(module.signs), x=x, y=y))
+    return nodes
+
+MODULE_NODES = _build_nodes()
 
 
 class FireflyButton(QPushButton):
@@ -195,10 +210,6 @@ class ModuleSelectWidget(QWidget):
         self.popup_detail.setText(f'{node["description"]}\n{node["count"]} Signs')
         self.position_popup()
         self.popup.show()
-        if hasattr(self, "level_badge"):
-            bw, bh = round(210 * scale), round(46 * scale)
-            self.level_badge.setGeometry((width - bw) // 2, round(height * 0.88), bw, bh)
-            self.level_badge.raise_()
         self.popup.raise_()
 
     def position_popup(self):
