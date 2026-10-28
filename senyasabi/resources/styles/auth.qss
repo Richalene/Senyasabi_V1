@@ -29,7 +29,7 @@ Line#line {
 }
 
 /* Field labels */
-QLabel#emailLabel, QLabel#passwordLabel {
+QLabel#emailLabel, QLabel#passwordLabel, QLabel#usernameLabel, QLabel#nameLabel, QLabel#confirmPasswordLabel {
     color: #4a4332;
     font-size: 18px;
     font-weight: 600;
@@ -37,7 +37,7 @@ QLabel#emailLabel, QLabel#passwordLabel {
 }
 
 /* Pill input boxes with dark outline */
-QLineEdit#emailInput, QLineEdit#passwordInput {
+QLineEdit#emailInput, QLineEdit#passwordInput, QLineEdit#usernameInput, QLineEdit#nameInput, QLineEdit#confirmPasswordInput {
     background-color: transparent;
     color: #010100;
     border: 2.5px solid #010100;
@@ -47,7 +47,7 @@ QLineEdit#emailInput, QLineEdit#passwordInput {
     padding: 0px 24px;
 }
 
-QLineEdit#emailInput:focus, QLineEdit#passwordInput:focus {
+QLineEdit#emailInput:focus, QLineEdit#passwordInput:focus, QLineEdit#usernameInput:focus, QLineEdit#nameInput:focus, QLineEdit#confirmPasswordInput:focus {
     border: 2.5px solid #082b08;
     background-color: rgba(255, 255, 255, 0.15);
 }

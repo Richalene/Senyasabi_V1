@@ -15,12 +15,11 @@ ROOT = Path(__file__).resolve().parents[2]
 # Positions are canvas fractions, independent of desktop resolution.
 # Trajectory along horizontal branch leading to golden walnut cache matching reference mockup
 POSITIONS = (
-    (.140, .650),  # 1: Number (on leaves branch)
-    (.255, .820),  # 2: Family
-    (.360, .580),  # 3: Greeting (crest)
-    (.470, .780),  # 4: Survival
-    (.590, .590),  # 5: Days (crest)
-    (.705, .710),  # 6: Calendar (approaching golden walnuts)
+    (.160, .660),  # 1: Greeting
+    (.290, .800),  # 2: Survival
+    (.430, .590),  # 3: Number
+    (.570, .760),  # 4: Days
+    (.710, .650),  # 5: Family
 )
 MODULE_NODES = [dict(module_code="alphabet", title="FSL Alphabet",
                      description="Learn the FSL alphabet", count=sum(map(len, LESSON_LETTERS.values())),
@@ -196,8 +195,6 @@ class ModuleSelectWidget(QWidget):
         self.position_popup()
         self.popup.show()
         if hasattr(self, "level_badge"):
-            bw, bh = round(210 * scale), round(46 * scale)
-            self.level_badge.setGeometry((width - bw) // 2, round(height * 0.88), bw, bh)
             self.level_badge.raise_()
         self.popup.raise_()
 
@@ -245,8 +242,6 @@ class ModuleSelectWidget(QWidget):
             button.graphicsEffect().setBlurRadius(max(12,32*scale))
             button.raise_()
         if hasattr(self, "level_badge"):
-            bw, bh = round(210 * scale), round(46 * scale)
-            self.level_badge.setGeometry((width - bw) // 2, round(height * 0.88), bw, bh)
             self.level_badge.raise_()
         self.popup.raise_()
         self.position_popup()

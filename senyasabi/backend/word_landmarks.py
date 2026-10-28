@@ -123,17 +123,125 @@ def make_landmarkers(hand_model_path=HAND_MODEL_PATH, pose_model_path=POSE_MODEL
     return hand, pose
 
 
+
+
+class _LandmarkerWrapper:
+    def __init__(self, detector, preprocessor, kind):
+        self._detector = detector
+        self._preprocessor = preprocessor
+        self._kind = kind
+        self._last_valid_pose = None
+
+    def detect(self, image):
+        res = self._detector.detect(image)
+        try:
+            if self._kind == 'hand':
+                self._preprocessor.last_hand_landmarks = list(res.hand_landmarks) if res and res.hand_landmarks else []
+            elif self._kind == 'pose':
+                pose_landmarks = res.pose_landmarks[0] if res and res.pose_landmarks else []
+                if len(pose_landmarks) > 12:
+                    ls, rs = pose_landmarks[11], pose_landmarks[12]
+                    ls_vis = getattr(ls, 'visibility', 1.0) or 0.0
+                    rs_vis = getattr(rs, 'visibility', 1.0) or 0.0
+                    if ls_vis >= 0.40 and rs_vis >= 0.40:
+                        self._last_valid_pose = pose_landmarks
+                        self._preprocessor.last_pose_landmarks = pose_landmarks
+                    elif self._last_valid_pose is not None:
+                        from types import SimpleNamespace as NS
+                        res = NS(pose_landmarks=[self._last_valid_pose])
+                        self._preprocessor.last_pose_landmarks = self._last_valid_pose
+                    else:
+                        from types import SimpleNamespace as NS
+                        res = NS(pose_landmarks=[])
+                        self._preprocessor.last_pose_landmarks = []
+                elif self._last_valid_pose is not None:
+                    from types import SimpleNamespace as NS
+                    if not (res and res.pose_landmarks):
+                        res = NS(pose_landmarks=[self._last_valid_pose])
+                    self._preprocessor.last_pose_landmarks = self._last_valid_pose
+                else:
+                    self._preprocessor.last_pose_landmarks = pose_landmarks
+        except Exception:
+            pass
+        return res
+
+    def close(self):
+        if hasattr(self._detector, 'close'):
+            self._detector.close()
+
+    def __getattr__(self, name):
+        return getattr(self._detector, name)
+
+HAND_CONNECTIONS = [
+    (0, 1), (1, 2), (2, 3), (3, 4),
+    (0, 5), (5, 6), (6, 7), (7, 8),
+    (5, 9), (9, 10), (10, 11), (11, 12),
+    (9, 13), (13, 14), (14, 15), (15, 16),
+    (13, 17), (17, 18), (18, 19), (19, 20),
+    (0, 17),
+]
+ARM_CONNECTIONS = [(11, 12), (11, 13), (13, 15), (12, 14), (14, 16)]
+
+
+def draw_landmarks_on_frame(frame_bgr, hand_landmarks_list=None, pose_landmarks=None):
+    import cv2
+    if frame_bgr is None:
+        return None
+    annotated = frame_bgr.copy()
+    h, w = frame_bgr.shape[:2]
+
+    # Draw arms / shoulders if pose landmarks present
+    if pose_landmarks and len(pose_landmarks) > 16:
+        pose_pts = {}
+        for idx in (11, 12, 13, 14, 15, 16):
+            if idx < len(pose_landmarks):
+                lm = pose_landmarks[idx]
+                vis = getattr(lm, 'visibility', 1.0)
+                if vis is None or vis > 0.35:
+                    pose_pts[idx] = (int(lm.x * w), int(lm.y * h))
+        for p1, p2 in ARM_CONNECTIONS:
+            if p1 in pose_pts and p2 in pose_pts:
+                cv2.line(annotated, pose_pts[p1], pose_pts[p2], (180, 230, 180), 2, cv2.LINE_AA)
+        for pt in pose_pts.values():
+            cv2.circle(annotated, pt, 4, (80, 190, 100), -1, cv2.LINE_AA)
+
+    # Draw hands
+    if hand_landmarks_list:
+        for hand in hand_landmarks_list:
+            if not hand:
+                continue
+            pts = [(int(lm.x * w), int(lm.y * h)) for lm in hand]
+            for p1, p2 in HAND_CONNECTIONS:
+                if p1 < len(pts) and p2 < len(pts):
+                    cv2.line(annotated, pts[p1], pts[p2], (255, 255, 255), 2, cv2.LINE_AA)
+            for pt in pts:
+                cv2.circle(annotated, pt, 4, (58, 145, 232), -1, cv2.LINE_AA)
+                cv2.circle(annotated, pt, 2, (255, 255, 255), -1, cv2.LINE_AA)
+
+    return annotated
+
 class WordLandmarkPreprocessor:
     """Own the two Tasks detectors; every camera frame yields the training vector."""
     def __init__(self, config, hand_model_path=HAND_MODEL_PATH, pose_model_path=POSE_MODEL_PATH):
         self.config = validate_landmark_config(config)
-        self.hand_detector, self.pose_detector = make_landmarkers(hand_model_path, pose_model_path)
+        raw_hand, raw_pose = make_landmarkers(hand_model_path, pose_model_path)
+        self.last_hand_landmarks = []
+        self.last_pose_landmarks = []
+        self.hand_detector = _LandmarkerWrapper(raw_hand, self, 'hand')
+        self.pose_detector = _LandmarkerWrapper(raw_pose, self, 'pose')
 
     def process(self, frame_bgr):
         import cv2
         # Training reads unmirrored RGB frames. Do not flip or swap handedness slots.
         frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
         return frame_to_features(frame_rgb, self.hand_detector, self.pose_detector)
+
+    def draw(self, frame_bgr):
+        return draw_landmarks_on_frame(
+            frame_bgr,
+            hand_landmarks_list=self.last_hand_landmarks,
+            pose_landmarks=self.last_pose_landmarks
+        )
 
     def close(self):
         hand, pose = self.hand_detector, self.pose_detector

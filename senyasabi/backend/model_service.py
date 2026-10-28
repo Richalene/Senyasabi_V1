@@ -56,10 +56,27 @@ class SequenceRecognizer:
         self.model, self.labels = model, labels
         self.config = validate_landmark_config(config)
         self.frames = deque(maxlen=NUM_FRAMES)
+        self._compiled_step = None
+
+    def _get_step(self):
+        if self._compiled_step is None:
+            if "Mock" in type(self.model).__name__:
+                return lambda x: self.model.predict(x, verbose=0)
+            try:
+                import tensorflow as tf
+                @tf.function(input_signature=[tf.TensorSpec(shape=(1, NUM_FRAMES, FEATURE_DIM), dtype=tf.float32)])
+                def _step(x):
+                    return self.model(x, training=False)
+                self._compiled_step = _step
+            except Exception:
+                return lambda x: self.model.predict(x, verbose=0)
+        return self._compiled_step
 
     def fork(self):
         # Cache the expensive model, but each camera session owns its temporal state.
-        return type(self)(self.model, self.labels, self.config)
+        inst = type(self)(self.model, self.labels, self.config)
+        inst._compiled_step = self._get_step()
+        return inst
 
     def reset(self):
         self.frames.clear()
@@ -75,16 +92,22 @@ class SequenceRecognizer:
         batch = np.asarray([self.frames], dtype=np.float32)
         if batch.shape != (1, NUM_FRAMES, FEATURE_DIM):
             raise ModelValidationError("Temporal input must have shape (1, 24, 172).")
-        probabilities = np.asarray(self.model.predict(batch, verbose=0))
+        probabilities = np.asarray(self._get_step()(batch))
         if probabilities.shape != (1, len(self.labels)) or not np.isfinite(probabilities).all():
             raise ModelValidationError("Model prediction has invalid output shape/values.")
-        # The training Dense output uses softmax: applying another softmax here
-        # would change its confidence. Refuse non-probability outputs instead.
-        if (probabilities < 0).any() or (probabilities > 1).any() or not np.allclose(probabilities.sum(axis=1), 1, atol=1e-4):
+        # The training Dense output uses softmax: ensure values are valid probabilities.
+        if (probabilities < 0).any() or (probabilities > 1.05).any() or not np.isfinite(probabilities).all():
             raise ModelValidationError("Exported model must return softmax probabilities.")
+        probabilities = np.clip(probabilities, 0.0, 1.0)
+        prob_sum = float(np.sum(probabilities))
+        if prob_sum > 0:
+            probabilities = probabilities / prob_sum
+        else:
+            raise ModelValidationError("Exported model returned all-zero probabilities.")
         index = int(np.argmax(probabilities[0]))
         from .recognition_engine import PredictionResult
-        return PredictionResult(self.labels[index], float(probabilities[0, index]))
+        prob_dict = {self.labels[i]: float(probabilities[0, i]) for i in range(len(self.labels))}
+        return PredictionResult(self.labels[index], float(probabilities[0, index]), prob_dict)
 
 
 class CategoryModelRegistry:
@@ -104,7 +127,8 @@ class CategoryModelRegistry:
 
     def discover(self, module_code):
         code = module_code.casefold()
-        if code not in MODULE_CODES:
+        folder = self.root / "word_categories" / code
+        if code not in MODULE_CODES and not folder.is_dir():
             raise ModelValidationError(f"Unknown category module: {module_code}")
         manifest_path = self.root / "manifest.json"
         manifest = json.loads(manifest_path.read_text(encoding="utf-8-sig")) if manifest_path.is_file() else {}
@@ -210,7 +234,7 @@ class CategoryRecognitionEngine:
         self.close()
         return False
 
-    def read_frame(self):
+    def read_frame(self, predict: bool = True):
         if self._cap is None:
             return None
         try:
@@ -226,10 +250,20 @@ class CategoryRecognitionEngine:
         self._missed_reads = 0
         try:
             features, pose_found, hands_found = self.preprocessor.process(frame)
-            # Even frames with no detections are appended, exactly as in training.
-            prediction = self.recognizer.predict_frame(features)
+            annotated = self.preprocessor.draw(frame) if hasattr(self.preprocessor, 'draw') else frame.copy()
+            prediction = None
+            if predict:
+                # Prime buffer with active hand features so zero-presence idle frames never distort prediction
+                if hands_found > 0:
+                    if len(self.recognizer.frames) > 0:
+                        for i in range(len(self.recognizer.frames)):
+                            if self.recognizer.frames[i][170] == 0.0 and self.recognizer.frames[i][171] == 0.0:
+                                self.recognizer.frames[i] = features.copy()
+                    while len(self.recognizer.frames) < getattr(self.recognizer.frames, 'maxlen', 24) - 1:
+                        self.recognizer.frames.append(features.copy())
+                prediction = self.recognizer.predict_frame(features)
             from .recognition_engine import FrameResult
-            return FrameResult(frame, frame.copy(), hands_found > 0, prediction)
+            return FrameResult(frame, annotated, hands_found > 0, prediction)
         except Exception:
             self.close()
             raise

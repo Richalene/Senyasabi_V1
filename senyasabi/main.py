@@ -1,4 +1,45 @@
+import os
 import sys
+import traceback
+
+try:
+    import faulthandler
+    faulthandler.enable()
+except Exception:
+    pass
+
+def _excepthook(exc_type, exc_value, exc_tb):
+    tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
+    sys.stderr.write(f"\n================ CRITICAL CRASH ================\n{tb}\n================================================\n")
+    sys.stderr.flush()
+    try:
+        with open("crash.log", "a", encoding="utf-8") as f:
+            f.write(f"\n================ CRITICAL CRASH ================\n{tb}\n================================================\n")
+    except Exception:
+        pass
+    sys.__excepthook__(exc_type, exc_value, exc_tb)
+
+sys.excepthook = _excepthook
+
+if hasattr(sys, "unraisablehook"):
+    def _unraisablehook(unraisable):
+        msg = f"\n[UNRAISABLE] {unraisable.err_msg}: {unraisable.object}\n"
+        if unraisable.exc_traceback:
+            msg += "".join(traceback.format_tb(unraisable.exc_traceback))
+        msg += f"{unraisable.exc_type.__name__}: {unraisable.exc_value}\n"
+        sys.stderr.write(msg)
+        sys.stderr.flush()
+        try:
+            with open("crash.log", "a", encoding="utf-8") as f:
+                f.write(msg)
+        except Exception:
+            pass
+    sys.unraisablehook = _unraisablehook
+
+# On Windows, use FFmpeg backend so Qt can demux QuickTime (.MOV) and MP4 without third-party splitters.
+# On macOS, Qt's default 'darwin' (AVFoundation) backend provides native Apple Silicon acceleration for .MOV and .MP4.
+if sys.platform == "win32":
+    os.environ.setdefault("QT_MEDIA_BACKEND", "ffmpeg")
 
 from PySide6.QtCore import QEvent, QTimer, Qt
 from PySide6.QtGui import QColor, QPalette
@@ -15,6 +56,7 @@ class SenyaSabiApplication(QApplication):
 
     def __init__(self, argv):
         super().__init__(argv)
+        self.setQuitOnLastWindowClosed(False)
         self.fullscreen = True
 
     def notify(self, receiver, event):
@@ -67,7 +109,7 @@ def main() -> int:
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
     controller.show_welcome()
-    return app.exec()
+    return app.exec()      
 
 
 if __name__ == "__main__":

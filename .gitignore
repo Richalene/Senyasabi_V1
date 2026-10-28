@@ -90,3 +90,8 @@ _test_cache
 
 # Local video assets (keep videos out of Git pushes)
 /senyasabi/resources/videos/clips_labeled/
+/senyasabi/resources/models/training_configs/
+
+# Local model extraction and scratch directories
+ext_models/
+scratch/

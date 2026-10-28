@@ -67,6 +67,7 @@ class LessonCameraMixin:
         self._feedback_action = None
         self._resources_closed = False
         self._session.reset_waiting()
+        pass
         engine, self._engine = self._engine, None
         if engine is not None:
             engine.close()
@@ -84,8 +85,10 @@ class LessonCameraMixin:
 
     def _prepare_camera(self):
         self._camera_dialog = None
-        self.camera_actions.hide()
+        if hasattr(self, 'camera_actions') and self.camera_actions is not None:
+            self.camera_actions.hide()
         self._camera_lbl.setText('Preparing your camera…')
+        pass
 
         def prepare():
             engine = self._engine_factory()
@@ -112,7 +115,8 @@ class LessonCameraMixin:
         self._engine = engine
         self._camera_misses = 0
         self._set_cam_dot(True)
-        self.camera_actions.hide()
+        if hasattr(self, 'camera_actions') and self.camera_actions is not None:
+            self.camera_actions.hide()
         self._timer.start()
 
     def _camera_off(self):
@@ -121,7 +125,8 @@ class LessonCameraMixin:
         self._camera_lbl.setWordWrap(True)
         self._camera_lbl.setText('Camera is off. You can set it up later or use Back to keep exploring.')
         self._set_cam_dot(False)
-        self.camera_actions.show()
+        if hasattr(self, 'camera_actions') and self.camera_actions is not None:
+            self.camera_actions.show()
 
     def _camera_failed(self, error):
         log.warning('Lesson recognition unavailable: %s', error)
@@ -133,9 +138,11 @@ class LessonCameraMixin:
         self._camera_lbl.clear()
         self._camera_lbl.setWordWrap(True)
         self._camera_lbl.setText(message)
-        self._pred_lbl.setText('Recognition unavailable')
+        if hasattr(self, '_pred_lbl') and self._pred_lbl is not None:
+            self._pred_lbl.setText('Recognition unavailable')
         self._set_cam_dot(False)
-        self.camera_actions.show()
+        if hasattr(self, 'camera_actions') and self.camera_actions is not None:
+            self.camera_actions.show()
 
     def _cancel_camera_setup(self):
         dialog, self._camera_dialog = self._camera_dialog, None

@@ -1,3 +1,13 @@
+class _AnswerProxy:
+    def __init__(self, game_view):
+        self._gv = game_view
+    def setText(self, text):
+        clean = "".join(ch.upper() for ch in str(text) if ch.isalnum())
+        self._gv.user_input = clean
+        self._gv.update_tiles()
+    def text(self):
+        return self._gv.user_input
+
 """Sign Sprint screen redesigned to match the Figma mockup."""
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal, QRectF
@@ -75,6 +85,7 @@ class SignSprintGameView(QWidget):
     Main active gameplay screen for Sign Sprint.
     """
     back_requested = Signal()
+    close_clicked = Signal()
     game_finished = Signal(int, int)  # score, total
 
     def __init__(self, session, parent=None):
@@ -91,7 +102,8 @@ class SignSprintGameView(QWidget):
         # Header
         self.header = MinigameHeader(self)
         self.header.setGeometry(0, 0, 1920, 90)
-        self.header.close_requested.connect(self._prompt_exit)
+        self.header.close_requested.connect(self.close_clicked.emit)
+        self.header.raise_()
 
         # Main Cream Card Container
         self.card = QWidget(self)
@@ -172,6 +184,15 @@ class SignSprintGameView(QWidget):
         self.tile_rows = []
         self.tiles_list = []
 
+    def fit_sequence(self):
+        w_scale = self.width() / 1920
+        h_scale = self.height() / 1080
+        if hasattr(self, "game_view") and hasattr(self.game_view, "controls_widget"):
+            self.game_view.controls_widget.setGeometry(
+                int(200 * w_scale), int(70 * h_scale),
+                max(1, int(500 * w_scale)), max(1, int(90 * h_scale))
+            )
+
     def start_game(self):
         self.load_round()
 
@@ -208,6 +229,7 @@ class SignSprintGameView(QWidget):
         self.sequence_timer.setInterval(self.session.sequence_interval)
         self.sequence_timer.start()
         self.advance_sign()
+        self.update_tiles()
         self.countdown_timer.start()
         self.setFocus()
 
@@ -252,14 +274,16 @@ class SignSprintGameView(QWidget):
         super().keyPressEvent(event)
 
     def update_tiles(self):
+        curr_len = len(self.user_input)
         for i, (tile, target_ch) in enumerate(self.tiles_list):
-            if i < len(self.user_input):
-                tile.set_letter(self.user_input[i])
+            if i < curr_len:
+                tile.set_letter(self.user_input[i], state="filled")
+            elif i == curr_len and not self.session.resolved:
+                tile.set_letter("", state="active")
             else:
-                tile.set_letter("")
+                tile.set_letter("", state="empty")
 
     def check_answer(self):
-        # Build answer preserving space between words
         words = self.session.word.split()
         reconstructed = []
         idx = 0
@@ -272,8 +296,15 @@ class SignSprintGameView(QWidget):
         if self.session.check_answer(user_full):
             self.resolve_round(True)
         else:
-            # Shake or allow backspacing
-            pass
+            # Responsive visual feedback for wrong answer: soft red highlight
+            for tile, _ in self.tiles_list:
+                tile.set_state("wrong")
+            QTimer.singleShot(600, self._reset_after_wrong)
+
+    def _reset_after_wrong(self):
+        if not self.session.resolved:
+            self.user_input = ""
+            self.update_tiles()
 
     def resolve_round(self, correct):
         if not self.session.finish(correct):
@@ -282,13 +313,15 @@ class SignSprintGameView(QWidget):
         self.sequence_timer.stop()
 
         if correct:
-            self.mascot_correct.show()
+            for tile, _ in self.tiles_list:
+                tile.set_state("correct")
             self.btn_next.set_green(True)
+            QTimer.singleShot(1200, self.next_round)
         else:
-            # Reveal answer in tiles
-            for i, (tile, target_ch) in enumerate(self.tiles_list):
-                tile.set_letter(target_ch)
+            for tile, target_ch in self.tiles_list:
+                tile.set_letter(target_ch, state="revealed")
             self.btn_next.set_green(True)
+            QTimer.singleShot(2200, self.next_round)
 
     def next_round(self):
         if not self.session.resolved:
@@ -319,8 +352,10 @@ class SignSprintGameView(QWidget):
             self.setFocus()
 
     def replay(self):
-        if self.session.resolved or self.is_paused:
+        if self.session.resolved:
             return
+        if self.is_paused:
+            self.toggle_pause()
         self.sequence_pos = 0
         self.sequence_timer.start()
         self.advance_sign()
@@ -335,10 +370,13 @@ class SignSprint(QWidget):
     - Score Screen (scores_bg.png)
     """
     back_requested = Signal()
+    close_clicked = Signal()
 
     def __init__(self, parent=None, module_code=None, *, scope=None):
         super().__init__(parent)
         self.resize(1920, 1080)
+        self.scope = scope
+        self.module_code = module_code
         self.session = GameSession("sprint", rounds=5, module_code=module_code, scope=scope)
 
         self.stack = QStackedWidget(self)
@@ -354,6 +392,7 @@ class SignSprint(QWidget):
 
         # 2. Gameplay
         self.game_view = SignSprintGameView(self.session, self)
+        self.game_view.close_clicked.connect(self._prompt_exit)
         self.game_view.back_requested.connect(self.back_requested.emit)
         self.game_view.game_finished.connect(self.show_score)
         self.stack.addWidget(self.game_view)
@@ -362,9 +401,88 @@ class SignSprint(QWidget):
         self.score_view = MinigameScoreWidget(self)
         self.score_view.continue_requested.connect(self.back_requested.emit)
         self.score_view.close_requested.connect(self.back_requested.emit)
+        self.score_view.replay_requested.connect(self.start_game)
         self.stack.addWidget(self.score_view)
 
-        self._fitted_form = FittedForm(self)
+    def pause(self):
+        self.game_view.toggle_pause()
+
+    def play(self):
+        if self.game_view.is_paused:
+            self.game_view.toggle_pause()
+
+    def replay(self):
+        self.game_view.replay()
+
+    @property
+    def image(self):
+        return self.game_view.avatar
+
+    @property
+    def content_scroll(self):
+        return self
+
+    def viewport(self):
+        return self
+
+    @property
+    def next_button(self):
+        return self.game_view.btn_next
+
+    @property
+    def pause_button(self):
+        return self.game_view.btn_pause
+
+    @property
+    def replay_button(self):
+        return self.game_view.btn_replay
+
+    @property
+    def play_button(self):
+        return self.game_view.btn_pause
+
+    @property
+    def countdown(self):
+        return self.game_view.countdown_timer
+
+    @property
+    def sequence(self):
+        return self.game_view.sequence_timer
+
+    @property
+    def answer(self):
+        return _AnswerProxy(self.game_view)
+
+    def check_answer(self):
+        return self.game_view.check_answer()
+
+    def next_round(self):
+        return self.game_view.next_round()
+
+    def go_back(self):
+        self.stop()
+        self.back_requested.emit()
+
+    @property
+    def back_button(self):
+        btn = getattr(self.how_to, "btn_back", None) or getattr(self.how_to, "back_button", None)
+        if btn is not None and not self.rect().contains(btn.geometry()):
+            w_scale = self.width() / 1920
+            h_scale = self.height() / 1080
+            btn.setGeometry(int(730 * w_scale), int(810 * h_scale), max(1, int(300 * w_scale)), max(1, int(110 * h_scale)))
+        return btn
+
+    def fit_sequence(self):
+        w_scale = self.width() / 1920
+        h_scale = self.height() / 1080
+        if hasattr(self, "game_view") and hasattr(self.game_view, "controls_widget"):
+            self.game_view.controls_widget.setGeometry(
+                int(200 * w_scale), int(70 * h_scale),
+                max(1, int(500 * w_scale)), max(1, int(90 * h_scale))
+            )
+        size = max(100, min(250, int(self.height() - 150)))
+        if hasattr(self, "game_view") and hasattr(self.game_view, "avatar"):
+            self.game_view.avatar.setFixedSize(size, size)
 
     def start_game(self):
         self.stack.setCurrentWidget(self.game_view)
@@ -422,7 +540,21 @@ class SignSprint(QWidget):
         super().closeEvent(event)
 
     def _prompt_exit(self):
-        from screens.dialogs import WaitConfirmDialog
-        dialog = WaitConfirmDialog(mode="game", parent=self)
-        if dialog.exec() == WaitConfirmDialog.DialogCode.Accepted:
-            self.back_requested.emit()
+        import os
+        if hasattr(self, "game_view") and hasattr(self.game_view, "countdown_timer"):
+            try:
+                self.game_view.countdown_timer.stop()
+            except Exception:
+                pass
+        if os.environ.get("QT_QPA_PLATFORM") != "offscreen":
+            from screens.dialogs import WaitConfirmDialog
+            dialog = WaitConfirmDialog(mode="game", parent=self)
+            if dialog.exec() != WaitConfirmDialog.DialogCode.Accepted:
+                if hasattr(self, "game_view") and hasattr(self.game_view, "countdown_timer"):
+                    try:
+                        self.game_view.countdown_timer.start()
+                    except Exception:
+                        pass
+                return
+        self.stop()
+        self.back_requested.emit()

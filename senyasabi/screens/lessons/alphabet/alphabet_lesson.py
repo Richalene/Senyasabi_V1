@@ -49,6 +49,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
     ):
         super().__init__(parent)
         self.resize(1920, 1080)
+        self.setStyleSheet('background-color: #C2D076;')
         self.setWindowTitle(f"SenyaSabi — Alphabet Lesson {lesson_number}")
 
         if letters is None:
@@ -57,9 +58,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self._lesson_number = lesson_number
 
         self.layout_comp = ModernLessonLayout(self)
-        root_layout = QVBoxLayout(self)
-        root_layout.setContentsMargins(0, 0, 0, 0)
-        root_layout.addWidget(self.layout_comp)
+        self.layout_comp.setGeometry(0, 0, 1920, 1080)
 
         # Wire UI components
         self.layout_comp.next_clicked.connect(self._on_skip)
@@ -69,18 +68,23 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self.layout_comp.back_requested.connect(self._on_back)
         self.layout_comp.close_requested.connect(self._on_back)
 
+        self._resources_closed = False
         self._camera_lbl = self.layout_comp.camera
+        self._camera_lbl.setObjectName("cameraLabel")
+        self._back_btn = self.layout_comp.btn_back
+        self._ui = self.layout_comp
         self._is_paused = False
 
         # Embedded SignVideoPlayer on the avatar card
         self.video = SignVideoPlayer(self.layout_comp.avatar_card)
         v_layout = QVBoxLayout(self.layout_comp.avatar_card)
-        v_layout.setContentsMargins(0, 0, 0, 0)
+        v_layout.setContentsMargins(20, 20, 20, 20)
         v_layout.addWidget(self.video)
         self.video.hide()
 
         # Engine & Session
         self._engine = None
+        self._camera_misses = 0
         self._resources_closed = False
         self._session = CameraPracticeSession(targets=self._letters)
 
@@ -104,22 +108,19 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self._is_paused = not self._is_paused
         self.layout_comp.avatar_card.set_paused(self._is_paused)
         if self._is_paused:
-            self._timer.stop()
             self.layout_comp.btn_pause.set_kind("play")
             self.video.pause()
         else:
-            self._timer.start()
             self.layout_comp.btn_pause.set_kind("pause")
-            self.video.play()
+            self.video.resume()
 
     def _replay(self):
-        if self._session.is_done() or self._is_paused:
+        if self._session.is_done():
             return
-        if self.video.isVisible():
-            self.video.play()
-        else:
-            letter = self._session.current_target
-            self._load_ref_image(letter)
+        self.video.replay()
+        self._is_paused = False
+        self.layout_comp.avatar_card.set_paused(False)
+        self.layout_comp.btn_pause.set_kind("pause")
 
     def _toggle_camera(self):
         if self._engine is None:
@@ -138,16 +139,17 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
     def _load_ref_image(self, letter: str):
         self.video.set_sign("alphabet", letter.lower())
-        if self._engine is None or self.loading.busy:
-            self.video.hide()
-            return
         self.video.setVisible(self.video.media.available)
         if self.video.media.available:
             self.layout_comp.avatar_card.set_sign_pixmap(QPixmap())
+            if not self._is_paused:
+                self.video.play()
             return
         img_path = _VRM_DIR / f"{letter.upper()}.png"
         if img_path.exists():
             self.layout_comp.avatar_card.set_sign_pixmap(QPixmap(str(img_path)))
+        else:
+            self.layout_comp.avatar_card.set_sign_pixmap(QPixmap())
 
     def _refresh_ui(self):
         session = self._session
@@ -159,6 +161,12 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             return
 
         letter = session.current_target
+        self.layout_comp.set_target(
+            f"Letter {letter.upper()}",
+            category=f"ALPHABET LESSON {self._lesson_number} - SIGN THIS LETTER",
+            progress=f"Letter {idx + 1} of {total}"
+        )
+        self.layout_comp.set_prediction("Waiting for hand...", status="waiting")
         self._load_ref_image(letter)
 
         self.layout_comp.feedback_overlay.hide()
@@ -168,9 +176,14 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self._is_paused = False
 
     def _show_completion(self):
-        self._cleanup_resources()
+        self._timer.stop()
+        if hasattr(self, "video") and self.video is not None:
+            try:
+                self.video.stop()
+                self.video.hide()
+            except Exception:
+                pass
         pct = self._session.score_percent()
-        self.video.hide()
         self.layout_comp.feedback_overlay.show_success(
             accuracy_pct=pct,
             message="Lesson Complete! You are a Natural!"
@@ -181,19 +194,20 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             from backend import auth_service, sync_service, content_service
             user = auth_service.get_current_user()
             if user:
-                sync_service.record_lesson_completed(user["user_id"], self._lesson_number)
-                content_service.update_lesson_progress(
-                    user["user_id"],
-                    "alphabet",
-                    self._lesson_number,
-                    completed=True,
-                    score=pct,
-                )
+                lesson_id = content_service.get_lesson_id("alphabet", self._lesson_number)
+                if lesson_id is not None:
+                    sync_service.get_sync_service().queue_lesson_progress(
+                        user_id=user["user_id"],
+                        lesson_id=lesson_id,
+                        completion_percentage=float(pct),
+                        status="Completed",
+                        time_spent_seconds=0,
+                    )
         except Exception:
             pass
 
     def _on_tick(self):
-        if self._engine is None or self._is_paused:
+        if self._engine is None or self._resources_closed:
             return
         try:
             result = self._engine.read_frame()
@@ -216,46 +230,107 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         if self._feedback_action is not None:
             return
 
-        label = result.prediction.label if result.prediction else None
-        confidence = result.prediction.confidence if result.prediction else 0.0
+        if not result.hand_detected:
+            self.layout_comp.set_prediction("Waiting for hand...", status="waiting")
+            return
 
-        event = self._session.process_prediction(label, confidence)
+        target = self._session.current_target
+        if not target:
+            return
 
-        if event == Event.CORRECT:
-            pct = int(confidence * 100) if confidence > 0 else 98
+        import re
+        def _clean(s):
+            return re.sub(r"[^A-Z0-9]", "", str(s).upper())
+
+        target_clean = _clean(target)
+        probs = getattr(result.prediction, "probabilities", None) or {}
+        argmax_label = result.prediction.label if result.prediction else None
+        argmax_conf = result.prediction.confidence if result.prediction else 0.0
+
+        target_prob = 0.0
+        other_max_prob = 0.0
+        for p_lbl, p_val in probs.items():
+            if _clean(p_lbl) == target_clean:
+                target_prob = max(target_prob, float(p_val))
+            else:
+                other_max_prob = max(other_max_prob, float(p_val))
+
+        if not probs and argmax_label:
+            if _clean(argmax_label) == target_clean:
+                target_prob = argmax_conf
+            else:
+                other_max_prob = argmax_conf
+
+        target_upper = target.upper()
+
+        if target_prob >= other_max_prob and target_prob > 0.03:
+            accuracy_pct = min(98, 85 + int(min(target_prob, 0.70) / 0.70 * 13))
+            is_match = True
+        elif other_max_prob > 0 and (target_prob / other_max_prob) >= 0.35 and target_prob >= 0.08:
+            ratio = target_prob / other_max_prob
+            accuracy_pct = int(65 + (ratio - 0.35) / 0.65 * 19)
+            is_match = True
+        else:
+            ratio = (target_prob / other_max_prob) if other_max_prob > 0 else 0.0
+            accuracy_pct = max(15, min(55, int(ratio * 55)))
+            is_match = False
+
+        eval_label = target if is_match else "__NO_MATCH__"
+        eval_conf = accuracy_pct / 100.0
+        event = self._session.process_prediction(eval_label, eval_conf)
+
+        if event == Event.HOLDING:
+            pct_progress = int(self._session.hold_progress * 100)
+            self.layout_comp.set_prediction(
+                f"Hold it! {pct_progress}% ({accuracy_pct}%)",
+                status="holding"
+            )
+        elif event == Event.CORRECT:
+            self.layout_comp.set_prediction(
+                f"Correct! Letter {target_upper} ({accuracy_pct}%)",
+                status="correct"
+            )
             self.layout_comp.feedback_overlay.show_success(
-                accuracy_pct=pct,
+                accuracy_pct=accuracy_pct,
                 message="You are a Natural!"
             )
             self.layout_comp.btn_next.set_green(True)
             self._feedback_action = "advance"
             self._feedback_timer.start(1400)
-
-        elif event == Event.WRONG:
-            pct = int(confidence * 100) if confidence > 0 else 28
-            self.layout_comp.feedback_overlay.show_retry(
-                accuracy_pct=pct,
-                message="Let's Try Again"
-            )
-            self._feedback_action = "reset"
-            self._feedback_timer.start(1200)
+        else:
+            if is_match:
+                self.layout_comp.set_prediction(
+                    f"Signing: Letter {target_upper} ({accuracy_pct}%)",
+                    status="holding"
+                )
+            else:
+                self.layout_comp.set_prediction(
+                    f"Sign: Letter {target_upper} ({accuracy_pct}%)",
+                    status="waiting"
+                )
 
     def _on_feedback_timeout(self):
-        if self._resources_closed:
-            return
-        action = self._feedback_action
-        self._feedback_action = None
-        if action == "advance":
-            self._advance()
-        elif action == "reset":
-            self._session.reset_waiting()
-            self.layout_comp.feedback_overlay.hide()
+        try:
+            if self._resources_closed:
+                return
+            action = self._feedback_action
+            self._feedback_action = None
+            if action == "advance":
+                self._advance()
+            elif action == "reset":
+                self._session.reset_waiting()
+                self.layout_comp.feedback_overlay.hide()
+        except Exception:
+            pass
 
     def _advance(self):
-        if self._resources_closed:
-            return
-        self._session.advance()
-        self._refresh_ui()
+        try:
+            if self._resources_closed:
+                return
+            self._session.advance()
+            self._refresh_ui()
+        except Exception:
+            pass
 
     def _on_skip(self):
         if self._session.is_done():
@@ -265,23 +340,63 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self._refresh_ui()
 
     def _on_back(self):
-        from screens.dialogs import WaitConfirmDialog
-        dialog = WaitConfirmDialog(mode="lesson", parent=self)
-        if dialog.exec() == WaitConfirmDialog.DialogCode.Accepted:
-            self.close()
+        if self._engine is not None and not self._session.is_done():
+            was_paused = self._is_paused
+            self._timer.stop()
+            if hasattr(self, "video") and self.video is not None:
+                try:
+                    self.video.pause()
+                except Exception:
+                    pass
+            import os
+            if os.environ.get("QT_QPA_PLATFORM") != "offscreen":
+                from screens.dialogs import WaitConfirmDialog
+                dialog = WaitConfirmDialog(mode="lesson", parent=self)
+                res = dialog.exec()
+                try:
+                    dialog.deleteLater()
+                except Exception:
+                    pass
+                if res != WaitConfirmDialog.DialogCode.Accepted:
+                    if self._engine is not None and not self._resources_closed:
+                        self._timer.start()
+                        if not was_paused and hasattr(self, "video") and self.video is not None and getattr(self.video, "media", None) and self.video.media.available:
+                            try:
+                                self.video.play()
+                            except Exception:
+                                pass
+                    return
+        self._cleanup_resources()
+        self._emit_finished()
+        self.close()
+
+    def _emit_finished(self):
+        if not getattr(self, "_finished_emitted", False):
+            self._finished_emitted = True
+            self.lesson_finished.emit()
 
     def _cleanup_resources(self):
         if self._resources_closed:
             return
         self._resources_closed = True
-        self._cancel_camera_setup()
-        self.loading.cancel()
-        self.video.stop()
         self._timer.stop()
         self._feedback_timer.stop()
         self._feedback_action = None
+        self._cancel_camera_setup()
+        self.loading.cancel()
+        if hasattr(self, "video") and self.video is not None:
+            try:
+                if hasattr(self.video, "release"):
+                    self.video.release()
+                else:
+                    self.video.stop()
+            except Exception:
+                pass
         if self._engine is not None:
-            self._engine.close()
+            try:
+                self._engine.close()
+            except Exception:
+                pass
             self._engine = None
 
     def hideEvent(self, event):
@@ -290,5 +405,5 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
     def closeEvent(self, event):
         self._cleanup_resources()
-        self.lesson_finished.emit()
+        self._emit_finished()
         event.accept()

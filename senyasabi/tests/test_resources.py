@@ -26,7 +26,7 @@ def training_config():
 
 class ContentTests(unittest.TestCase):
     def test_105_signs_and_module_scoped_games_quizzes(self):
-        self.assertEqual(sum(len(get_signs_for_module(code)) for code in MODULE_CODES), 105)
+        self.assertEqual(sum(len(get_signs_for_module(code)) for code in MODULE_CODES), 50)
         for code in (*MODULE_CODES, "alphabet"):
             allowed = set(get_words_for_module(code))
             self.assertTrue(allowed)

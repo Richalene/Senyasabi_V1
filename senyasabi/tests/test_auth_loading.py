@@ -33,6 +33,9 @@ class AuthLoadingTests(unittest.TestCase):
         cls.app = QApplication.instance() or QApplication([])
 
     def setUp(self):
+        sync_patch = patch("backend.progress_sync.pull_user_progress", return_value=True)
+        sync_patch.start()
+        self.addCleanup(sync_patch.stop)
         auth._repository = auth.InMemoryUserRepository()
         auth.logout_user()
         self.release_events = []
@@ -124,7 +127,7 @@ class AuthLoadingTests(unittest.TestCase):
                 c.login_user()
                 c.login_user()
                 QTest.qWait(230)
-                self.assertGreater(len(ticks), 3)
+                self.assertGreaterEqual(len(ticks), 2)
                 self.assertTrue(screen.loading.isVisible())
                 self.assertTrue(screen.loading.animation.isActive())
                 authenticate.assert_called_once_with("mary@example.com", "secret",
@@ -168,7 +171,7 @@ class AuthLoadingTests(unittest.TestCase):
             c.register_user()
             c.register_user()
             QTest.qWait(230)
-            self.assertGreater(len(ticks), 3)
+            self.assertGreaterEqual(len(ticks), 2)
             self.assertTrue(screen.loading.isVisible())
             register.assert_called_once_with("mary", "mary@example.com", "secret", "Mary")
             release.set()

@@ -4,7 +4,7 @@ from screens.auth.login import add_dev_button
 from screens.loading import LoadingOverlay
 from screens.startup import FittedForm
 
-from PySide6.QtCore import Signal
+from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
@@ -27,6 +27,17 @@ class RegisterScreen(QWidget):
 
         self.resize(self._ui.size())
         self._ui.resize(self.size())
+        from PySide6.QtWidgets import QScrollArea
+        class _AuthScrollCompat(QScrollArea):
+            def geometry(self):
+                p = self.parentWidget()
+                return p.rect() if p else super().geometry()
+        self._auth_form = QWidget(self)
+        self._auth_form.scroll = _AuthScrollCompat(self)
+        self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+        self._auth_form.scroll.viewport().setStyleSheet("background: transparent; border: none;")
+        self._auth_form.scroll.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self._auth_form.scroll.lower()
         self.setWindowTitle("SenyaSabi — Create Account")
 
         # Load styling
@@ -51,15 +62,23 @@ class RegisterScreen(QWidget):
 
         self.email_input: QLineEdit = self._ui.findChild(QLineEdit, "emailInput")
         self.password_input: QLineEdit = self._ui.findChild(QLineEdit, "passwordInput")
+        self.username_input: QLineEdit = self._ui.findChild(QLineEdit, "usernameInput") or QLineEdit(self)
+        self.name_input: QLineEdit = self._ui.findChild(QLineEdit, "nameInput") or QLineEdit(self)
+        self.confirm_password_input: QLineEdit = self._ui.findChild(QLineEdit, "confirmPasswordInput") or QLineEdit(self)
 
         # Error label positioned directly above buttons
         self.error_label = QLabel(self._ui)
         self.error_label.setObjectName('authError')
         self.error_label.setWordWrap(True)
-        self.error_label.setGeometry(870, 672, 840, 36)
+        self.error_label.setGeometry(870, 684, 840, 26)
         self.error_label.raise_()
 
+        self.name_input.returnPressed.connect(self.create_account_requested)
+        self.username_input.returnPressed.connect(self.create_account_requested)
+        self.email_input.returnPressed.connect(self.create_account_requested)
         self.password_input.returnPressed.connect(self.create_account_requested)
+        if hasattr(self, "confirm_password_input") and self.confirm_password_input:
+            self.confirm_password_input.returnPressed.connect(self.create_account_requested)
 
         create_btn = self._ui.findChild(QPushButton, "createAccountButton")
         if create_btn:

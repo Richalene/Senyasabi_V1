@@ -88,18 +88,12 @@ class LoadingOverlay(QWidget):
         self.delay = QTimer(self)
         self.delay.setSingleShot(True)
         self.delay.timeout.connect(self._show)
-        self.tips = [
-            "Facial expressions and body language are important parts of sign language. Try to imagine the feeling or meaning behind what you are signing. This helps you express yourself more naturally and makes your message clearer to others.",
-            "When fingerspelling a word or your name, avoid repeatedly moving your hand forward and backward. Keep your hand as steady as possible and make smooth transitions between letters. This makes your signs easier for others to read and understand.",
-            "Try not to speak and sign at the same time. Sign languages have their own grammar and sentence structure, which may be different from spoken languages. Focusing on signing helps you communicate more clearly and naturally.",
-            "Avoid using bright, flashy, or highly detailed nail art when signing. These can distract from your hand movements and make it harder for others to focus on the signs you are making."
-        ]
-        import random
-        self.text = QLabel(random.choice(self.tips), self)
+        self.tips = ["Loading..."]
+        self.text = QLabel("Loading...", self)
         self.text.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.text.setWordWrap(True)
         self.text.setTextFormat(Qt.TextFormat.PlainText)
-        self.text.setStyleSheet("background: transparent; color: #704833; font-size: 16px; font-weight: 500; padding: 0 40px;")
+        self.text.setStyleSheet("background: transparent; color: #704833; font-size: 26px; font-weight: 700; padding: 0 40px;")
         parent.installEventFilter(self)
         self.hide()
 
@@ -113,8 +107,7 @@ class LoadingOverlay(QWidget):
         if self.busy:
             return False
         if "recognition" in message.lower() or "loading" in message.lower() or "preparing" in message.lower():
-            import random
-            self.text.setText(random.choice(self.tips))
+            self.text.setText("Loading...")
         else:
             self.text.setText(message)
         self.setAccessibleDescription(message)
@@ -127,6 +120,7 @@ class LoadingOverlay(QWidget):
         _JOBS.add(job)
         app = QApplication.instance()
         app.aboutToQuit.connect(job.shutdown)
+        self._hide_video_surfaces()
         self.delay.start(show_delay_ms)
         job.start()
         return True
@@ -150,6 +144,28 @@ class LoadingOverlay(QWidget):
         self._success = self._failure = None
         self._hide()
 
+    def _hide_video_surfaces(self):
+        self._hidden_video_surfaces = []
+        host = self.parentWidget() or self.window()
+        if host is not None:
+            try:
+                from screens.media_player import SignVideoPlayer
+                for player in host.findChildren(SignVideoPlayer):
+                    if player.isVisible():
+                        player.pause()
+                        player.hide()
+                        self._hidden_video_surfaces.append(player)
+            except Exception:
+                pass
+            try:
+                from PySide6.QtMultimediaWidgets import QVideoWidget
+                for vw in host.findChildren(QVideoWidget):
+                    if vw.isVisible():
+                        vw.hide()
+                        self._hidden_video_surfaces.append(vw)
+            except Exception:
+                pass
+
     def _hide(self):
         self.delay.stop()
         self.animation.stop()
@@ -161,12 +177,23 @@ class LoadingOverlay(QWidget):
         focus, self._previous_focus = self._previous_focus, None
         if focus is not None and isValid(focus) and focus.isVisible() and focus.isEnabled():
             focus.setFocus(Qt.FocusReason.OtherFocusReason)
+        if hasattr(self, '_hidden_video_surfaces'):
+            for widget in self._hidden_video_surfaces:
+                try:
+                    if isValid(widget):
+                        widget.show()
+                        if hasattr(widget, "resume"):
+                            widget.resume()
+                except Exception:
+                    pass
+            self._hidden_video_surfaces = []
 
     def _show(self):
         if self.busy and self.parentWidget().isVisible():
             self.frame = 0
             self.setGeometry(self.parentWidget().rect())
             self._previous_focus = self.parentWidget().focusWidget()
+            self._hide_video_surfaces()
             self.show()
             self.raise_()
             self.setFocus(Qt.FocusReason.OtherFocusReason)

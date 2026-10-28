@@ -21,7 +21,9 @@
     "slow": "clips_labeled/18_SLOW/0.MOV",
     "fast": "clips_labeled/19_FAST/0.MOV",
     "dont_understand": "clips_labeled/11_DON\u2019T_UNDERSTAND/0.MOV",
-    "dont_know": "clips_labeled/13_DON\u2019T_KNOW/0.MOV"
+    "dont_know": "clips_labeled/13_DON\u2019T_KNOW/0.MOV",
+    "don_t_understand": "clips_labeled/11_DON\u2019T_UNDERSTAND/0.MOV",
+    "don_t_know": "clips_labeled/13_DON\u2019T_KNOW/0.MOV"
   },
   "number": {
     "one": "clips_labeled/20_ONE/0.MOV",
@@ -56,7 +58,10 @@
     "thursday": "clips_labeled/45_THURSDAY/0.MOV",
     "friday": "clips_labeled/46_FRIDAY/0.MOV",
     "saturday": "clips_labeled/47_SATURDAY/0.MOV",
-    "sunday": "clips_labeled/48_SUNDAY/0.MOV"
+    "sunday": "clips_labeled/48_SUNDAY/0.MOV",
+    "today": "clips_labeled/49_TODAY/0.MOV",
+    "tomorrow": "clips_labeled/50_TOMORROW/0.MOV",
+    "yesterday": "clips_labeled/51_YESTERDAY/0.MOV"
   },
   "family": {
     "father": "clips_labeled/52_FATHER/0.MOV",

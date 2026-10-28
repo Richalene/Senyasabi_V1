@@ -34,7 +34,7 @@ class Ui_Dashboard(object):
         self.imageBg.setScaledContents(True)
         self.btnBack = QPushButton(Dashboard)
         self.btnBack.setObjectName(u"btnBack")
-        self.btnBack.setGeometry(QRect(50, 40, 80, 80))
+        self.btnBack.setGeometry(QRect(1810, 230, 80, 80))
         self.titlePanel = QFrame(Dashboard)
         self.titlePanel.setObjectName(u"titlePanel")
         self.titlePanel.setGeometry(QRect(150, 40, 200, 50))
@@ -53,7 +53,7 @@ class Ui_Dashboard(object):
         self.imgStatsChart.setStyleSheet(u"background: transparent;")
         self.cardLessons = QFrame(Dashboard)
         self.cardLessons.setObjectName(u"cardLessons")
-        self.cardLessons.setGeometry(QRect(730, 160, 245, 238))
+        self.cardLessons.setGeometry(QRect(740, 260, 245, 238))
         self.cardLessons.setStyleSheet(u"\n"
 "QFrame#cardLessons {\n"
 "    background: transparent;\n"
@@ -65,10 +65,10 @@ class Ui_Dashboard(object):
         self.lblLessonsCompleted.setObjectName(u"lblLessonsCompleted")
         self.lblLessonsCompleted.setGeometry(QRect(20, 78, 205, 80))
         self.lblLessonsCompleted.setStyleSheet(u"font-family: \"Cherry Bomb One\", \"Segoe UI\"; font-size: 46px; font-weight: bold; color: #5c3b28; background: transparent;")
-        self.lblLessonsCompleted.setAlignment(Qt.AlignCenter)
+        self.lblLessonsCompleted.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cardQuiz = QFrame(Dashboard)
         self.cardQuiz.setObjectName(u"cardQuiz")
-        self.cardQuiz.setGeometry(QRect(1030, 140, 265, 260))
+        self.cardQuiz.setGeometry(QRect(1050, 190, 211, 211))
         self.cardQuiz.setStyleSheet(u"\n"
 "QFrame#cardQuiz {\n"
 "    background: transparent;\n"
@@ -78,9 +78,9 @@ class Ui_Dashboard(object):
 "    ")
         self.lblTotalQuizScore = QLabel(self.cardQuiz)
         self.lblTotalQuizScore.setObjectName(u"lblTotalQuizScore")
-        self.lblTotalQuizScore.setGeometry(QRect(20, 90, 225, 75))
+        self.lblTotalQuizScore.setGeometry(QRect(30, 90, 225, 75))
         self.lblTotalQuizScore.setStyleSheet(u"font-family: \"Cherry Bomb One\", \"Segoe UI\"; font-size: 52px; font-weight: bold; color: #5c3b28; background: transparent;")
-        self.lblTotalQuizScore.setAlignment(Qt.AlignCenter)
+        self.lblTotalQuizScore.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.cardModule = QFrame(Dashboard)
         self.cardModule.setObjectName(u"cardModule")
         self.cardModule.setGeometry(QRect(1030, 425, 275, 270))
@@ -95,10 +95,10 @@ class Ui_Dashboard(object):
         self.lblModuleCount.setObjectName(u"lblModuleCount")
         self.lblModuleCount.setGeometry(QRect(30, 105, 215, 110))
         self.lblModuleCount.setStyleSheet(u"font-family: \"Cherry Bomb One\", \"Segoe UI\"; font-size: 75px; font-weight: bold; color: #5c3b28; background: transparent;")
-        self.lblModuleCount.setAlignment(Qt.AlignCenter)
+        self.lblModuleCount.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.badgeCard = QFrame(Dashboard)
         self.badgeCard.setObjectName(u"badgeCard")
-        self.badgeCard.setGeometry(QRect(730, 435, 245, 240))
+        self.badgeCard.setGeometry(QRect(750, 540, 245, 240))
         self.badgeCard.setStyleSheet(u"\n"
 "QFrame#badgeCard {\n"
 "    background: transparent;\n"
@@ -117,7 +117,7 @@ class Ui_Dashboard(object):
         self.lblLatestBadge.setVisible(False)
         self.cardMinigames = QFrame(Dashboard)
         self.cardMinigames.setObjectName(u"cardMinigames")
-        self.cardMinigames.setGeometry(QRect(1050, 715, 235, 236))
+        self.cardMinigames.setGeometry(QRect(1090, 720, 231, 221))
         self.cardMinigames.setStyleSheet(u"\n"
 "QFrame#cardMinigames {\n"
 "    background: transparent;\n"
@@ -129,10 +129,10 @@ class Ui_Dashboard(object):
         self.lblMinigamesCompleted.setObjectName(u"lblMinigamesCompleted")
         self.lblMinigamesCompleted.setGeometry(QRect(15, 90, 205, 70))
         self.lblMinigamesCompleted.setStyleSheet(u"font-family: \"Cherry Bomb One\", \"Segoe UI\"; font-size: 48px; font-weight: bold; color: #5c3b28; background: transparent;")
-        self.lblMinigamesCompleted.setAlignment(Qt.AlignCenter)
+        self.lblMinigamesCompleted.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.btnLeaderboard = QPushButton(Dashboard)
         self.btnLeaderboard.setObjectName(u"btnLeaderboard")
-        self.btnLeaderboard.setGeometry(QRect(1380, 320, 315, 398))
+        self.btnLeaderboard.setGeometry(QRect(1380, 350, 315, 398))
         self.btnLeaderboard.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnLeaderboard.setStyleSheet(u"\n"
 "QPushButton#btnLeaderboard {\n"
@@ -145,7 +145,7 @@ class Ui_Dashboard(object):
         self.lblLeaderboardRank.setObjectName(u"lblLeaderboardRank")
         self.lblLeaderboardRank.setGeometry(QRect(55, 255, 205, 55))
         self.lblLeaderboardRank.setStyleSheet(u"font-family: \"Cherry Bomb One\", \"Segoe UI\"; font-size: 36px; color: #fdfae5; background: transparent;")
-        self.lblLeaderboardRank.setAlignment(Qt.AlignCenter)
+        self.lblLeaderboardRank.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.quizImage = QLabel(Dashboard)
         self.quizImage.setObjectName(u"quizImage")
         self.quizImage.setGeometry(QRect(0, 0, 0, 0))

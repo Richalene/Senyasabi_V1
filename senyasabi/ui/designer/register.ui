@@ -96,13 +96,71 @@
     <enum>Qt::Orientation::Horizontal</enum>
    </property>
   </widget>
+  <widget class="QLabel" name="nameLabel">
+   <property name="geometry">
+    <rect>
+     <x>870</x>
+     <y>365</y>
+     <width>400</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Display Name</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="nameInput">
+   <property name="geometry">
+    <rect>
+     <x>870</x>
+     <y>398</y>
+     <width>400</width>
+     <height>64</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>Type Your Display Name</string>
+   </property>
+   <property name="clearButtonEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="usernameLabel">
+   <property name="geometry">
+    <rect>
+     <x>1310</x>
+     <y>365</y>
+     <width>400</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Your Username</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="usernameInput">
+   <property name="geometry">
+    <rect>
+     <x>1310</x>
+     <y>398</y>
+     <width>400</width>
+     <height>64</height>
+    </rect>
+   </property>
+   <property name="placeholderText">
+    <string>Type Your Username Here</string>
+   </property>
+   <property name="clearButtonEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
   <widget class="QLabel" name="emailLabel">
    <property name="geometry">
     <rect>
      <x>870</x>
-     <y>390</y>
+     <y>475</y>
      <width>840</width>
-     <height>30</height>
+     <height>28</height>
     </rect>
    </property>
    <property name="text">
@@ -113,9 +171,9 @@
    <property name="geometry">
     <rect>
      <x>870</x>
-     <y>430</y>
+     <y>508</y>
      <width>840</width>
-     <height>88</height>
+     <height>64</height>
     </rect>
    </property>
    <property name="placeholderText">
@@ -129,29 +187,61 @@
    <property name="geometry">
     <rect>
      <x>870</x>
-     <y>540</y>
-     <width>840</width>
-     <height>30</height>
+     <y>585</y>
+     <width>400</width>
+     <height>28</height>
     </rect>
    </property>
    <property name="text">
-    <string>Create New Password</string>
+    <string>Create Password</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="passwordInput">
    <property name="geometry">
     <rect>
      <x>870</x>
-     <y>580</y>
-     <width>840</width>
-     <height>88</height>
+     <y>618</y>
+     <width>400</width>
+     <height>64</height>
     </rect>
    </property>
    <property name="echoMode">
     <enum>QLineEdit::EchoMode::Password</enum>
    </property>
    <property name="placeholderText">
-    <string>Password must include 1 uppercase letter and a number</string>
+    <string>Enter password</string>
+   </property>
+   <property name="clearButtonEnabled">
+    <bool>false</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="confirmPasswordLabel">
+   <property name="geometry">
+    <rect>
+     <x>1310</x>
+     <y>585</y>
+     <width>400</width>
+     <height>28</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string>Confirm Password</string>
+   </property>
+  </widget>
+  <widget class="QLineEdit" name="confirmPasswordInput">
+   <property name="geometry">
+    <rect>
+     <x>1310</x>
+     <y>618</y>
+     <width>400</width>
+     <height>64</height>
+    </rect>
+   </property>
+   <property name="echoMode">
+    <enum>QLineEdit::EchoMode::Password</enum>
+   </property>
+   <property name="placeholderText">
+    <string>Re-enter password</string>
    </property>
    <property name="clearButtonEnabled">
     <bool>false</bool>
@@ -163,7 +253,7 @@
      <x>870</x>
      <y>715</y>
      <width>400</width>
-     <height>88</height>
+     <height>75</height>
     </rect>
    </property>
    <property name="text">
@@ -179,7 +269,7 @@
      <x>1310</x>
      <y>715</y>
      <width>400</width>
-     <height>88</height>
+     <height>75</height>
     </rect>
    </property>
    <property name="text">
@@ -196,7 +286,7 @@
    <property name="geometry">
     <rect>
      <x>870</x>
-     <y>830</y>
+     <y>815</y>
      <width>840</width>
      <height>40</height>
     </rect>
@@ -216,10 +306,16 @@
   <zorder>titleLabel</zorder>
   <zorder>subtitleLabel</zorder>
   <zorder>line</zorder>
+  <zorder>nameLabel</zorder>
+  <zorder>nameInput</zorder>
+  <zorder>usernameLabel</zorder>
+  <zorder>usernameInput</zorder>
   <zorder>emailLabel</zorder>
   <zorder>emailInput</zorder>
   <zorder>passwordLabel</zorder>
   <zorder>passwordInput</zorder>
+  <zorder>confirmPasswordLabel</zorder>
+  <zorder>confirmPasswordInput</zorder>
   <zorder>backButton</zorder>
   <zorder>createAccountButton</zorder>
   <zorder>signInButton</zorder>

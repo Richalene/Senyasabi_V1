@@ -45,19 +45,22 @@ class HowToPlayWidget(QWidget):
             "QPushButton:hover { background: rgba(0, 0, 0, 0.08); }"
         )
         self.btn_back.clicked.connect(self.back_requested.emit)
+        self.back_button = self.btn_back
 
 
 class MinigameScoreWidget(QWidget):
     """
-    End-of-game Score Screen matching Figma reference:
-    - Background: scores_bg.png
-    - Title: 'Excellent!'
-    - Score label: 'Score: 10/10' (or dynamic X/Y)
-    - Green circular Next arrow button
+    Polished end-of-game Score Screen:
+    - Seamless dynamic Title banner inside yellow blob ("Excellent!", "Great Job!", "Well Done!", "Keep Going!")
+    - Perfectly aligned score next to baked 'Score:'
+    - Accuracy badge pill
+    - Primary Continue button
+    - Secondary Play Again button
     - Top-right close button '✕'
     """
     continue_requested = Signal()
     close_requested = Signal()
+    replay_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -81,28 +84,116 @@ class MinigameScoreWidget(QWidget):
         )
         self.btn_close.clicked.connect(self.close_requested.emit)
 
-        # Dynamic Score Display: e.g. "5/5"
+        # Seamless Title Banner inside yellow blob
+        self.title_banner = QLabel(self)
+        self.title_banner.setGeometry(160, 310, 1020, 220)
+        self.title_banner.setStyleSheet(
+            "QLabel {"
+            "  background-color: #FFDE59;"
+            "  color: #704833;"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            "  font-size: 110px;"
+            "  font-weight: bold;"
+            "}"
+        )
+        self.title_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_banner.setText("Excellent!")
+
+        # Dynamic Score Display aligned directly next to baked 'Score:'
         self.lbl_score_val = QLabel(self)
-        self.lbl_score_val.setGeometry(560, 680, 500, 220)
+        self.lbl_score_val.setGeometry(475, 640, 300, 140)
         self.lbl_score_val.setStyleSheet(
-            "QLabel { font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif; font-size: 130px; font-weight: bold; color: #704833; background: transparent; }"
+            "QLabel {"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            "  font-size: 85px;"
+            "  font-weight: bold;"
+            "  color: #704833;"
+            "  background: transparent;"
+            "}"
         )
         self.lbl_score_val.setText("5/5")
         self.lbl_score_val.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
-        # Green arrow button
+        # Accuracy pill badge
+        self.badge_acc = QLabel(self)
+        self.badge_acc.setGeometry(740, 665, 230, 68)
+        self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.badge_acc.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 24px;"
+            "  font-weight: 700;"
+            "  color: #2D4014;"
+            "  background-color: #BFD379;"
+            "  border-radius: 34px;"
+            "}"
+        )
+        self.badge_acc.setText("100% Accuracy")
+
+        # Primary Continue Button
         self.btn_next = QPushButton(self)
-        self.btn_next.setGeometry(220, 740, 170, 170)
+        self.btn_next.setGeometry(170, 815, 340, 85)
         self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
-        arrow_icon_path = str(ROOT / "resources/img/ui/green_arrow_btn.png").replace("\\", "/")
+        self.btn_next.setText("Continue  ➔")
         self.btn_next.setStyleSheet(
-            f"QPushButton {{ background: transparent; border: none; border-image: url({arrow_icon_path}) 0 0 0 0 stretch stretch; }} "
-            "QPushButton:hover { transform: scale(1.08); }"
+            "QPushButton {"
+            "  background-color: #8C9F3E;"
+            "  color: #FFFFFF;"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 30px;"
+            "  font-weight: 700;"
+            "  border-radius: 42px;"
+            "  border: none;"
+            "}"
+            "QPushButton:hover { background-color: #9DB446; }"
+            "QPushButton:pressed { background-color: #788934; }"
         )
         self.btn_next.clicked.connect(self.continue_requested.emit)
 
+        # Secondary Play Again Button
+        self.btn_replay = QPushButton(self)
+        self.btn_replay.setGeometry(540, 815, 270, 85)
+        self.btn_replay.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_replay.setText("Play Again")
+        self.btn_replay.setStyleSheet(
+            "QPushButton {"
+            "  background-color: #FFFDF0;"
+            "  color: #704833;"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 26px;"
+            "  font-weight: 700;"
+            "  border-radius: 42px;"
+            "  border: 3.5px solid #D5C9A9;"
+            "}"
+            "QPushButton:hover { background-color: #FFF8E7; border-color: #B8A783; }"
+            "QPushButton:pressed { background-color: #F5ECCE; }"
+        )
+        self.btn_replay.clicked.connect(self.replay_requested.emit)
+
     def set_score(self, score, total):
         self.lbl_score_val.setText(f"{score}/{total}")
+        pct = int((score / total) * 100) if total > 0 else 0
+        self.badge_acc.setText(f"{pct}% Accuracy")
+        if pct >= 100:
+            self.title_banner.setText("Excellent!")
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #2D4014; background-color: #BFD379; border-radius: 34px; }"
+            )
+        elif pct >= 80:
+            self.title_banner.setText("Great Job!")
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFDE59; border-radius: 34px; }"
+            )
+        elif pct >= 50:
+            self.title_banner.setText("Well Done!")
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFDE59; border-radius: 34px; }"
+            )
+        else:
+            self.title_banner.setText("Keep Going!")
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #661D17; background-color: #FFB3A7; border-radius: 34px; }"
+            )
 
 
 class MinigameHeader(QWidget):
@@ -123,7 +214,7 @@ class MinigameHeader(QWidget):
         self.logo = QLabel(self)
         self.logo.setPixmap(QPixmap(str(ROOT / "resources/img/ui/senyasabi_logo_header.png")))
         self.logo.setScaledContents(True)
-        self.logo.setFixedSize(220, 45)
+        self.logo.setFixedSize(176, 60)
         layout.addWidget(self.logo, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         layout.addStretch()
@@ -143,32 +234,106 @@ class MinigameHeader(QWidget):
 
 class LetterTile(QLabel):
     """
-    Rounded golden-yellow tile box for letters.
+    Polished responsive letter tile with distinct visual states:
+    - empty: subtle cream box awaiting typing
+    - active: highlighted box showing the current typing slot
+    - filled: bold golden-yellow tile with letter
+    - correct: vibrant green celebration tile
+    - wrong: soft error tint for incorrect attempt
+    - revealed: golden dashed border when round expires
     """
     def __init__(self, letter="", parent=None):
         super().__init__(parent)
         self.letter = letter.upper()
-        self.setFixedSize(92, 92)
+        self.state = "filled" if letter else "empty"
+        self.setFixedSize(88, 88)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText(self.letter)
         self.update_style()
 
-    def set_letter(self, letter):
+    def set_letter(self, letter, state=None):
         self.letter = letter.upper()
         self.setText(self.letter)
+        if state is not None:
+            self.state = state
+        else:
+            self.state = "filled" if self.letter else "empty"
+        self.update_style()
+
+    def set_state(self, state):
+        self.state = state
         self.update_style()
 
     def update_style(self):
-        self.setStyleSheet(
-            "QLabel {"
-            "  background-color: #FFAE00;"
-            "  color: #000000;"
-            "  border-radius: 20px;"
-            "  font-family: 'Segoe UI', Arial, sans-serif;"
-            "  font-size: 42px;"
-            "  font-weight: 800;"
-            "}"
-        )
+        if self.state == "empty":
+            self.setStyleSheet(
+                "QLabel {"
+                "  background-color: #FFFDF0;"
+                "  color: #3C2415;"
+                "  border: 3px solid #D5C9A9;"
+                "  border-radius: 20px;"
+                "}"
+            )
+        elif self.state == "active":
+            self.setStyleSheet(
+                "QLabel {"
+                "  background-color: #FFFFFF;"
+                "  color: #FFAE00;"
+                "  border: 3.5px solid #FFAE00;"
+                "  border-radius: 20px;"
+                "  font-family: 'Segoe UI', Arial, sans-serif;"
+                "  font-size: 42px;"
+                "  font-weight: 800;"
+                "}"
+            )
+        elif self.state == "correct":
+            self.setStyleSheet(
+                "QLabel {"
+                "  background-color: #BFD379;"
+                "  color: #1E330C;"
+                "  border: 3px solid #94AB45;"
+                "  border-radius: 20px;"
+                "  font-family: 'Segoe UI', Arial, sans-serif;"
+                "  font-size: 42px;"
+                "  font-weight: 800;"
+                "}"
+            )
+        elif self.state == "wrong":
+            self.setStyleSheet(
+                "QLabel {"
+                "  background-color: #FFB3A7;"
+                "  color: #661D17;"
+                "  border: 3px solid #E06D5E;"
+                "  border-radius: 20px;"
+                "  font-family: 'Segoe UI', Arial, sans-serif;"
+                "  font-size: 42px;"
+                "  font-weight: 800;"
+                "}"
+            )
+        elif self.state == "revealed":
+            self.setStyleSheet(
+                "QLabel {"
+                "  background-color: #FFE6A3;"
+                "  color: #5C3B28;"
+                "  border: 3px dashed #E09800;"
+                "  border-radius: 20px;"
+                "  font-family: 'Segoe UI', Arial, sans-serif;"
+                "  font-size: 42px;"
+                "  font-weight: 800;"
+                "}"
+            )
+        else:  # filled
+            self.setStyleSheet(
+                "QLabel {"
+                "  background-color: #FFAE00;"
+                "  color: #2D1A0D;"
+                "  border: 3px solid #E69D00;"
+                "  border-radius: 20px;"
+                "  font-family: 'Segoe UI', Arial, sans-serif;"
+                "  font-size: 42px;"
+                "  font-weight: 800;"
+                "}"
+            )
 
 
 class CircularActionButton(QPushButton):

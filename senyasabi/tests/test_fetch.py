@@ -1,5 +1,6 @@
 import hashlib, sys, time
 from pathlib import Path
+sys.path.insert(0, str(Path(__file__).resolve().parent))
 
 import requests
 from PIL import Image

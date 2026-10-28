@@ -22,6 +22,7 @@ from .camera_service import open_selected_capture
 class PredictionResult:
     label: str
     confidence: float
+    probabilities: Optional[dict] = None
 
 
 @dataclass
@@ -36,10 +37,11 @@ class FrameResult:
 class HandLandmarkExtractor:
     """Wraps a single MediaPipe Hands instance."""
 
-    def __init__(self, max_num_hands: int = 1,
+    def __init__(self, max_num_hands: int = 2,
                  min_detection_confidence: float = 0.5,
                  min_tracking_confidence: float = 0.5):
         import mediapipe as mp
+        self.max_num_hands = max_num_hands
         self._mp_hands = mp.solutions.hands
         self._mp_drawing = mp.solutions.drawing_utils
         self._hands = self._mp_hands.Hands(
@@ -57,14 +59,20 @@ class HandLandmarkExtractor:
         result = self._hands.process(rgb)
         if not result.multi_hand_landmarks:
             return None, result
-        lm = result.multi_hand_landmarks[0].landmark
-        coords = np.array([[p.x, p.y, p.z] for p in lm])
-        coords -= coords[0]                      # translate to wrist origin
-        scale = np.linalg.norm(coords[9])         # normalize by palm length
-        if scale == 0:
-            return None, result
-        coords /= scale
-        return coords.flatten(), result
+
+        # Select primary hand (largest palm scale) for single-hand feature vector (63-dim)
+        best_features = None
+        max_scale = -1.0
+        for hand_landmarks in result.multi_hand_landmarks:
+            lm = hand_landmarks.landmark
+            coords = np.array([[p.x, p.y, p.z] for p in lm])
+            coords -= coords[0]                      # translate to wrist origin
+            scale = np.linalg.norm(coords[9])         # normalize by palm length
+            if scale > 0 and scale > max_scale:
+                max_scale = scale
+                best_features = (coords / scale).flatten()
+
+        return best_features, result
 
     def draw(self, frame_bgr: np.ndarray, mp_result) -> np.ndarray:
         """Returns a copy of frame_bgr with the hand skeleton drawn on it."""
@@ -107,12 +115,15 @@ class SignPredictor:
         self.scaler = None
         if scaler_path is not None:
             self.scaler = pickle.loads(Path(scaler_path).read_bytes())
+        import tensorflow as tf
+        self._infer = tf.function(lambda x: self.model(x, training=False))
 
     def predict(self, features: np.ndarray) -> PredictionResult:
-        x = self.scaler.transform([features]) if self.scaler is not None else np.array([features])
-        probs = self.model.predict(x, verbose=0)[0]
+        x = self.scaler.transform([features]) if self.scaler is not None else np.array([features], dtype=np.float32)
+        probs = np.asarray(self._infer(x))[0]
         idx = int(np.argmax(probs))
-        return PredictionResult(self.class_names[idx], float(probs[idx]))
+        probs_dict = {self.class_names[i]: float(probs[i]) for i in range(len(self.class_names))}
+        return PredictionResult(self.class_names[idx], float(probs[idx]), probabilities=probs_dict)
 
 
 class SignRecognitionEngine:
@@ -150,7 +161,7 @@ class SignRecognitionEngine:
     def __init__(self, mode: str = "alphabet"):
         self.mode = mode
         self.predictor = self._build_predictor(mode)
-        self.extractor = HandLandmarkExtractor()
+        self.extractor = HandLandmarkExtractor(max_num_hands=2)
         self._cap = None
         self._closed = False
 

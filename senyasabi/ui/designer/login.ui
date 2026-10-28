@@ -106,7 +106,7 @@
     </rect>
    </property>
    <property name="text">
-    <string>Your Email</string>
+    <string>Your Email or Username</string>
    </property>
   </widget>
   <widget class="QLineEdit" name="emailInput">
@@ -119,7 +119,7 @@
     </rect>
    </property>
    <property name="placeholderText">
-    <string>Type Your Email Here</string>
+    <string>Type Your Email or Username Here</string>
    </property>
    <property name="clearButtonEnabled">
     <bool>false</bool>

@@ -37,14 +37,30 @@ class MinigameMenuWidget(QWidget):
         b17 = str(ROOT / "resources/img/ui/button_17.png").replace("\\", "/")
 
         self.ui.btnSprint.setStyleSheet(
-            f"QPushButton#btnSprint {{ background: transparent; border: none; border-image: url({b16}) 0 0 0 0 stretch stretch; }}"
+            f"QPushButton#btnSprint {{ background: transparent; border: none; color: transparent; font-size: 1px; border-image: url({b16}) 0 0 0 0 stretch stretch; }}"
         )
         self.ui.btnQuest.setStyleSheet(
-            f"QPushButton#btnQuest {{ background: transparent; border: none; border-image: url({b17}) 0 0 0 0 stretch stretch; }}"
+            f"QPushButton#btnQuest {{ background: transparent; border: none; color: transparent; font-size: 1px; border-image: url({b17}) 0 0 0 0 stretch stretch; }}"
         )
         self.ui.btnDetective.setStyleSheet(
-            f"QPushButton#btnDetective {{ background: transparent; border: none; border-image: url({b16}) 0 0 0 0 stretch stretch; }}"
+            f"QPushButton#btnDetective {{ background: transparent; border: none; color: transparent; font-size: 1px; border-image: url({b16}) 0 0 0 0 stretch stretch; }}"
         )
+        self.ui.btnSprint.setText(f"{CONFIG['sprint'][0]}\n{CONFIG['sprint'][1]}")
+        self.ui.btnQuest.setText(f"{CONFIG['quest'][0]}\n{CONFIG['quest'][1]}")
+        self.ui.btnDetective.setText(f"{CONFIG['detective'][0]}\n{CONFIG['detective'][1]}")
+
+        self.ui.lblSprintText.setText(
+            f"<b>{CONFIG['sprint'][0]}</b><br><span style='font-size:18px; color:#8F8C78; font-weight:normal;'>{CONFIG['sprint'][1]}</span>"
+        )
+        self.ui.lblQuestText.setText(
+            f"<b>{CONFIG['quest'][0]}</b><br><span style='font-size:18px; color:#8F8C78; font-weight:normal;'>{CONFIG['quest'][1]}</span>"
+        )
+        self.ui.lblDetectiveText.setText(
+            f"<b>{CONFIG['detective'][0]}</b><br><span style='font-size:18px; color:#8F8C78; font-weight:normal;'>{CONFIG['detective'][1]}</span>"
+        )
+        self.ui.lblSprintText.setTextFormat(Qt.TextFormat.RichText)
+        self.ui.lblQuestText.setTextFormat(Qt.TextFormat.RichText)
+        self.ui.lblDetectiveText.setTextFormat(Qt.TextFormat.RichText)
 
         star_pix = QPixmap(str(ROOT / "resources/img/ui/star.png"))
         for star in (self.ui.starSprint1, self.ui.starQuest1, self.ui.starQuest2,
@@ -134,9 +150,12 @@ class MinigameSelect(GameCanvas):
         QTimer.singleShot(0, lambda: self.start_game(game))
 
     def start_game(self, game):
-        # Games now begin at their respective How-To instructions screen,
-        # so game.start_game() is triggered when the player clicks "Let's Go!"
-        pass
+        if self.game is not game:
+            return
+        if hasattr(game, "start_game"):
+            game.start_game()
+        elif hasattr(game, "start"):
+            game.start()
 
     def game_back(self):
         self.return_menu()
