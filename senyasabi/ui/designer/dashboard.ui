@@ -26,10 +26,8 @@
    <string>My Statistics — SenyaSabi</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">QWidget#Dashboard { background-color: #c2d076; font-family: "Segoe UI"; }</string>
+   <string notr="true">QWidget#Dashboard { background-color: #c2d076; font-family: &quot;Segoe UI&quot;; }</string>
   </property>
-
-  <!-- Background Image: dashboard_bg.png has cloud header and pie chart placeholder left blank -->
   <widget class="QLabel" name="imageBg">
    <property name="geometry">
     <rect>
@@ -49,44 +47,65 @@
     <bool>true</bool>
    </property>
   </widget>
-
-  <!-- Navigation / Header placeholders (Back button & Hamburger / Streak replaced by header) -->
   <widget class="QPushButton" name="btnBack">
    <property name="geometry">
     <rect>
-     <x>50</x>
-     <y>40</y>
+     <x>1810</x>
+     <y>230</y>
      <width>80</width>
      <height>80</height>
     </rect>
    </property>
-   <property name="text"><string></string></property>
+   <property name="text">
+    <string/>
+   </property>
   </widget>
-
   <widget class="QFrame" name="titlePanel">
    <property name="geometry">
-    <rect><x>150</x><y>40</y><width>200</width><height>50</height></rect>
+    <rect>
+     <x>150</x>
+     <y>40</y>
+     <width>200</width>
+     <height>50</height>
+    </rect>
    </property>
   </widget>
   <widget class="QFrame" name="streakPanel">
    <property name="geometry">
-    <rect><x>1400</x><y>40</y><width>200</width><height>60</height></rect>
+    <rect>
+     <x>1400</x>
+     <y>40</y>
+     <width>200</width>
+     <height>60</height>
+    </rect>
    </property>
    <widget class="QLabel" name="lblCurrentStreak">
     <property name="geometry">
-     <rect><x>0</x><y>0</y><width>50</width><height>20</height></rect>
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>50</width>
+      <height>20</height>
+     </rect>
     </property>
-    <property name="text"><string>0 Days</string></property>
+    <property name="text">
+     <string>0 Days</string>
+    </property>
    </widget>
   </widget>
   <widget class="QPushButton" name="btnMenu">
    <property name="geometry">
-    <rect><x>1750</x><y>40</y><width>50</width><height>50</height></rect>
+    <rect>
+     <x>1750</x>
+     <y>40</y>
+     <width>50</width>
+     <height>50</height>
+    </rect>
    </property>
-   <property name="text"><string></string></property>
+   <property name="text">
+    <string/>
+   </property>
   </widget>
-
-  <!-- Dummy pie chart widget - left blank as requested -->
   <widget class="QLabel" name="imgStatsChart">
    <property name="geometry">
     <rect>
@@ -100,20 +119,14 @@
     <string notr="true">background: transparent;</string>
    </property>
    <property name="text">
-    <string></string>
+    <string/>
    </property>
   </widget>
-
-  <!-- ═════════════════════════════════════════════════════════════════ -->
-  <!-- STAT CARDS (My Statistics Screen - Balanced & Rescaled)          -->
-  <!-- ═════════════════════════════════════════════════════════════════ -->
-
-  <!-- Card 1: Lessons Completed (db_lessoncomplete.png) -->
   <widget class="QFrame" name="cardLessons">
    <property name="geometry">
     <rect>
-     <x>730</x>
-     <y>160</y>
+     <x>740</x>
+     <y>260</y>
      <width>245</width>
      <height>238</height>
     </rect>
@@ -129,28 +142,31 @@ QFrame#cardLessons {
    </property>
    <widget class="QLabel" name="lblLessonsCompleted">
     <property name="geometry">
-     <rect><x>20</x><y>78</y><width>205</width><height>80</height></rect>
+     <rect>
+      <x>20</x>
+      <y>78</y>
+      <width>205</width>
+      <height>80</height>
+     </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 46px; font-weight: bold; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <string notr="true">font-family: &quot;Cherry Bomb One&quot;, &quot;Segoe UI&quot;; font-size: 46px; font-weight: bold; color: #5c3b28; background: transparent;</string>
     </property>
     <property name="text">
      <string>2/7</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
    </widget>
   </widget>
-
-  <!-- Card 2: Total Quiz Scores (db_totalquizscrs.png) -->
   <widget class="QFrame" name="cardQuiz">
    <property name="geometry">
     <rect>
-     <x>1030</x>
-     <y>140</y>
-     <width>265</width>
-     <height>260</height>
+     <x>1050</x>
+     <y>190</y>
+     <width>211</width>
+     <height>211</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -164,21 +180,24 @@ QFrame#cardQuiz {
    </property>
    <widget class="QLabel" name="lblTotalQuizScore">
     <property name="geometry">
-     <rect><x>20</x><y>90</y><width>225</width><height>75</height></rect>
+     <rect>
+      <x>30</x>
+      <y>90</y>
+      <width>225</width>
+      <height>75</height>
+     </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 52px; font-weight: bold; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <string notr="true">font-family: &quot;Cherry Bomb One&quot;, &quot;Segoe UI&quot;; font-size: 52px; font-weight: bold; color: #5c3b28; background: transparent;</string>
     </property>
     <property name="text">
      <string>67</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
    </widget>
   </widget>
-
-  <!-- Card 3: Module (db_module.png) -->
   <widget class="QFrame" name="cardModule">
    <property name="geometry">
     <rect>
@@ -199,26 +218,29 @@ QFrame#cardModule {
    </property>
    <widget class="QLabel" name="lblModuleCount">
     <property name="geometry">
-     <rect><x>30</x><y>105</y><width>215</width><height>110</height></rect>
+     <rect>
+      <x>30</x>
+      <y>105</y>
+      <width>215</width>
+      <height>110</height>
+     </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 75px; font-weight: bold; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <string notr="true">font-family: &quot;Cherry Bomb One&quot;, &quot;Segoe UI&quot;; font-size: 75px; font-weight: bold; color: #5c3b28; background: transparent;</string>
     </property>
     <property name="text">
      <string>7</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
    </widget>
   </widget>
-
-  <!-- Card 4: Latest Badge (db_badges.png) -->
   <widget class="QFrame" name="badgeCard">
    <property name="geometry">
     <rect>
-     <x>730</x>
-     <y>435</y>
+     <x>750</x>
+     <y>540</y>
      <width>245</width>
      <height>240</height>
     </rect>
@@ -234,7 +256,12 @@ QFrame#badgeCard {
    </property>
    <widget class="QLabel" name="badgeShieldImg">
     <property name="geometry">
-     <rect><x>68</x><y>62</y><width>110</width><height>115</height></rect>
+     <rect>
+      <x>68</x>
+      <y>62</y>
+      <width>110</width>
+      <height>115</height>
+     </rect>
     </property>
     <property name="styleSheet">
      <string notr="true">background: transparent;</string>
@@ -244,20 +271,29 @@ QFrame#badgeCard {
     </property>
    </widget>
    <widget class="QLabel" name="lblLatestBadge">
-    <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-    <property name="visible"><bool>false</bool></property>
-    <property name="text"><string></string></property>
+    <property name="geometry">
+     <rect>
+      <x>0</x>
+      <y>0</y>
+      <width>0</width>
+      <height>0</height>
+     </rect>
+    </property>
+    <property name="visible">
+     <bool>false</bool>
+    </property>
+    <property name="text">
+     <string/>
+    </property>
    </widget>
   </widget>
-
-  <!-- Card 5: Minigames Completed (db_minigames.png) -->
   <widget class="QFrame" name="cardMinigames">
    <property name="geometry">
     <rect>
-     <x>1050</x>
-     <y>715</y>
-     <width>235</width>
-     <height>236</height>
+     <x>1090</x>
+     <y>720</y>
+     <width>231</width>
+     <height>221</height>
     </rect>
    </property>
    <property name="styleSheet">
@@ -271,26 +307,29 @@ QFrame#cardMinigames {
    </property>
    <widget class="QLabel" name="lblMinigamesCompleted">
     <property name="geometry">
-     <rect><x>15</x><y>90</y><width>205</width><height>70</height></rect>
+     <rect>
+      <x>15</x>
+      <y>90</y>
+      <width>205</width>
+      <height>70</height>
+     </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 48px; font-weight: bold; color: #5c3b28; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <string notr="true">font-family: &quot;Cherry Bomb One&quot;, &quot;Segoe UI&quot;; font-size: 48px; font-weight: bold; color: #5c3b28; background: transparent;</string>
     </property>
     <property name="text">
      <string>57</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
    </widget>
   </widget>
-
-  <!-- Card 6: Leaderboard Trophy (db_leaderboards.png) -->
   <widget class="QPushButton" name="btnLeaderboard">
    <property name="geometry">
     <rect>
      <x>1380</x>
-     <y>320</y>
+     <y>350</y>
      <width>315</width>
      <height>398</height>
     </rect>
@@ -309,70 +348,180 @@ QPushButton#btnLeaderboard {
    </property>
    <widget class="QLabel" name="lblLeaderboardRank">
     <property name="geometry">
-     <rect><x>55</x><y>255</y><width>205</width><height>55</height></rect>
+     <rect>
+      <x>55</x>
+      <y>255</y>
+      <width>205</width>
+      <height>55</height>
+     </rect>
     </property>
     <property name="styleSheet">
-     <string notr="true">font-family: "Cherry Bomb One", "Segoe UI"; font-size: 36px; color: #fdfae5; background: transparent;</string>
-    </property>
-    <property name="alignment">
-     <set>Qt::AlignCenter</set>
+     <string notr="true">font-family: &quot;Cherry Bomb One&quot;, &quot;Segoe UI&quot;; font-size: 36px; color: #fdfae5; background: transparent;</string>
     </property>
     <property name="text">
      <string>#3</string>
     </property>
+    <property name="alignment">
+     <set>Qt::AlignmentFlag::AlignCenter</set>
+    </property>
    </widget>
   </widget>
-
-  <!-- Hidden legacy labels to keep backwards compatibility with python code -->
   <widget class="QLabel" name="quizImage">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="lessonsImage">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="modulesImage">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="leaderboardImage">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="minigamesImage">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QLabel" name="badgeImage">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QFrame" name="legendDot1">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QFrame" name="legendDot2">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QFrame" name="legendDot3">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QFrame" name="legendDot4">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QFrame" name="legendDot5">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
   <widget class="QFrame" name="legendDot6">
-   <property name="geometry"><rect><x>0</x><y>0</y><width>0</width><height>0</height></rect></property>
-   <property name="visible"><bool>false</bool></property>
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>0</width>
+     <height>0</height>
+    </rect>
+   </property>
+   <property name="visible">
+    <bool>false</bool>
+   </property>
   </widget>
-
  </widget>
  <resources/>
  <connections/>

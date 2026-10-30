@@ -24,10 +24,20 @@ class CredentialStore:
 
     SERVICE_NAME = "Senyasabi"
 
+    _tested: Optional[bool] = None
+
     @classmethod
     def is_available(cls) -> bool:
-        """Check if the credential store is available."""
-        return KEYRING_AVAILABLE
+        """Check if the credential store is available and functional."""
+        if not KEYRING_AVAILABLE:
+            return False
+        if cls._tested is None:
+            try:
+                keyring.get_password(cls.SERVICE_NAME, "__test__")
+                cls._tested = True
+            except Exception:
+                cls._tested = False
+        return cls._tested
 
     @classmethod
     def store_refresh_token(cls, user_id: str, refresh_token: str) -> bool:
@@ -49,7 +59,7 @@ class CredentialStore:
             username = str(user_id)
             keyring.set_password(cls.SERVICE_NAME, username, refresh_token)
             return True
-        except KeyringError as e:
+        except Exception as e:
             print(f"Error storing refresh token: {e}")
             return False
 
@@ -71,7 +81,7 @@ class CredentialStore:
             username = str(user_id)
             token = keyring.get_password(cls.SERVICE_NAME, username)
             return token
-        except KeyringError as e:
+        except Exception as e:
             print(f"Error retrieving refresh token: {e}")
             return None
 
@@ -93,7 +103,7 @@ class CredentialStore:
             username = str(user_id)
             keyring.delete_password(cls.SERVICE_NAME, username)
             return True
-        except KeyringError as e:
+        except Exception as e:
             # Token might not exist, which is fine
             if "not found" in str(e).lower():
                 return True

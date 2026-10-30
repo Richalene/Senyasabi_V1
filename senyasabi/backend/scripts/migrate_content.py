@@ -55,14 +55,21 @@ LABELS_PATH = config.DATA_DIR / "105labels.json"
 MINIGAMES_PATH = config.DATA_DIR / "minigames.json"
 
 CONTENT_VERSION_NUMBER = 1
-EXPECTED_MODULE_COUNT = 7
+EXPECTED_MODULE_COUNT = 6
 QUIZ_PASSING_SCORE = 70
 MEDIA_ROLE = "demonstration"
 
 # module name as written in expected_dataset.md -> module_code.
 # Anything not listed falls back to UPPER_SNAKE of the name,
 # e.g. {"Words": "WORD", "Alphabet": "ALPHABET"}
-MODULE_CODE_OVERRIDES: dict[str, str] = {}
+MODULE_CODE_OVERRIDES: dict[str, str] = {
+    "The Manual Alphabet": "ALPHABET",
+    "Numbers": "NUMBER",
+    "Family Members": "FAMILY",
+    "Basic Communication": "GREETING",
+    "Days of the Week": "DAYS",
+    "Survival Signs": "SURVIVAL",
+}
 
 # (badge_code, badge_name, description)
 STATIC_BADGES = [

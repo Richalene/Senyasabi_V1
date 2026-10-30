@@ -16,6 +16,7 @@ from typing import Protocol
 from . import config
 from .recognition_labels import normalize_label
 
+MODULE_CODES = ("greeting", "survival", "number", "days", "family")
 ROOT = Path(__file__).resolve().parents[1]
 DATASET_PATH = config.DATA_DIR / "expected_dataset.md"
 LABELS_PATH = config.DATA_DIR / "105labels.json"
@@ -186,8 +187,17 @@ class ContentRepository(Protocol):
 
 
 class BundledContentRepository:
-    def get_modules(self):
-        return list(_load_modules())
+    def get_signs(self, module_code):
+        if module_code == "alphabet":
+            return [SignRecord("alphabet", char.lower(), char, char)
+                    for char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+        if module_code not in MODULE_CODES:
+            raise ValueError(f"Unknown module: {module_code}")
+        entries = json.loads((ROOT / "resources/data/105labels.json").read_text(encoding="utf-8-sig"))
+        # Source training IDs are not database IDs. Adapters supply real DB IDs.
+        return [SignRecord(module_code, entry.get("sign_code") or readable_code(entry["label"]),
+                           entry["label"], normalize_label(entry.get("recognition_label", entry["label"])))
+                for entry in entries if entry["category"].casefold() == module_code]
 
 
 _repository: ContentRepository = BundledContentRepository()
@@ -225,7 +235,8 @@ def get_words_for_module(module_code):
 
 
 def get_sign(module_code, sign_code):
-    return next((s for s in get_signs_for_module(module_code) if s.sign_code == sign_code), None)
+    return next((sign for sign in get_signs_for_module(module_code)
+                 if sign.sign_code == sign_code), None)
 
 
 def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
@@ -245,3 +256,4 @@ def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
             return lesson.lesson_id if lesson else None
     except Exception:
         return None
+

@@ -107,7 +107,6 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 class LeaderboardWindow(QWidget):
     back_requested = Signal()
-    menu_requested = Signal()
     _scores_changed = Signal()
 
     def __init__(self, parent=None):
@@ -202,7 +201,7 @@ class LeaderboardWindow(QWidget):
                 self._render_entries([], failed=True)
 
         return self.loading.run(
-            lambda: leaderboard_service.get_leaderboard(user_id=user_id, board_code=board_code), ready, failed,
+            lambda: (leaderboard_service.get_leaderboard(user_id=user_id) if board_code in ('all_time', None) else leaderboard_service.get_leaderboard(user_id=user_id, board_code=board_code)), ready, failed,
             message="Loading the leaderboard…")
 
     def _render_entries(self, entries, *, failed=False):
@@ -230,7 +229,9 @@ class LeaderboardWindow(QWidget):
             current = entry["is_current_user"]
             row = QFrame(self.ui.leaderboardContainer)
             row.setObjectName("leaderboardEntry")
-            row.setProperty("class", f"leaderboardRank{rank}" if rank in (1, 2, 3) else "leaderboardNormal")
+            row.setProperty("class", f"leaderboardRank{rank}" if rank in (1, 2, 3) else ("leaderboardCurrentUser" if current else "leaderboardNormal"))
+            if current and hasattr(self, "ui") and hasattr(self.ui, "lblCurrentStreak") and self.ui.lblCurrentStreak:
+                self.ui.lblCurrentStreak.setText(f"{entry.get('current_streak', 0)} Days")
             row.setProperty("user_id", entry["user_id"])
             row.setProperty("rank_position", rank)
             row.setProperty("currentUser", current)
@@ -241,6 +242,7 @@ class LeaderboardWindow(QWidget):
 
             # Medal / Rank column with emojis
             rank_label = QLabel(row)
+            rank_label.setObjectName("rank")
             rank_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
             medal_emojis = {1: "\U0001F947", 2: "\U0001F948", 3: "\U0001F949"}  # 🥇, 🥈, 🥉
             if rank in medal_emojis:
@@ -260,7 +262,7 @@ class LeaderboardWindow(QWidget):
             name_label.setToolTip(entry["username"])
             columns.addWidget(name_label, 1)
 
-            score_label = QLabel(f"{entry['total_score']} pts", row)
+            score_label = QLabel(f"{entry.get('total_score', 0)} pts", row)
             score_label.setObjectName("score")
             score_label.setProperty("currentUser", current)
             score_label.setAlignment(Qt.AlignmentFlag.AlignCenter | Qt.AlignmentFlag.AlignVCenter)

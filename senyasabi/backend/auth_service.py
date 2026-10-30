@@ -350,6 +350,13 @@ def get_access_token() -> str | None:
     global _session
     if _current_user is None:
         return None
+    user_id = _current_user.get("user_id")
+    if isinstance(_repository, InMemoryUserRepository) or user_id == "dev-session":
+        return None
+    try:
+        uuid.UUID(str(user_id))
+    except (ValueError, TypeError, AttributeError):
+        return None
     if _session is None:
         _restore_session(_current_user["user_id"])  # offline login earlier; retry now
         return _session["access_token"] if _session else None
@@ -376,4 +383,4 @@ def logout_user() -> None:
 
 
 def get_current_user() -> dict | None:
-    return dict(_current_user) if _current_user is not None else None
+    return dict(_current_user) if _current_user is not None else None

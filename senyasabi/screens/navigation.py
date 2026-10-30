@@ -151,6 +151,8 @@ class SenyaSabiHeader(QWidget):
         self.streak = StreakDisplay(self) if show_streak else None
         self.streak_label = self.streak.value_label if self.streak is not None else None
         self.menu_button = AssetButton(parent=self) if show_menu else None
+        if self.menu_button is not None:
+            self.menu_button.setObjectName('menuBtn')
         self._positions = []
         cursor = 0
         if self.back_button is not None:
@@ -213,31 +215,46 @@ def install_page_menu(widget, *, header=None, canvas_size=None):
     if header is None:
         return None
     if header.menu_button is not None:
-        if header.menu_button.objectName() == "menuBtn" and hasattr(widget, "menu_requested"):
+        popup = None
+        if hasattr(widget, "menu_requested"):
             header.menu_button.clicked.connect(widget.menu_requested.emit)
         else:
             from screens.dialogs import MenuCalloutPopup
             popup = MenuCalloutPopup(header.menu_button)
             header.menu_button.clicked.connect(popup.toggle_popup)
-            # Retain backwards-compatible mock actions for screens listening to camera / logout
-            class _MockAction:
-                def __init__(self, name):
-                    self.name = name
-                    self._callbacks = []
-                def connect(self, cb):
-                    self._callbacks.append(cb)
-                def emit(self):
-                    for cb in self._callbacks: cb()
-                @property
-                def triggered(self):
-                    return self
-            class _MockMenu:
-                def __init__(self):
-                    self.camera_action = _MockAction("camera")
-                    self.sign_out_action = _MockAction("sign_out")
-            header.menu_button._menu_compat = _MockMenu()
-            header.menu_button.menu = lambda: header.menu_button._menu_compat
+        # Retain backwards-compatible mock actions for screens listening to camera / logout
+        class _MockAction:
+            def __init__(self, name):
+                self.name = name
+                self._callbacks = []
+            def text(self):
+                return self.name
+            def connect(self, cb):
+                self._callbacks.append(cb)
+            def emit(self):
+                for cb in self._callbacks: cb()
+            def trigger(self):
+                self.emit()
+            @property
+            def triggered(self):
+                return self
+        class _MockMenu:
+            def __init__(self):
+                self.camera_action = _MockAction("Camera Settings")
+                self.sign_out_action = _MockAction("Sign Out")
+            def isVisible(self):
+                return popup.isVisible() if popup is not None else False
+            def close(self):
+                if popup is not None:
+                    popup.close()
+            def hide(self):
+                if popup is not None:
+                    popup.hide()
+        header.menu_button._menu_compat = _MockMenu()
+        header.menu_button.menu = lambda: header.menu_button._menu_compat
+        if popup is not None:
             popup.sign_out_requested.connect(header.menu_button._menu_compat.sign_out_action.emit)
+            popup.camera_requested.connect(header.menu_button._menu_compat.camera_action.emit)
     return header
 
 

@@ -31,7 +31,7 @@ class LessonHeader(QWidget):
         if logo_path.exists():
             self.logo.setPixmap(QPixmap(str(logo_path)))
         self.logo.setScaledContents(True)
-        self.logo.setFixedSize(220, 45)
+        self.logo.setFixedSize(176, 60)
         layout.addWidget(self.logo, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         layout.addStretch()
@@ -240,6 +240,7 @@ class ModernLessonLayout(QWidget):
 
         # Background
         self.bg_label = QLabel(self)
+        self.bg_label.setObjectName("imgBackground")
         self.bg_label.setGeometry(0, 0, 1920, 1080)
         self.bg_label.setStyleSheet("background-color: #C2D076;")
 
@@ -248,11 +249,59 @@ class ModernLessonLayout(QWidget):
         self.header.setGeometry(0, 0, 1920, 90)
         self.header.back_requested.connect(self.back_requested.emit)
         self.header.close_requested.connect(self.close_requested.emit)
+        self.btn_back = self.header.btn_back
 
         # Main Cream Card Container
         self.card = QWidget(self)
         self.card.setGeometry(50, 95, 1820, 935)
         self.card.setStyleSheet("QWidget { background-color: #FAFFDC; border-radius: 40px; }")
+
+        # Target Word / Sign Header Area (above avatar_card)
+        self.target_header = QWidget(self.card)
+        self.target_header.setGeometry(90, 20, 700, 85)
+        self.target_header.setStyleSheet("background: transparent;")
+        th_layout = QHBoxLayout(self.target_header)
+        th_layout.setContentsMargins(0, 0, 0, 0)
+
+        left_col = QVBoxLayout()
+        left_col.setContentsMargins(0, 0, 0, 0)
+        left_col.setSpacing(2)
+
+        self.lbl_target_sub = QLabel("SIGN THIS WORD", self.target_header)
+        self.lbl_target_sub.setStyleSheet("color: #7A6045; font-size: 13px; font-weight: 700; letter-spacing: 2px;")
+        left_col.addWidget(self.lbl_target_sub)
+
+        self.lbl_target_word = QLabel("WORD", self.target_header)
+        self.lbl_target_word.setStyleSheet("color: #2F4858; font-size: 34px; font-weight: 800;")
+        left_col.addWidget(self.lbl_target_word)
+        th_layout.addLayout(left_col, 1)
+
+        self.lbl_progress = QLabel("Word 1 of 5", self.target_header)
+        self.lbl_progress.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_progress.setFixedHeight(38)
+        self.lbl_progress.setStyleSheet(
+            "background-color: #FFF7D6; color: #69452F; border: 2px solid #D5C79C; "
+            "border-radius: 19px; padding: 0 18px; font-size: 14px; font-weight: 700;"
+        )
+        th_layout.addWidget(self.lbl_progress, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+        # Live Prediction / Detection Pill (above camera_container)
+        self.pred_container = QWidget(self.card)
+        self.pred_container.setGeometry(970, 30, 760, 65)
+        self.pred_container.setStyleSheet("background: transparent;")
+        pred_layout = QHBoxLayout(self.pred_container)
+        pred_layout.setContentsMargins(0, 0, 0, 0)
+        pred_layout.addStretch()
+
+        self.lbl_prediction = QLabel("Waiting for hand...", self.pred_container)
+        self.lbl_prediction.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_prediction.setFixedHeight(44)
+        self.lbl_prediction.setStyleSheet(
+            "background-color: #2F4858; color: #E5E7EB; border: 2px solid #5A7385; "
+            "border-radius: 22px; padding: 0 24px; font-size: 15px; font-weight: 700;"
+        )
+        pred_layout.addWidget(self.lbl_prediction)
+
 
         # Left Avatar Card
         self.avatar_card = LessonAvatarCard(self.card)
@@ -291,7 +340,12 @@ class ModernLessonLayout(QWidget):
         c_layout.addWidget(self.btn_cam)
 
         # Right: Camera Container Card
-        self.camera_container = QWidget(self.card)
+        class _CameraContainer(QWidget):
+            def resizeEvent(sub_self, ev):
+                super().resizeEvent(ev)
+                if hasattr(self, "feedback_overlay") and self.feedback_overlay:
+                    self.feedback_overlay.setGeometry(sub_self.rect())
+        self.camera_container = _CameraContainer(self.card)
         self.camera_container.setGeometry(970, 115, 760, 700)
         self.camera_container.setStyleSheet("QWidget { background-color: #405768; border-radius: 40px; }")
 
@@ -306,6 +360,44 @@ class ModernLessonLayout(QWidget):
         # Success Overlay
         self.feedback_overlay = LessonFeedbackOverlay(self.camera_container)
         self.feedback_overlay.setGeometry(0, 0, 760, 700)
+
+
+    def set_target(self, word: str, category: str = "SIGN THIS WORD", progress: str = ""):
+        self.lbl_target_word.setText(str(word).upper())
+        self.lbl_target_sub.setText(str(category).upper())
+        if progress:
+            self.lbl_progress.setText(str(progress))
+            self.lbl_progress.show()
+        else:
+            self.lbl_progress.hide()
+
+    def set_prediction(self, text: str, status: str = "waiting"):
+        self.lbl_prediction.setText(text)
+        if status == "correct" or status == "holding":
+            self.lbl_prediction.setStyleSheet(
+                "background-color: #1E3A2F; color: #5ECF8A; border: 2px solid #5ECF8A; "
+                "border-radius: 22px; padding: 0 24px; font-size: 15px; font-weight: 700;"
+            )
+        elif status == "seeing":
+            self.lbl_prediction.setStyleSheet(
+                "background-color: #2F4858; color: #FFFFFF; border: 2px solid #F9BD49; "
+                "border-radius: 22px; padding: 0 24px; font-size: 15px; font-weight: 700;"
+            )
+        elif status == "wrong":
+            self.lbl_prediction.setStyleSheet(
+                "background-color: #3D2222; color: #F87171; border: 2px solid #EF4444; "
+                "border-radius: 22px; padding: 0 24px; font-size: 15px; font-weight: 700;"
+            )
+        else:
+            self.lbl_prediction.setStyleSheet(
+                "background-color: #2F4858; color: #C5CCD3; border: 2px solid #5A7385; "
+                "border-radius: 22px; padding: 0 24px; font-size: 15px; font-weight: 700;"
+            )
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if hasattr(self, "bg_label") and self.bg_label:
+            self.bg_label.setGeometry(self.rect())
 
     def set_camera_active(self, active: bool):
         icon_name = "btn_cam_off.png" if active else "btn_cam_on.png"

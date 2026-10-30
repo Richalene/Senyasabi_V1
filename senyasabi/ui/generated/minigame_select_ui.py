@@ -61,9 +61,9 @@ class Ui_MinigameSelect(object):
         self.starSprint1.setScaledContents(True)
         self.lblSprintText = QLabel(self.btnSprint)
         self.lblSprintText.setObjectName(u"lblSprintText")
-        self.lblSprintText.setGeometry(QRect(160, 65, 310, 110))
+        self.lblSprintText.setGeometry(QRect(145, 55, 340, 125))
         self.lblSprintText.setStyleSheet(u"font-family: \"Segoe UI\", sans-serif; font-size: 34px; font-weight: 700; color: #5C3B28; background: transparent;")
-        self.lblSprintText.setAlignment(Qt.AlignmentFlag.AlignVCenter|Qt.AlignmentFlag.AlignLeft)
+        self.lblSprintText.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
         self.btnQuest = QPushButton(MinigameSelect)
         self.btnQuest.setObjectName(u"btnQuest")
         self.btnQuest.setGeometry(QRect(990, 340, 522, 237))
@@ -90,12 +90,12 @@ class Ui_MinigameSelect(object):
         self.starQuest2.setScaledContents(True)
         self.lblQuestText = QLabel(self.btnQuest)
         self.lblQuestText.setObjectName(u"lblQuestText")
-        self.lblQuestText.setGeometry(QRect(150, 65, 320, 110))
+        self.lblQuestText.setGeometry(QRect(140, 55, 345, 125))
         self.lblQuestText.setStyleSheet(u"font-family: \"Segoe UI\", sans-serif; font-size: 34px; font-weight: 700; color: #5C3B28; background: transparent;")
-        self.lblQuestText.setAlignment(Qt.AlignmentFlag.AlignVCenter|Qt.AlignmentFlag.AlignLeft)
+        self.lblQuestText.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
         self.btnDetective = QPushButton(MinigameSelect)
         self.btnDetective.setObjectName(u"btnDetective")
-        self.btnDetective.setGeometry(QRect(990, 610, 530, 242))
+        self.btnDetective.setGeometry(QRect(690, 630, 530, 242))
         self.btnDetective.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnDetective.setStyleSheet(u"\n"
 "QPushButton#btnDetective {\n"
@@ -126,7 +126,7 @@ class Ui_MinigameSelect(object):
         self.lblDetectiveText.setObjectName(u"lblDetectiveText")
         self.lblDetectiveText.setGeometry(QRect(180, 65, 310, 110))
         self.lblDetectiveText.setStyleSheet(u"font-family: \"Segoe UI\", sans-serif; font-size: 34px; font-weight: 700; color: #5C3B28; background: transparent;")
-        self.lblDetectiveText.setAlignment(Qt.AlignmentFlag.AlignVCenter|Qt.AlignmentFlag.AlignLeft)
+        self.lblDetectiveText.setAlignment(Qt.AlignmentFlag.AlignLeading|Qt.AlignmentFlag.AlignLeft|Qt.AlignmentFlag.AlignVCenter)
 
         self.retranslateUi(MinigameSelect)
 

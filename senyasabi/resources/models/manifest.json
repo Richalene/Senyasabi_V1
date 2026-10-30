@@ -7,31 +7,31 @@
   },
   "survival": {
     "enabled": "auto",
-    "model_path": "best_landmark_model.keras",
+    "model_path": "survival.keras",
     "class_mapping_path": "class_mapping.json",
     "landmark_config_path": "landmark_config.json"
   },
   "number": {
     "enabled": "auto",
-    "model_path": "best_landmark_model.keras",
+    "model_path": "number.keras",
     "class_mapping_path": "class_mapping.json",
     "landmark_config_path": "landmark_config.json"
   },
   "calendar": {
     "enabled": "auto",
-    "model_path": "best_landmark_model.keras",
+    "model_path": "calendar.keras",
     "class_mapping_path": "class_mapping.json",
     "landmark_config_path": "landmark_config.json"
   },
   "days": {
     "enabled": "auto",
-    "model_path": "best_landmark_model.keras",
+    "model_path": "days.keras",
     "class_mapping_path": "class_mapping.json",
     "landmark_config_path": "landmark_config.json"
   },
   "family": {
     "enabled": "auto",
-    "model_path": "best_landmark_model.keras",
+    "model_path": "family.keras",
     "class_mapping_path": "class_mapping.json",
     "landmark_config_path": "landmark_config.json"
   }

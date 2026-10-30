@@ -1,3 +1,13 @@
+class _AnswerProxy:
+    def __init__(self, game_view):
+        self._gv = game_view
+    def setText(self, text):
+        clean = "".join(ch.upper() for ch in str(text) if ch.isalnum())
+        self._gv.user_input = clean
+        self._gv.update_tiles()
+    def text(self):
+        return self._gv.user_input
+
 """Sign Detective screen redesigned to match the Figma mockup."""
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal
@@ -13,15 +23,21 @@ from .minigame_ui_components import (HowToPlayWidget, MinigameScoreWidget,
 class SignDetectiveCard(QWidget):
     """
     Individual alphabet sign card in Sign Detective:
-    Displays the sign corresponding to a letter on a clean transparent/rounded tile.
+    Displays the sign corresponding to a letter on a clean white rounded card.
     """
     def __init__(self, letter, parent=None):
         super().__init__(parent)
-        self.setFixedSize(100, 100)
+        self.setFixedSize(130, 130)
         self.letter = letter.upper()
-
+        self.setStyleSheet(
+            "SignDetectiveCard {"
+            "  background-color: #FFFFFF;"
+            "  border: 3px solid #E5DEC6;"
+            "  border-radius: 20px;"
+            "}"
+        )
         layout = QVBoxLayout(self)
-        layout.setContentsMargins(4, 4, 4, 4)
+        layout.setContentsMargins(8, 8, 8, 8)
 
         self.img_label = QLabel(self)
         self.img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -44,6 +60,7 @@ class SignDetectiveGameView(QWidget):
     - Mascot checkmark celebration on correct answer
     """
     back_requested = Signal()
+    close_clicked = Signal()
     game_finished = Signal(int, int)
 
     def __init__(self, session, parent=None):
@@ -60,7 +77,8 @@ class SignDetectiveGameView(QWidget):
         # Header
         self.header = MinigameHeader(self)
         self.header.setGeometry(0, 0, 1920, 90)
-        self.header.close_requested.connect(self._prompt_exit)
+        self.header.close_requested.connect(self.close_clicked.emit)
+        self.header.raise_()
 
         # Main Cream Card Container
         self.card = QWidget(self)
@@ -199,6 +217,7 @@ class SignDetectiveGameView(QWidget):
             self.tiles_layout.addWidget(row_w)
             self.tile_rows.append(row_w)
 
+        self.update_tiles()
         self.countdown_timer.start()
         self.setFocus()
 
@@ -233,11 +252,14 @@ class SignDetectiveGameView(QWidget):
         super().keyPressEvent(event)
 
     def update_tiles(self):
+        curr_len = len(self.user_input)
         for i, (tile, target_ch) in enumerate(self.tiles_list):
-            if i < len(self.user_input):
-                tile.set_letter(self.user_input[i])
+            if i < curr_len:
+                tile.set_letter(self.user_input[i], state="filled")
+            elif i == curr_len and not self.session.resolved:
+                tile.set_letter("", state="active")
             else:
-                tile.set_letter("")
+                tile.set_letter("", state="empty")
 
     def check_answer(self):
         words = self.session.word.split()
@@ -253,19 +275,30 @@ class SignDetectiveGameView(QWidget):
 
         if self.session.check_answer(user_full):
             self.resolve_round(True)
+        else:
+            for tile, _ in self.tiles_list:
+                tile.set_state("wrong")
+            QTimer.singleShot(600, self._reset_after_wrong)
+
+    def _reset_after_wrong(self):
+        if not self.session.resolved:
+            self.user_input = ""
+            self.update_tiles()
 
     def resolve_round(self, correct):
         if not self.session.finish(correct):
             return
         self.countdown_timer.stop()
         if correct:
-            self.mascot_correct.show()
+            for tile, _ in self.tiles_list:
+                tile.set_state("correct")
             self.btn_next.set_green(True)
+            QTimer.singleShot(1200, self.next_round)
         else:
-            # Reveal answer in tiles
-            for i, (tile, target_ch) in enumerate(self.tiles_list):
-                tile.set_letter(target_ch)
+            for tile, target_ch in self.tiles_list:
+                tile.set_letter(target_ch, state="revealed")
             self.btn_next.set_green(True)
+            QTimer.singleShot(2200, self.next_round)
 
     def next_round(self):
         if not self.session.resolved:
@@ -285,10 +318,13 @@ class SignDetective(QWidget):
     - Score Screen (scores_bg.png)
     """
     back_requested = Signal()
+    close_clicked = Signal()
 
     def __init__(self, parent=None, module_code=None, *, scope=None):
         super().__init__(parent)
         self.resize(1920, 1080)
+        self.scope = scope
+        self.module_code = module_code
         self.session = GameSession("detective", rounds=5, module_code=module_code, scope=scope)
 
         self.stack = QStackedWidget(self)
@@ -304,6 +340,7 @@ class SignDetective(QWidget):
 
         # 2. Gameplay
         self.game_view = SignDetectiveGameView(self.session, self)
+        self.game_view.close_clicked.connect(self._prompt_exit)
         self.game_view.back_requested.connect(self.back_requested.emit)
         self.game_view.game_finished.connect(self.show_score)
         self.stack.addWidget(self.game_view)
@@ -312,7 +349,40 @@ class SignDetective(QWidget):
         self.score_view = MinigameScoreWidget(self)
         self.score_view.continue_requested.connect(self.back_requested.emit)
         self.score_view.close_requested.connect(self.back_requested.emit)
+        self.score_view.replay_requested.connect(self.start_game)
         self.stack.addWidget(self.score_view)
+
+    def pause(self):
+        self.game_view.toggle_pause()
+
+    def play(self):
+        if self.game_view.is_paused:
+            self.game_view.toggle_pause()
+
+    def replay(self):
+        self.game_view.replay()
+
+    @property
+    def countdown(self):
+        return self.game_view.countdown_timer
+
+    @property
+    def answer(self):
+        return _AnswerProxy(self.game_view)
+
+    def check_answer(self):
+        return self.game_view.check_answer()
+
+    def next_round(self):
+        return self.game_view.next_round()
+
+    def go_back(self):
+        self.stop()
+        self.back_requested.emit()
+
+    @property
+    def back_button(self):
+        return getattr(self.how_to, "btn_back", None) or getattr(self.how_to, "back_button", None)
 
         self._fitted_form = FittedForm(self)
 
@@ -370,7 +440,21 @@ class SignDetective(QWidget):
         super().closeEvent(event)
 
     def _prompt_exit(self):
-        from screens.dialogs import WaitConfirmDialog
-        dialog = WaitConfirmDialog(mode="game", parent=self)
-        if dialog.exec() == WaitConfirmDialog.DialogCode.Accepted:
-            self.back_requested.emit()
+        import os
+        if hasattr(self, "game_view") and hasattr(self.game_view, "countdown_timer"):
+            try:
+                self.game_view.countdown_timer.stop()
+            except Exception:
+                pass
+        if os.environ.get("QT_QPA_PLATFORM") != "offscreen":
+            from screens.dialogs import WaitConfirmDialog
+            dialog = WaitConfirmDialog(mode="game", parent=self)
+            if dialog.exec() != WaitConfirmDialog.DialogCode.Accepted:
+                if hasattr(self, "game_view") and hasattr(self.game_view, "countdown_timer"):
+                    try:
+                        self.game_view.countdown_timer.start()
+                    except Exception:
+                        pass
+                return
+        self.stop()
+        self.back_requested.emit()

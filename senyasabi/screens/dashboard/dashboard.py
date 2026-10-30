@@ -2,9 +2,13 @@ from pathlib import Path
 # This Python file uses the following encoding: utf-8
 import sys
 
-from PySide6.QtCore import Qt, Signal
+import math
 import os
-from PySide6.QtGui import QPixmap, QCloseEvent, QFontDatabase
+from PySide6.QtCore import Qt, Signal, QPointF, QRectF
+from PySide6.QtGui import (
+    QPixmap, QCloseEvent, QFontDatabase, QPainter,
+    QColor, QPen, QBrush, QPolygonF, QFont
+)
 from PySide6.QtWidgets import QApplication, QHBoxLayout, QLabel, QMessageBox, QPushButton, QWidget
 
 from screens.loading import LoadingOverlay
@@ -75,6 +79,9 @@ class StatisticsDashboardWindow(QWidget):
         self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
         self.ui.btnMenu.setObjectName("btnMenu")
         self.ui.lblLatestBadge.setWordWrap(True)
+        if hasattr(self.ui, "imgStatsChart"):
+            self.ui.imgStatsChart.setGeometry(150, 310, 450, 450)
+            self.ui.imgStatsChart.setScaledContents(True)
         self._menu = None
         self._leaderboard = None
         self.ui.btnBack.clicked.connect(self._open_menu)
@@ -115,7 +122,7 @@ class StatisticsDashboardWindow(QWidget):
         self.ui.lblCurrentStreak.setText(f'{data["streaks"]["current_streak"]} Days')
         lp_completed = sum(1 for lp in data.get("lesson_progress", []) if lp.get("status") == "Completed")
         completed_count = max(stats.get("lessons_completed", 0), lp_completed)
-        self.ui.lblLessonsCompleted.setText(f"{completed_count}/7")
+        self.ui.lblLessonsCompleted.setText(str(completed_count))
         self.ui.lblTotalQuizScore.setText(str(stats["total_quiz_score"]))
         module_count = len(data["module_progress"]) if data.get("module_progress") else data.get("module_count", 0)
         self.ui.lblModuleCount.setText(str(module_count))
@@ -123,10 +130,140 @@ class StatisticsDashboardWindow(QWidget):
         badges = data["user_badges"]
         latest = max(badges, key=lambda badge: badge["unlocked_at"]) if badges else None
         named = data.get("latest_badge") or {}
-        self.ui.lblLatestBadge.setText(named.get("badge_name") or (f'Badge {latest["badge_id"]}' if latest else "No badges yet"))
+        self.ui.lblLatestBadge.setText(named.get("badge_name") or (str(latest["badge_id"]) if latest else "No badges yet"))
         self.ui.lblMinigamesCompleted.setText(str(stats["minigames_completed"]))
         rank = data["leaderboard"]["rank_position"]
         self.ui.lblLeaderboardRank.setText(f"#{rank}" if rank else "Unranked")
+        chart_pix = self._draw_spider_chart(data.get("module_performance", []), data.get("lesson_progress", []))
+        if hasattr(self.ui, "imgStatsChart") and chart_pix is not None:
+            self.ui.imgStatsChart.setPixmap(chart_pix)
+
+    def _draw_spider_chart(self, module_perf_list, lesson_progress_list=None):
+        """Draw 6-axis performance spider chart across the core modules."""
+        width, height = 450, 450
+        pixmap = QPixmap(width, height)
+        pixmap.fill(Qt.GlobalColor.transparent)
+        painter = QPainter(pixmap)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        painter.setRenderHint(QPainter.RenderHint.TextAntialiasing)
+
+        cx = width / 2.0
+        cy = height / 2.0
+        max_radius = min(cx, cy) - 58.0
+
+        # Clockwise 6 core modules starting from 12 o'clock
+        CORE_MODULES = [
+            ("alphabet", "Module 1"),
+            ("greeting", "Module 2"),
+            ("survival", "Module 3"),
+            ("number", "Module 4"),
+            ("days", "Module 5"),
+            ("family", "Module 6"),
+        ]
+        num_axes = len(CORE_MODULES)
+        angles = [-math.pi / 2.0 + i * (2.0 * math.pi / num_axes) for i in range(num_axes)]
+
+        perf_by_code = {p.get("module_code", "").lower(): p for p in (module_perf_list or [])}
+
+        # Calculate module lesson completion percentage as baseline
+        completed_lessons = set()
+        for lp in (lesson_progress_list or []):
+            if lp.get("status") == "Completed":
+                completed_lessons.add(lp.get("lesson_id"))
+
+        # Fallback completion map by checking completed lessons count
+        fallback_scores = {}
+        if completed_lessons:
+            try:
+                from backend import content_service
+                for code, _ in CORE_MODULES:
+                    lessons = content_service.list_lessons_for_module(code)
+                    if lessons:
+                        cnt = sum(1 for les in lessons if getattr(les, "lesson_id", None) in completed_lessons)
+                        fallback_scores[code] = round((cnt / len(lessons)) * 100.0, 1)
+            except Exception:
+                pass
+
+        axes_scores = []
+        for code, title in CORE_MODULES:
+            perf = perf_by_code.get(code, {})
+            score = float(perf.get("score") or 0.0)
+            if score <= 0.0 and code in fallback_scores:
+                score = float(fallback_scores[code])
+            axes_scores.append((title, score))
+
+        # 1. Concentric web levels (20%, 40%, 60%, 80%, 100%)
+        levels = [0.2, 0.4, 0.6, 0.8, 1.0]
+        for lvl in levels:
+            poly = QPolygonF()
+            r = max_radius * lvl
+            for angle in angles:
+                poly.append(QPointF(cx + r * math.cos(angle), cy + r * math.sin(angle)))
+            pen = QPen(QColor(160, 180, 110, 150 if lvl == 1.0 else 85))
+            pen.setWidthF(2.0 if lvl == 1.0 else 1.2)
+            painter.setPen(pen)
+            painter.setBrush(QBrush(QColor(255, 255, 255, 35 if lvl == 1.0 else 0)))
+            painter.drawPolygon(poly)
+
+        # 2. Radial spokes
+        spoke_pen = QPen(QColor(140, 160, 90, 120))
+        spoke_pen.setWidthF(1.5)
+        painter.setPen(spoke_pen)
+        for angle in angles:
+            painter.drawLine(
+                QPointF(cx, cy),
+                QPointF(cx + max_radius * math.cos(angle), cy + max_radius * math.sin(angle))
+            )
+
+        # 3. Data polygon
+        data_poly = QPolygonF()
+        has_any_score = any(score > 0 for _, score in axes_scores)
+        for i, (_, score) in enumerate(axes_scores):
+            capped = max(0.0, min(100.0, score))
+            r = max_radius * (capped / 100.0)
+            data_poly.append(QPointF(cx + r * math.cos(angles[i]), cy + r * math.sin(angles[i])))
+
+        if has_any_score:
+            fill_brush = QBrush(QColor(220, 60, 50, 125))
+            painter.setBrush(fill_brush)
+            data_pen = QPen(QColor(200, 40, 30, 230))
+            data_pen.setWidthF(2.8)
+            painter.setPen(data_pen)
+            painter.drawPolygon(data_poly)
+
+        # 4. Markers and labels
+        point_brush = QBrush(QColor(255, 255, 255))
+        point_pen = QPen(QColor(180, 30, 20) if has_any_score else QColor(140, 160, 90))
+        point_pen.setWidthF(2.5)
+
+        font = QFont("Segoe UI", 11, QFont.Weight.Bold)
+        painter.setFont(font)
+
+        for i, (title, score) in enumerate(axes_scores):
+            capped = max(0.0, min(100.0, score))
+            r = max_radius * (capped / 100.0)
+            pt = QPointF(cx + r * math.cos(angles[i]), cy + r * math.sin(angles[i]))
+
+            painter.setPen(point_pen)
+            painter.setBrush(point_brush)
+            painter.drawEllipse(pt, 4.5, 4.5)
+
+            # Axis outer text
+            label_r = max_radius + 30.0
+            lx = cx + label_r * math.cos(angles[i])
+            ly = cy + label_r * math.sin(angles[i])
+
+            score_str = f"{int(capped)}%" if capped > 0 else "0%"
+            full_text = f"{title}\n{score_str}"
+
+            label_w, label_h = 110, 40
+            label_rect = QRectF(lx - label_w / 2.0, ly - label_h / 2.0, label_w, label_h)
+            painter.setPen(QColor(92, 59, 40))
+            painter.drawText(label_rect, Qt.AlignmentFlag.AlignCenter, full_text)
+
+        painter.end()
+        return pixmap
+
 
     def showEvent(self, event):
         self.refresh_stats()
@@ -151,7 +288,6 @@ class StatisticsDashboardWindow(QWidget):
             from screens.dashboard.leaderboard import LeaderboardWindow
             self._leaderboard = LeaderboardWindow()
             self._leaderboard.back_requested.connect(self._back_from_leaderboard)
-            self._leaderboard.menu_requested.connect(self._menu_from_leaderboard)
         self._leaderboard.show()
         self.hide()
 
@@ -277,7 +413,7 @@ class DashboardWindow(QWidget):
         self.ui.streakValue.setText(f'{data["streaks"]["current_streak"]} Days')
         lp_completed = sum(1 for lp in data.get("lesson_progress", []) if lp.get("status") == "Completed")
         completed_count = max(stats.get("lessons_completed", 0), lp_completed)
-        self.ui.lblLessonsCompleted.setText(f"{completed_count}/7")
+        self.ui.lblLessonsCompleted.setText(str(completed_count))
         self.ui.lblModule.setText(str(module_count))
         self.ui.lblLatestBadgeValue.setText(
             str(latest_badge["badge_id"]) if latest_badge else "No badges yet"
@@ -291,6 +427,10 @@ class DashboardWindow(QWidget):
     def hideEvent(self, event):
         self.loading.cancel()
         super().hideEvent(event)
+
+    def closeEvent(self, event):
+        self.loading.cancel()
+        super().closeEvent(event)
 
     def _show_minigames_notice(self):
         QMessageBox.information(

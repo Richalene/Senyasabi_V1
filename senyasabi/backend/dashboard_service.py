@@ -1,8 +1,10 @@
 """Dashboard data boundary using SQLite persistence."""
 import logging
 import uuid
+from sqlalchemy import select
 
 from .database.session import session_scope
+from .database.models import Lesson, Module
 from .database.repository import (
     get_user_statistics, list_lesson_progress, list_user_badges,
     get_leaderboard_cache, get_streak,
@@ -175,20 +177,37 @@ class SQLiteDashboardRepository(DefaultDashboardRepository):
                 if current else None
             )
 
-            modules = list_modules(db)
+            # Map user's lesson progress to approved active modules
+            approved_codes = {"alphabet", "greeting", "survival", "number", "days", "family"}
+            lesson_ids = [lp.lesson_id for lp in lesson_progress_list]
+            if lesson_ids:
+                user_module_objs = db.scalars(
+                    select(Module)
+                    .join(Lesson, Lesson.parent_module == Module.module_id)
+                    .where(
+                        Lesson.lesson_id.in_(lesson_ids),
+                        Module.is_deleted.is_(False),
+                        Module.is_active.is_(True),
+                    )
+                    .distinct()
+                ).all()
+            else:
+                user_module_objs = []
+
             module_progress_data = [
                 {
                     "module_id": m.module_id,
                     "module_code": m.module_code,
                     "title": m.title,
                 }
-                for m in modules
+                for m in user_module_objs
+                if m.module_code.lower() in approved_codes
             ]
 
             return {
                 "user_statistics": stats_data,
                 "streaks": streaks_data,
-                "module_count": len(modules),
+                "module_count": len(module_progress_data),
                 "module_progress": module_progress_data,
                 "lesson_progress": lesson_progress_data,
                 "user_badges": user_badges_data,
@@ -262,4 +281,4 @@ def build_dashboard(raw: dict) -> dict:
                 for m in raw["module_performance"]
             ],
         },
-    }
+    }

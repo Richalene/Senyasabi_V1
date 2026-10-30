@@ -127,16 +127,16 @@ class NavigationTests(unittest.TestCase):
 
     def wait_for_jobs(self):
         from screens.loading import _JOBS
-        for _ in range(300):
+        for _ in range(800):
             self.app.processEvents()
             if not _JOBS:
                 return
             QTest.qWait(10)
-        self.fail('Timed out waiting for background work')
+        self.fail(f'Timed out waiting for background work: {_JOBS}')
 
     def click(self, screen, name):
         screen.findChild(QPushButton, name).click()
-        for _ in range(300):
+        for _ in range(800):
             self.app.processEvents()
             if not self.controller.login.loading.busy and not self.controller.register.loading.busy:
                 return

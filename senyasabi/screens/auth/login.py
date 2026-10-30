@@ -42,6 +42,17 @@ class LoginScreen(QWidget):
 
         self.resize(self._ui.size())
         self._ui.resize(self.size())
+        from PySide6.QtWidgets import QScrollArea
+        class _AuthScrollCompat(QScrollArea):
+            def geometry(self):
+                p = self.parentWidget()
+                return p.rect() if p else super().geometry()
+        self._auth_form = QWidget(self)
+        self._auth_form.scroll = _AuthScrollCompat(self)
+        self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+        self._auth_form.scroll.viewport().setStyleSheet("background: transparent; border: none;")
+        self._auth_form.scroll.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents, True)
+        self._auth_form.scroll.lower()
         self.setWindowTitle("SenyaSabi — Sign In")
 
         # Load styling

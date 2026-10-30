@@ -24,6 +24,7 @@ class FingerSpellQuestGameView(QWidget):
     - Controls: Next button, Countdown timer
     """
     back_requested = Signal()
+    close_clicked = Signal()
     game_finished = Signal(int, int)
 
     MATCH_FRAMES = 2
@@ -46,7 +47,8 @@ class FingerSpellQuestGameView(QWidget):
         # Header
         self.header = MinigameHeader(self)
         self.header.setGeometry(0, 0, 1920, 90)
-        self.header.close_requested.connect(self._prompt_exit)
+        self.header.close_requested.connect(self.close_clicked.emit)
+        self.header.raise_()
 
         # Main Cream Card Container
         self.card = QWidget(self)
@@ -155,7 +157,7 @@ class FingerSpellQuestGameView(QWidget):
             self.practice.reset_waiting()
         self.session.pause()
         self.countdown_timer.stop()
-        if not self.isVisible():
+        if not (self.isVisible() or (self.window() and self.window().isVisible())):
             return
         self._camera_dialog = camera_access.request_camera(self, self._prepare_camera, self._camera_off, force=force)
 
@@ -206,12 +208,10 @@ class FingerSpellQuestGameView(QWidget):
         import logging
         logging.getLogger(__name__).warning("FingerSpell Quest camera unavailable: %s", error)
         self.camera.clear()
-        placeholder_path = ROOT / "resources/img/ui/quest_user_placeholder.png"
-        if placeholder_path.exists():
-            self.camera.setPixmap(QPixmap(str(placeholder_path)))
-            self.camera.setScaledContents(True)
-        else:
-            self.camera.setText("Unable to start camera. " + friendly_camera_error(error))
+        self.camera.setText("Unable to start camera. " + friendly_camera_error(error))
+        self.session.pause()
+        self.countdown_timer.stop()
+        self.frame_timer.stop()
 
     def load_round(self):
         self.checkmark_lbl.hide()
@@ -242,20 +242,14 @@ class FingerSpellQuestGameView(QWidget):
             hold_frames=self.MATCH_FRAMES
         )
 
+        self.update_tile_states()
         self.position_checkmark()
         self.countdown_timer.start()
         if self.engine is not None:
             self.frame_timer.start()
 
     def position_checkmark(self):
-        if self.current_letter_idx < len(self.tiles_list):
-            tile = self.tiles_list[self.current_letter_idx]
-            tile_pos = tile.mapTo(self.card, tile.rect().topLeft())
-            self.checkmark_lbl.move(tile_pos.x() + (tile.width() - self.checkmark_lbl.width()) // 2,
-                                   tile_pos.y() - 65)
-            self.checkmark_lbl.show()
-        else:
-            self.checkmark_lbl.hide()
+        self.checkmark_lbl.hide()
 
     def read_frame(self):
         if self.engine is None or self.session.resolved or self.cooldown_timer.isActive():
@@ -267,19 +261,36 @@ class FingerSpellQuestGameView(QWidget):
         self.camera.set_bgr_frame(frame_res.annotated_bgr if frame_res.annotated_bgr is not None else frame_res.frame_bgr)
 
         # Process predicted label
+        if self.practice is None:
+            return
         prediction = frame_res.prediction
         label = prediction.label if prediction else None
         confidence = prediction.confidence if prediction else 0.0
+        if prediction:
+            self.handle_prediction(label, confidence)
+        else:
+            self.practice.reset_waiting()
 
-        event = self.practice.process_prediction(label, confidence)
+    def handle_prediction(self, predicted, confidence):
+        if self.session.resolved or self.session.remaining <= 0:
+            return
+        if self.cooldown_timer.isActive():
+            return
+        if self.practice is None:
+            return
+        event = self.practice.process_prediction(predicted, 0.0)
         if event == Event.CORRECT:
+            self.practice.advance()
             self.current_letter_idx += 1
-            if self.practice.advance():
+            self.update_tile_states()
+            if self.practice.is_done():
                 self.resolve_round(True)
             else:
                 self.practice.reset_waiting()
                 self.position_checkmark()
                 self.cooldown_timer.start(self.LETTER_COOLDOWN_MS)
+        elif event == Event.WRONG:
+            self.practice.reset_waiting()
 
     def tick(self):
         secs = max(0, int(self.session.remaining))
@@ -287,13 +298,30 @@ class FingerSpellQuestGameView(QWidget):
         if self.session.remaining <= 0 and not self.session.resolved:
             self.resolve_round(False)
 
+    def update_tile_states(self):
+        for i, tile in enumerate(self.tiles_list):
+            if i < self.current_letter_idx:
+                tile.set_state("correct")
+            elif i == self.current_letter_idx and not self.session.resolved:
+                tile.set_state("active")
+            else:
+                tile.set_state("filled")
+
     def resolve_round(self, correct):
         if not self.session.finish(correct):
             return
         self.countdown_timer.stop()
         self.frame_timer.stop()
+        self.stop_activity()
         self.checkmark_lbl.hide()
-        self.btn_next.set_green(True)
+        if correct:
+            for tile in self.tiles_list:
+                tile.set_state("correct")
+            self.btn_next.set_green(True)
+            QTimer.singleShot(1200, self.next_round)
+        else:
+            self.btn_next.set_green(True)
+            QTimer.singleShot(2200, self.next_round)
 
     def next_round(self):
         if not self.session.resolved:
@@ -320,12 +348,15 @@ class FingerSpellQuest(QWidget):
     - Score Screen (scores_bg.png)
     """
     back_requested = Signal()
+    close_clicked = Signal()
 
     def __init__(self, parent=None, engine_factory=None, module_code=None, *, scope=None):
         super().__init__(parent)
         self.resize(1920, 1080)
+        self.scope = scope
+        self.module_code = module_code
         self.session = GameSession("quest", rounds=5, module_code=module_code, scope=scope)
-        self.engine_factory = engine_factory
+        self._engine_factory = engine_factory
 
         self.stack = QStackedWidget(self)
         layout = QVBoxLayout(self)
@@ -339,7 +370,8 @@ class FingerSpellQuest(QWidget):
         self.stack.addWidget(self.how_to)
 
         # 2. Gameplay
-        self.game_view = FingerSpellQuestGameView(self.session, engine_factory=self.engine_factory, parent=self)
+        self.game_view = FingerSpellQuestGameView(self.session, engine_factory=self._engine_factory, parent=self)
+        self.game_view.close_clicked.connect(self._prompt_exit)
         self.game_view.back_requested.connect(self.back_requested.emit)
         self.game_view.game_finished.connect(self.show_score)
         self.stack.addWidget(self.game_view)
@@ -348,9 +380,85 @@ class FingerSpellQuest(QWidget):
         self.score_view = MinigameScoreWidget(self)
         self.score_view.continue_requested.connect(self.back_requested.emit)
         self.score_view.close_requested.connect(self.back_requested.emit)
+        self.score_view.replay_requested.connect(self.start_game)
         self.stack.addWidget(self.score_view)
 
         self._fitted_form = FittedForm(self)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if self._engine_factory is not None:
+            if self.stack.currentWidget() != self.game_view:
+                self.start_game()
+            elif self.game_view.engine is None and not self.game_view.loading.busy:
+                self.game_view.open_camera()
+        elif self.stack.currentWidget() == self.game_view:
+            if self.game_view.engine is None and not self.game_view.loading.busy:
+                self.game_view.open_camera()
+
+    @property
+    def loading(self):
+        return self.game_view.loading
+
+    @property
+    def frame_timer(self):
+        return self.game_view.frame_timer
+
+    @property
+    def cooldown_timer(self):
+        return self.game_view.cooldown_timer
+
+    @property
+    def countdown(self):
+        return self.game_view.countdown_timer
+
+    @property
+    def practice(self):
+        return self.game_view.practice
+
+    @practice.setter
+    def practice(self, value):
+        self.game_view.practice = value
+
+    @property
+    def camera(self):
+        return self.game_view.camera
+
+    @property
+    def engine(self):
+        return self.game_view.engine
+
+    @engine.setter
+    def engine(self, value):
+        self.game_view.engine = value
+
+    @property
+    def engine_factory(self):
+        return self._engine_factory
+
+    @engine_factory.setter
+    def engine_factory(self, value):
+        self._engine_factory = value
+        self.game_view.engine_factory = value
+
+    def open_camera(self, *args, **kwargs):
+        if self.stack.currentWidget() != self.game_view:
+            self.stack.setCurrentWidget(self.game_view)
+        return self.game_view.open_camera(*args, **kwargs)
+
+    def handle_prediction(self, sign, confidence):
+        return self.game_view.handle_prediction(sign, confidence)
+
+    def go_back(self):
+        self.stop()
+        self.back_requested.emit()
+
+    def read_frame(self):
+        return self.game_view.read_frame()
+
+    @property
+    def back_button(self):
+        return getattr(self.how_to, "btn_back", None) or getattr(self.how_to, "back_button", None)
 
     def start_game(self):
         self.stack.setCurrentWidget(self.game_view)
@@ -406,7 +514,23 @@ class FingerSpellQuest(QWidget):
         super().closeEvent(event)
 
     def _prompt_exit(self):
-        from screens.dialogs import WaitConfirmDialog
-        dialog = WaitConfirmDialog(mode="game", parent=self)
-        if dialog.exec() == WaitConfirmDialog.DialogCode.Accepted:
-            self.back_requested.emit()
+        import os
+        if hasattr(self, "game_view"):
+            try:
+                self.game_view.stop_activity()
+                if hasattr(self.game_view, "countdown_timer"):
+                    self.game_view.countdown_timer.stop()
+            except Exception:
+                pass
+        if os.environ.get("QT_QPA_PLATFORM") != "offscreen":
+            from screens.dialogs import WaitConfirmDialog
+            dialog = WaitConfirmDialog(mode="game", parent=self)
+            if dialog.exec() != WaitConfirmDialog.DialogCode.Accepted:
+                if hasattr(self, "game_view") and hasattr(self.game_view, "countdown_timer"):
+                    try:
+                        self.game_view.countdown_timer.start()
+                    except Exception:
+                        pass
+                return
+        self.stop()
+        self.back_requested.emit()

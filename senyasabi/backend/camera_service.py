@@ -169,7 +169,7 @@ class _OwnedCapture:
             self.last_frame = monotonic()
         else:
             self.failed_reads += 1
-            if self.failed_reads >= 3 or monotonic()-self.last_frame > 1:
+            if self.failed_reads >= 3 or monotonic()-self.last_frame > 1.5:
                 self.release()
         return ok, frame
 

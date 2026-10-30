@@ -1,0 +1,100 @@
+{
+  "alphabet": [
+    {
+      "lesson_number": 1,
+      "title": "Letters A - F",
+      "words": ["A", "B", "C", "D", "E", "F"]
+    },
+    {
+      "lesson_number": 2,
+      "title": "Letters G - L",
+      "words": ["G", "H", "I", "J", "K", "L"]
+    },
+    {
+      "lesson_number": 3,
+      "title": "Letters M - R",
+      "words": ["M", "N", "O", "P", "Q", "R"]
+    },
+    {
+      "lesson_number": 4,
+      "title": "Letters S - Z",
+      "words": ["S", "T", "U", "V", "W", "X", "Y", "Z"]
+    }
+  ],
+  "number": [
+    {
+      "lesson_number": 1,
+      "title": "One to Five",
+      "words": ["ONE", "TWO", "THREE", "FOUR", "FIVE"]
+    },
+    {
+      "lesson_number": 2,
+      "title": "Six to Ten",
+      "words": ["SIX", "SEVEN", "EIGHT", "NINE", "TEN"]
+    }
+  ],
+  "family": [
+    {
+      "lesson_number": 1,
+      "title": "Immediate Family",
+      "words": ["FATHER", "MOTHER", "PARENTS"]
+    },
+    {
+      "lesson_number": 2,
+      "title": "Children & Young Family",
+      "words": ["SON", "DAUGHTER"]
+    },
+    {
+      "lesson_number": 3,
+      "title": "Older Generation",
+      "words": ["GRANDFATHER", "GRANDMOTHER", "UNCLE", "AUNTIE"]
+    },
+    {
+      "lesson_number": 4,
+      "title": "Same / Younger Generation",
+      "words": ["COUSIN"]
+    }
+  ],
+  "greeting": [
+    {
+      "lesson_number": 1,
+      "title": "Daily Greetings & Farewells",
+      "words": ["GOOD MORNING", "GOOD AFTERNOON", "GOOD EVENING", "HELLO", "SEE YOU TOMORROW"]
+    },
+    {
+      "lesson_number": 2,
+      "title": "Courtesy",
+      "words": ["THANK YOU", "YOURE WELCOME"]
+    },
+    {
+      "lesson_number": 3,
+      "title": "Introductions & Small Talk",
+      "words": ["NICE TO MEET YOU", "HOW ARE YOU", "IM FINE"]
+    }
+  ],
+  "days": [
+    {
+      "lesson_number": 1,
+      "title": "Days of the Week",
+      "words": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]
+    },
+    {
+      "lesson_number": 2,
+      "title": "Relative Days",
+      "words": ["TODAY", "TOMORROW", "YESTERDAY"]
+    }
+  ],
+  "survival": [
+    {
+      "lesson_number": 1,
+      "title": "Responses & Answers",
+      "words": ["YES", "NO", "CORRECT", "WRONG"]
+    },
+    {
+      "lesson_number": 2,
+      "title": "Understanding & Pacing",
+      "words": ["UNDERSTAND", "DONT UNDERSTAND", "KNOW", "DONT KNOW", "SLOW", "FAST"]
+    }
+  ]
+}
+

@@ -1,4 +1,5 @@
 import logging
+from PySide6.QtWidgets import QLineEdit
 
 from screens.auth import login as dev_config
 from screens.auth.login import LoginScreen
@@ -52,14 +53,19 @@ class AppController:
         windows = [self.welcome, self.landing, self.login, self.register,
                    self.main_menu, self.dashboard, self.dashboard._leaderboard, self.minigames, self.module_map, self.module_lessons,
                    self.quiz, self.active_lesson]
-        windows.extend(getattr(self.main_menu, name) for name in (
+        windows.extend(getattr(self.main_menu, name, None) for name in (
             "_alphabet_menu", "_lesson_select", "_learn_window", "_spell_cat",
             "_spell_words", "_spell_lesson", "_word_menu", "_word_lesson"))
+        from shiboken6 import isValid
         for window in windows:
             if window is None:
                 continue
             if window is not screen:
-                window.hide()
+                try:
+                    if isValid(window):
+                        window.hide()
+                except Exception:
+                    pass
 
     def show_welcome(self):
         self._show_screen(self.welcome)
@@ -120,20 +126,22 @@ class AppController:
         if screen.loading.busy:
             return
         password = screen.password_input.text()
+        confirm_widget = screen._ui.findChild(QLineEdit, "confirmPasswordInput")
+        confirm_text = screen.confirm_password_input.text() if hasattr(screen, "confirm_password_input") else ""
         email = screen.email_input.text().strip()
         screen.error_label.clear()
         self._clear_passwords()
+
+        if (confirm_widget is not None or confirm_text) and password != confirm_text:
+            screen.error_label.setText("Passwords do not match.")
+            return
 
         if not email:
             screen.error_label.setText("Please enter your email.")
             return
 
-        if not (any(c.isupper() for c in password) and any(c.isdigit() for c in password)):
-            screen.error_label.setText("Password must include 1 uppercase letter and a number.")
-            return
-
         username = getattr(screen, "username_input", None)
-        username = username.text().strip() if username else email.split("@")[0]
+        username = username.text().strip() if (username and username.text().strip()) else email.split("@")[0]
         # Clean username to match regex ^[a-z0-9_.-]{3,30}$
         import re
         username = re.sub(r"[^a-z0-9_.-]", "_", username.lower())
@@ -141,10 +149,10 @@ class AppController:
             username = (username + "_user")[:30]
 
         name = getattr(screen, "name_input", None)
-        name = name.text().strip() if name else username
+        name = name.text().strip() if (name and name.text().strip()) else username
 
         def registered(user):
-            self.login.email_input.setText(email)
+            self.login.email_input.setText(user.get("username") or email)
             self.show_login()
             self.login.error_label.setText(
                 "Account created. Check your email to confirm it, then sign in."
@@ -152,6 +160,10 @@ class AppController:
                 else "Account created. Sign in to continue.")
             screen.email_input.clear()
             screen.password_input.clear()
+            if hasattr(screen, "username_input") and screen.username_input is not None:
+                screen.username_input.clear()
+            if hasattr(screen, "name_input") and screen.name_input is not None:
+                screen.name_input.clear()
 
         screen.loading.run(lambda: auth_service.register_user(username, email, password, name),
                            registered, lambda error: self._auth_failed(screen, error, "create your account"),
@@ -254,9 +266,10 @@ class AppController:
             from screens.lessons.alphabet.alphabet_lesson import AlphabetLessonWidget
             screen = AlphabetLessonWidget(lesson_number=number)
         else:
-            from backend.content_service import get_words_for_module
+            from backend.content_service import get_words_for_lesson, get_words_for_module
+            words = get_words_for_lesson(self.selected_module, number) or get_words_for_module(self.selected_module)
             from screens.lessons.words.word_lesson import WordLessonWidget
-            screen = WordLessonWidget(get_words_for_module(self.selected_module), self.selected_module)
+            screen = WordLessonWidget(words, self.selected_module)
         self.active_lesson = screen
         screen.lesson_finished.connect(self._lesson_back)
         self._show_screen(screen)
@@ -264,9 +277,17 @@ class AppController:
     def _dispose_lesson(self):
         screen, self.active_lesson = self.active_lesson, None
         if screen is not None:
-            screen.lesson_finished.disconnect(self._lesson_back)
-            screen.close()
-            screen.deleteLater()
+            try:
+                screen.lesson_finished.disconnect(self._lesson_back)
+            except Exception:
+                pass
+            try:
+                from shiboken6 import isValid
+                if isValid(screen):
+                    screen.close()
+                    screen.deleteLater()
+            except Exception:
+                pass
 
     def _lesson_back(self):
         try:
@@ -295,6 +316,10 @@ class AppController:
     def shutdown(self):
         self.login.loading.cancel()
         self.register.loading.cancel()
+        if hasattr(self, "dashboard") and self.dashboard is not None:
+            self.dashboard.loading.cancel()
+        if hasattr(self, "main_menu") and self.main_menu is not None:
+            self.main_menu.loading.cancel()
         if self.camera_settings is not None:
             self.camera_settings.reject()
         self._dispose_lesson()

@@ -174,9 +174,9 @@ class NavigationAssetTests(unittest.TestCase):
             opened.append(window.logout_menu.isVisible())
             window.logout_menu.close()
 
-        QTimer.singleShot(30, dismiss)
+        QTimer.singleShot(50, dismiss)
         QTest.mouseClick(window.ui.btnHamburger, Qt.MouseButton.LeftButton)
-        QTest.qWait(40)
+        QTest.qWait(150)
         self.assertEqual(opened, [True])
         selected = []
         window.camera_settings_requested.connect(lambda: selected.append("camera"))

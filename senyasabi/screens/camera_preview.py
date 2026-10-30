@@ -56,6 +56,8 @@ class RoundedCameraPreview(QLabel):
 
     def set_bgr_frame(self, frame):
         """Copy a BGR display frame, leaving recognition's pixels and shape intact."""
+        if not hasattr(frame, "shape") or not hasattr(frame, "strides") or not isinstance(frame.shape, (tuple, list)):
+            return
         image = QImage(frame.data, frame.shape[1], frame.shape[0], frame.strides[0],
                        QImage.Format.Format_BGR888).copy()
         self.setPixmap(QPixmap.fromImage(image))

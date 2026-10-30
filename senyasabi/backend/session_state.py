@@ -61,11 +61,13 @@ class CameraPracticeSession:
     targets: List[str]
     confidence_threshold: float = config.CONFIDENCE_THRESHOLD
     hold_frames: int = config.HOLD_FRAMES
+    grace_frames: int = 4
 
     index: int = field(default=0, init=False)
     score: int = field(default=0, init=False)
     state: SessionState = field(default=SessionState.WAITING, init=False)
     _hold: int = field(default=0, init=False)
+    _grace: int = field(default=0, init=False)
 
     # ---- queries --------------------------------------------------------
     @property
@@ -94,27 +96,37 @@ class CameraPracticeSession:
         """Call once per camera frame while state is WAITING."""
         if self.state is not SessionState.WAITING:
             return Event.NONE
-        if label == self.current_target and confidence >= self.confidence_threshold:
+        is_match = (label == self.current_target)
+        if not is_match and label is not None and self.current_target is not None:
+            import re
+            is_match = re.sub(r"[^A-Z0-9]", "", str(label).upper()) == re.sub(r"[^A-Z0-9]", "", str(self.current_target).upper())
+        if is_match and confidence >= self.confidence_threshold:
             self._hold += 1
+            self._grace = 0
             if self._hold >= self.hold_frames:
                 self.score += 1
                 self.state = SessionState.FEEDBACK
                 return Event.CORRECT
             return Event.HOLDING
         if self._hold > 0:
+            if self._grace < self.grace_frames:
+                self._grace += 1
+                return Event.HOLDING
             self._hold = 0
-            self.state = SessionState.FEEDBACK
-            return Event.WRONG
+            self._grace = 0
+            return Event.NONE
         return Event.NONE
 
     # ---- transitions (call these from your QTimer.singleShot callbacks) --
     def reset_waiting(self):
         self.state = SessionState.WAITING
         self._hold = 0
+        self._grace = 0
 
     def advance(self):
         self.index += 1
         self._hold = 0
+        self._grace = 0
         self.state = SessionState.DONE if self.index >= len(self.targets) else SessionState.WAITING
 
     def skip(self):
@@ -125,6 +137,7 @@ class CameraPracticeSession:
         self.score = 0
         self.state = SessionState.WAITING
         self._hold = 0
+        self._grace = 0
 
 
 @dataclass

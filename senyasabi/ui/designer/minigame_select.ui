@@ -115,10 +115,10 @@ QPushButton#btnSprint:hover {
    <widget class="QLabel" name="lblSprintText">
     <property name="geometry">
      <rect>
-      <x>160</x>
-      <y>65</y>
-      <width>310</width>
-      <height>110</height>
+      <x>145</x>
+      <y>55</y>
+      <width>340</width>
+      <height>125</height>
      </rect>
     </property>
     <property name="styleSheet">
@@ -192,10 +192,10 @@ QPushButton#btnQuest:hover {
    <widget class="QLabel" name="lblQuestText">
     <property name="geometry">
      <rect>
-      <x>150</x>
-      <y>65</y>
-      <width>320</width>
-      <height>110</height>
+      <x>140</x>
+      <y>55</y>
+      <width>345</width>
+      <height>125</height>
      </rect>
     </property>
     <property name="styleSheet">

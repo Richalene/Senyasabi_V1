@@ -45,6 +45,15 @@ class BackendSmoke(unittest.TestCase):
                                  game_type="camera", config={"rounds": 5})
             repo.create_badge(db, 1, "FIRST_STEPS", "First Steps", "Complete a lesson")
 
+    @classmethod
+    def tearDownClass(cls):
+        from backend.database.engine import engine
+        engine.dispose()
+        try:
+            _TMP.cleanup()
+        except Exception:
+            pass
+
     def test_seed_readable(self):
         with session_scope() as db:
             self.assertEqual(len(repo.list_modules(db)), 1)
@@ -65,7 +74,8 @@ class BackendSmoke(unittest.TestCase):
             self.assertEqual(p.time_spent_seconds, 50)
             self.assertIsNotNone(p.completed_at)
             self.assertIsNotNone(p.completed_at.tzinfo)                    # UTC-aware
-        res = sync_service.process_pending_syncs(uid, batch_size=100)
+        with patch.object(sync_service.SyncService, "_send_to_server", return_value=True):
+            res = sync_service.process_pending_syncs(uid, batch_size=100)
         self.assertEqual(res["failed"], 0)
         self.assertEqual(sync_service.get_sync_status(uid)["pending"], 0)
         sync_service.queue_lesson_progress(uid, 1, 100.0, "Completed", 5)  # after sync: new row OK

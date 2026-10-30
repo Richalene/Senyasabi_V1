@@ -190,6 +190,8 @@ class DataLoadingTests(unittest.TestCase):
                 self.assertEqual(call.kwargs, {"user_id": "first"})
 
     def test_leaderboard_explicit_user_does_not_read_current_session(self):
-        with patch.object(auth_service, "get_current_user", side_effect=AssertionError("GUI snapshot required")):
-            entries = leaderboard_service.get_leaderboard(user_id="mock-2")
+        mock_entries = [dict(user_id="mock-2", username="Sample Ben", total_score=100, current_streak=5, badges_unlocked=2, rank_position=1)]
+        with patch.object(leaderboard_service._repository, "get_leaderboard", return_value=mock_entries):
+            with patch.object(auth_service, "get_current_user", side_effect=AssertionError("GUI snapshot required")):
+                entries = leaderboard_service.get_leaderboard(user_id="mock-2")
         self.assertEqual([entry["user_id"] for entry in entries if entry["is_current_user"]], ["mock-2"])

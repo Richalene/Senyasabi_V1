@@ -2,43 +2,562 @@
 <ui version="4.0">
  <class>LessonSelect</class>
  <widget class="QWidget" name="LessonSelect">
-  <property name="geometry"><rect><x>0</x><y>0</y><width>1920</width>
-    <height>1080</height></rect></property>
-  <property name="styleSheet"><string notr="true">
-QWidget#LessonSelect { background: #C2D076; }
-QLabel { background: transparent; color: #72513D; }
-QLabel#moduleTitle { font-size: 28px; font-weight: 800; }
-QLabel[class="sectionTitle"] { font-size: 24px; font-weight: 700; }
-QLabel#streakLabel { background: #FFF6D2; border-radius: 16px; padding: 8px 16px; }
-QFrame#divider { border: none; border-left: 3px dotted #FFF6D2; }
-QPushButton { color: #754B3B; font-weight: 600; }
-QPushButton[class="lessonButton"] { background: #FFF6D2; border: 2px solid #E7DCA8; border-radius: 24px; font-size: 16px; padding: 10px 24px; min-height: 32px; }
-QPushButton[class="lessonButton"]:hover { background: #FFF0B8; border-color: #D5B957; }
-QPushButton[class="minigameButton"] { background: #FFFDE0; border: none; border-radius: 30px; font-size: 16px; padding: 14px 22px; min-height: 50px; }
-QPushButton[class="minigameButton"]:hover { background: #FFF2B8; }
-QPushButton#backBtn, QPushButton#menuBtn { background: #FFF6D2; border: none; border-radius: 14px; padding: 10px 18px; }
-QScrollArea, QScrollArea > QWidget > QWidget { background: transparent; border: none; }
-  </string></property>
-  <layout class="QVBoxLayout" name="rootLayout">
-   <property name="leftMargin"><number>45</number></property>
-   <property name="topMargin"><number>28</number></property>
-   <property name="rightMargin"><number>45</number></property>
-   <property name="bottomMargin"><number>28</number></property>
-   <item><layout class="QHBoxLayout" name="headerLayout">
-    <item><widget class="QLabel" name="moduleTitle"><property name="text"><string>FSL Alphabet</string></property></widget></item>
-    <item><spacer name="headerSpacer"><property name="orientation"><enum>Qt::Horizontal</enum></property><property name="sizeHint"><size><width>40</width><height>20</height></size></property></spacer></item>
-    <item><widget class="QLabel" name="streakLabel"><property name="text"><string>0 Days</string></property></widget></item>
-    <item><widget class="QPushButton" name="menuBtn"><property name="text"><string>?</string></property></widget></item>
-    <item><widget class="QPushButton" name="backBtn"><property name="text"><string>? Back</string></property></widget></item>
-   </layout></item>
-   <item><layout class="QHBoxLayout" name="sectionsLayout" stretch="1,0,1">
-    <item><widget class="QScrollArea" name="lessonScroll"><property name="widgetResizable"><bool>true</bool></property>
-     <widget class="QWidget" name="lessonContainer"><layout class="QVBoxLayout" name="lessonLayout"/></widget>
-    </widget></item>
-    <item><widget class="QFrame" name="divider"><property name="minimumSize"><size><width>20</width><height>0</height></size></property></widget></item>
-    <item><widget class="QWidget" name="gameContainer"><layout class="QVBoxLayout" name="gameLayout"/></widget></item>
-   </layout></item>
-  </layout>
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1920</width>
+    <height>1080</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>SenyaSabi — Lessons + MiniGames</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">
+QWidget#LessonSelect { background-color: #C2D076; font-family: &quot;Segoe UI&quot;; }
+   </string>
+  </property>
+  <widget class="QLabel" name="imageBg">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1920</width>
+     <height>1080</height>
+    </rect>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+   <property name="pixmap">
+    <pixmap>../../resources/img/gen_bg.png</pixmap>
+   </property>
+   <property name="scaledContents">
+    <bool>true</bool>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lblMyLessons">
+   <property name="geometry">
+    <rect>
+     <x>280</x>
+     <y>180</y>
+     <width>380</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font-family: &quot;Cherry Bomb One&quot;, cursive, sans-serif; font-size: 46px; color: #4F3222; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>My Lessons</string>
+   </property>
+  </widget>
+  <widget class="QLabel" name="lblMiniGames">
+   <property name="geometry">
+    <rect>
+     <x>1260</x>
+     <y>180</y>
+     <width>380</width>
+     <height>70</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">font-family: &quot;Cherry Bomb One&quot;, cursive, sans-serif; font-size: 46px; color: #4F3222; background: transparent;</string>
+   </property>
+   <property name="text">
+    <string>MiniGames</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnBack">
+   <property name="geometry">
+    <rect>
+     <x>1810</x>
+     <y>160</y>
+     <width>68</width>
+     <height>68</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="text">
+    <string/>
+   </property>
+  </widget>
+  <widget class="QFrame" name="divider">
+   <property name="geometry">
+    <rect>
+     <x>956</x>
+     <y>240</y>
+     <width>8</width>
+     <height>720</height>
+    </rect>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">border: 2px dashed #C8DA86;</string>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::Shape::VLine</enum>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLesson1">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>300</y>
+     <width>500</width>
+     <height>92</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 42px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Lesson 1</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLesson2">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>415</y>
+     <width>500</width>
+     <height>92</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 42px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Lesson 2</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLesson3">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>530</y>
+     <width>500</width>
+     <height>92</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 42px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Lesson 3</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLesson4">
+   <property name="geometry">
+    <rect>
+     <x>300</x>
+     <y>645</y>
+     <width>500</width>
+     <height>92</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 42px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Lesson 4</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnLesson5">
+   <property name="geometry">
+    <rect>
+     <x>180</x>
+     <y>760</y>
+     <width>500</width>
+     <height>92</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 42px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 28px;
+  font-weight: 600;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Lesson 5</string>
+   </property>
+  </widget>
+  <widget class="QPushButton" name="btnSprint">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>340</y>
+     <width>380</width>
+     <height>150</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 46px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  padding-left: 50px;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Sign
+Sprint</string>
+   </property>
+   <widget class="QLabel" name="starSprint">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>52</y>
+      <width>42</width>
+      <height>42</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="btnQuest">
+   <property name="geometry">
+    <rect>
+     <x>1460</x>
+     <y>340</y>
+     <width>380</width>
+     <height>150</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 46px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  padding-left: 50px;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>FingerSpell
+Quest</string>
+   </property>
+   <widget class="QLabel" name="starQuest1">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>34</y>
+      <width>40</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="starQuest2">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>78</y>
+      <width>40</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="btnExpression">
+   <property name="geometry">
+    <rect>
+     <x>1020</x>
+     <y>560</y>
+     <width>380</width>
+     <height>150</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 46px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  padding-left: 50px;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Expression
+in Motion</string>
+   </property>
+   <widget class="QLabel" name="starExpr1">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>34</y>
+      <width>40</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="starExpr2">
+    <property name="geometry">
+     <rect>
+      <x>45</x>
+      <y>78</y>
+      <width>40</width>
+      <height>40</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="btnDetective">
+   <property name="geometry">
+    <rect>
+     <x>1460</x>
+     <y>560</y>
+     <width>380</width>
+     <height>150</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #FFFDF0;
+  border: 4px solid #FFFFFF;
+  border-radius: 46px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  padding-left: 50px;
+}
+QPushButton:hover {
+  background-color: #FFF3BD;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Sign
+Detective</string>
+   </property>
+   <widget class="QLabel" name="starDet1">
+    <property name="geometry">
+     <rect>
+      <x>38</x>
+      <y>30</y>
+      <width>38</width>
+      <height>38</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="starDet2">
+    <property name="geometry">
+     <rect>
+      <x>74</x>
+      <y>30</y>
+      <width>38</width>
+      <height>38</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+   <widget class="QLabel" name="starDet3">
+    <property name="geometry">
+     <rect>
+      <x>38</x>
+      <y>74</y>
+      <width>38</width>
+      <height>38</height>
+     </rect>
+    </property>
+    <property name="pixmap">
+     <pixmap>../../resources/img/ui/star.png</pixmap>
+    </property>
+    <property name="scaledContents">
+     <bool>true</bool>
+    </property>
+   </widget>
+  </widget>
+  <widget class="QPushButton" name="btnQuiz">
+   <property name="geometry">
+    <rect>
+     <x>260</x>
+     <y>930</y>
+     <width>460</width>
+     <height>74</height>
+    </rect>
+   </property>
+   <property name="cursor">
+    <cursorShape>PointingHandCursor</cursorShape>
+   </property>
+   <property name="styleSheet">
+    <string notr="true">
+QPushButton {
+  background-color: #BFD379;
+  border: 4px solid #FFFFFF;
+  border-radius: 34px;
+  color: #4F3222;
+  font-family: 'Segoe UI', sans-serif;
+  font-size: 26px;
+  font-weight: 700;
+}
+QPushButton:hover {
+  background-color: #ADC362;
+}
+    </string>
+   </property>
+   <property name="text">
+    <string>Module Quiz</string>
+   </property>
+  </widget>
  </widget>
- <resources/><connections/>
+ <resources/>
+ <connections/>
 </ui>

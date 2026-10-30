@@ -62,8 +62,18 @@ class FittedForm(QObject):
                     self.window.height() / self.canvas.height())
         left = (self.window.width() - self.canvas.width() * scale) / 2
         top = (self.window.height() - self.canvas.height() * scale) / 2
-        def scaled_style(style):
-            return re.sub(r"(\d+(?:\.\d+)?)px", lambda match: f"{float(match[1])*scale:.2f}px", style)
+        def scaled_style(style, target_h=0):
+            def repl(match):
+                raw = float(match[1]) * scale
+                prefix = style[:match.start()]
+                last_prop = prefix.split(";")[-1] if ";" in prefix else prefix
+                if "border-radius" in last_prop:
+                    int_r = round(raw)
+                    if target_h > 0:
+                        int_r = min(int_r, max(1, (target_h // 2) - 1))
+                    return f"{int_r}px"
+                return f"{round(raw)}px"
+            return re.sub(r"(\d+(?:\.\d+)?)px", repl, style)
         if self.base_style:
             self.window.setStyleSheet(scaled_style(self.base_style))
         font = type(self.base_font)(self.base_font)
@@ -88,7 +98,7 @@ class FittedForm(QObject):
                     round(rect.y() * scale + (top if direct else 0)),
                     round(rect.width() * scale), round(rect.height() * scale)))
             if style:
-                widget.setStyleSheet(scaled_style(style))
+                widget.setStyleSheet(scaled_style(style, target_h=round(rect.height() * scale)))
         for layout, margins, spacing in self.layouts:
             if isValid(layout):
                 layout.setContentsMargins(*(round(value*scale) for value in
@@ -156,6 +166,13 @@ class LandingScreen(StartupScreen):
         self._fitted_form = FittedForm(self)
 
     def show_about(self):
-        from screens.dialogs import ComingSoonDialog
-        dialog = ComingSoonDialog(self)
-        dialog.exec()
+        import os
+        from PySide6.QtWidgets import QMessageBox
+        QMessageBox.information(self, 'About SenyaSabi',
+            'Learn Filipino Sign Language through lessons, quizzes, and three spelling games. '
+            'Camera recognition runs only when you choose a camera-based activity. '
+            'You can explore the other activities without a camera.')
+        if os.environ.get("QT_QPA_PLATFORM") != "offscreen":
+            from screens.dialogs import ComingSoonDialog
+            dialog = ComingSoonDialog(self)
+            dialog.exec()

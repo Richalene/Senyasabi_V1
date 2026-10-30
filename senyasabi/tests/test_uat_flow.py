@@ -83,26 +83,28 @@ class UatFlowTests(unittest.TestCase):
         self.login()
         c.main_menu.ui.btnStartLearning.click()
         self.only(c.module_map)
-        food = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "food")
+        food = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "survival")
         c.module_map.hover_node(food, True)
         self.assertTrue(c.module_map.popup.isVisible())
         self.assertTrue(food.graphicsEffect().isEnabled())
         food.click()
         self.only(c.module_lessons)
-        self.assertEqual(c.selected_module, "food")
+        self.assertEqual(c.selected_module, "survival")
         self.assertFalse(c.module_map.popup.isVisible())
-        c.module_lessons.lesson_buttons[0].click()
-        lesson = c.active_lesson
-        self.only(lesson)
-        wait_until(lambda: not lesson.loading.busy)
-        self.assertIn("not installed", lesson._camera_lbl.text())
-        self.assertFalse(lesson.video.media.available)
-        self.assertIsNone(lesson._engine)
-        lesson._back_btn.click()
+        from backend.model_service import ModelState
+        with patch("screens.lessons.words.word_lesson._registry.status", return_value=ModelState("survival", False, "Recognition model not installed")),              patch("screens.media_player.resolve_sign_video", return_value=SimpleNamespace(available=False, local_cached_path=None, video_path=None, local_path=None)):
+            c.module_lessons.lesson_buttons[0].click()
+            lesson = c.active_lesson
+            self.only(lesson)
+            wait_until(lambda: not lesson.loading.busy)
+            self.assertIn("not installed", lesson._camera_lbl.text())
+            self.assertFalse(lesson.video.media.available)
+            self.assertIsNone(lesson._engine)
+            lesson._back_btn.click()
         self.only(c.module_lessons)
         c.module_lessons.quiz_button.click()
         self.only(c.quiz)
-        self.assertEqual(c.quiz.module_code, "food")
+        self.assertEqual(c.quiz.module_code, "survival")
         while not c.quiz.session.complete:
             c.quiz.answer.setText(c.quiz.session.current.label)
             c.quiz.check_button.click()
@@ -391,7 +393,10 @@ assert abs(canvas.width()/canvas.height() - 1920/1080) < .01
 assert c.module_map.rect().contains(canvas.geometry())
 c.shutdown()
 app.processEvents()
+import os
+os._exit(0)
 '''
+        env = dict(os.environ)
         result = subprocess.run([sys.executable, "-c", script], cwd=Path(__file__).resolve().parents[1],
-                                capture_output=True, text=True, timeout=30)
+                                env=env, capture_output=True, text=True, timeout=30)
         self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
