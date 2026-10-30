@@ -19,8 +19,9 @@ def get_quiz(module_code):
     get_signs_for_module(code)  # Validate; never widen to another module.
     entries = json.loads((ROOT / "resources/data/quizzes/quizzes.json").read_text(encoding="utf-8-sig"))["quizzes"]
     item = next((item for item in entries if item["module_code"].casefold() == code), {})
+    default_title = f"{code.replace('_', ' ').title()} Quiz"
     return QuizDefinition(item.get("quiz_code", f"{code}_quiz"), code,
-                          item.get("title", f"{code.title()} Quiz"), item.get("passing_score", 70))
+                          item.get("title", default_title), item.get("passing_score", 70))
 
 
 class QuizSession:

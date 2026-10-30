@@ -525,6 +525,9 @@ class DashboardWindow(QWidget):
         self._word_menu.show()
 
     def _open_word_lesson(self, category: str, words: list):
+        if category.casefold() == "alphabet":
+            self._open_lesson_select()
+            return
         from screens.lessons.words.word_lesson import WordLessonWidget
         if self._word_menu is not None:
             self._word_menu.hide()

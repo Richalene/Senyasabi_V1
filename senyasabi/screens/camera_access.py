@@ -68,8 +68,10 @@ class LessonCameraMixin:
         self._resources_closed = False
         self._session.reset_waiting()
         pass
+        stop_worker = getattr(self, '_stop_inference', None)
+        worker_gone = stop_worker() if stop_worker else True
         engine, self._engine = self._engine, None
-        if engine is not None:
+        if engine is not None and worker_gone:  # else the worker closes it when it exits
             engine.close()
         if self._availability is not None and not force:
             state = self._availability()

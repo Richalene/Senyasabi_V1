@@ -337,11 +337,17 @@ class ModuleQuiz(GameCanvas):
         self.render_sequence(force=True)
         if current_sign:
             try:
-                self.video.set_sign(self.module_code, current_sign.sign_code)
+                sign_module = getattr(current_sign, "module_code", None) or self.module_code
+                self.video.set_sign(sign_module, current_sign.sign_code)
                 if self.video.media and self.video.media.available:
                     self.video.show()
                     self.scroll.hide()
-                    self.video.play()
+                    self._play_token = getattr(self, "_play_token", 0) + 1
+                    if self.isVisible():
+                        self.video.play()
+                    else:
+                        token = self._play_token
+                        QTimer.singleShot(0, lambda t=token: self._play_if_ready(t))
                 else:
                     self.video.stop()
                     self.video.hide()
@@ -446,6 +452,24 @@ class ModuleQuiz(GameCanvas):
                             percentage=float(self.session.percent),
                             passed=(self.session.percent >= self.session.definition.passing_score),
                         )
+        except Exception:
+            pass
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        token = getattr(self, "_play_token", 0)
+        if token:
+            QTimer.singleShot(0, lambda t=token: self._play_if_ready(t))
+
+    def _play_if_ready(self, token: int):
+        try:
+            from shiboken6 import isValid
+            if not isValid(self) or not self.isVisible() or self.session.complete:
+                return
+            if token != getattr(self, "_play_token", 0):
+                return
+            if hasattr(self, "video") and self.video is not None and self.video.media and self.video.media.available:
+                self.video.play()
         except Exception:
             pass
 

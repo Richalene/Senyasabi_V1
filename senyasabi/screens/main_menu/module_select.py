@@ -7,6 +7,7 @@ from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QFrame,
                               QVBoxLayout, QGraphicsDropShadowEffect)
+from backend.content_service import get_words_for_module
 from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.main_menu.word_menu import _load_categories
 from screens.navigation import BackButton, install_page_menu
@@ -15,18 +16,72 @@ ROOT = Path(__file__).resolve().parents[2]
 # Positions are canvas fractions, independent of desktop resolution.
 # Trajectory along horizontal branch leading to golden walnut cache matching reference mockup
 POSITIONS = (
-    (.160, .660),  # 1: Greeting
-    (.290, .800),  # 2: Survival
-    (.430, .590),  # 3: Number
-    (.570, .760),  # 4: Days
-    (.710, .650),  # 5: Family
+    (.140, .650),  # 2: Numbers
+    (.255, .820),  # 3: Family Members
+    (.360, .580),  # 4: Basic Communication (Greetings + Survival)
+    (.470, .780),  # 5: Days of the Week
+    (.590, .590),  # 6: Months of the Year (placeholder)
+    (.705, .710),  # 7: Action Words (placeholder)
 )
-MODULE_NODES = [dict(module_code="alphabet", title="FSL Alphabet",
-                     description="Learn the FSL alphabet", count=sum(map(len, LESSON_LETTERS.values())),
-                     x=.050, y=.908)] + [
-    dict(module_code=code.casefold(), title=code.title(), description="Learn FSL words and phrases",
-         count=len(words), x=position[0], y=position[1])
-    for (code, words), position in zip(_load_categories().items(), POSITIONS)
+MODULE_NODES = [
+    dict(
+        module_code="alphabet",
+        title="FSL Alphabet",
+        description="Learn the FSL alphabet",
+        count=sum(map(len, LESSON_LETTERS.values())),
+        x=.050,
+        y=.908,
+    ),
+    dict(
+        module_code="number",
+        title="Numbers",
+        description="Learn FSL words and phrases",
+        count=len(get_words_for_module("number")),
+        x=POSITIONS[0][0],
+        y=POSITIONS[0][1],
+    ),
+    dict(
+        module_code="family",
+        title="Family Members",
+        description="Learn FSL words and phrases",
+        count=len(get_words_for_module("family")),
+        x=POSITIONS[1][0],
+        y=POSITIONS[1][1],
+    ),
+    dict(
+        module_code="basic_communication",
+        title="Basic Communication",
+        description="Covers Greetings and Survival",
+        count=len(get_words_for_module("basic_communication")),
+        x=POSITIONS[2][0],
+        y=POSITIONS[2][1],
+    ),
+    dict(
+        module_code="days",
+        title="Days of the Week",
+        description="Learn FSL words and phrases",
+        count=len(get_words_for_module("days")),
+        x=POSITIONS[3][0],
+        y=POSITIONS[3][1],
+    ),
+    dict(
+        module_code="months",
+        title="Months of the Year",
+        description="Lesson coming soon",
+        count=0,
+        coming_soon=True,
+        x=POSITIONS[4][0],
+        y=POSITIONS[4][1],
+    ),
+    dict(
+        module_code="actions",
+        title="Action Words",
+        description="Lesson coming soon",
+        count=0,
+        coming_soon=True,
+        x=POSITIONS[5][0],
+        y=POSITIONS[5][1],
+    ),
 ]
 
 
@@ -130,7 +185,10 @@ class ModuleSelectWidget(QWidget):
             button = FireflyButton(self._ui)
             button.setProperty("class", "moduleFirefly")
             button.setProperty("module_code", node["module_code"])
+            button.setProperty("coming_soon", bool(node.get("coming_soon", False)))
+            desc = "Lesson coming soon" if node.get("coming_soon") else node["description"]
             button.setAccessibleName(f'Module {number}: {node["title"]}')
+            button.setToolTip(f'{number}. {node["title"]} — {desc}')
             button.setCursor(Qt.CursorShape.PointingHandCursor)
             button.setIcon(icon)
             if icon.isNull():
@@ -145,7 +203,7 @@ class ModuleSelectWidget(QWidget):
             button.clicked.connect(lambda checked=False, code=node["module_code"]: self.choose(code))
             self.buttons.append(button)
         # Bottom Level Badge matching Wireframe Pages 27, 28, 36, 54, 55, 64, 65
-        self.level_badge = QLabel("Level 1/4", self._ui)
+        self.level_badge = QLabel("Level 1/7", self._ui)
         self.level_badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.level_badge.setStyleSheet(
             "background-color: #FFFDF0; "
@@ -191,7 +249,10 @@ class ModuleSelectWidget(QWidget):
         number = self.buttons.index(button)
         node = MODULE_NODES[number]
         self.popup_title.setText(f'Module {number+1}: {node["title"]}')
-        self.popup_detail.setText(f'{node["description"]}\n{node["count"]} Signs')
+        if node.get("coming_soon"):
+            self.popup_detail.setText("Lesson coming soon")
+        else:
+            self.popup_detail.setText(f'{node["description"]}\n{node["count"]} Signs')
         self.position_popup()
         self.popup.show()
         if hasattr(self, "level_badge"):

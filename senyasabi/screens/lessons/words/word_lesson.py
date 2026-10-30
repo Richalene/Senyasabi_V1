@@ -3,6 +3,7 @@ FSL Word Lesson widget redesigned with the modern layout matching Figma.
 """
 from __future__ import annotations
 
+import logging
 import sys
 from pathlib import Path
 from typing import List
@@ -22,8 +23,12 @@ from screens.lessons.lesson_ui_components import ModernLessonLayout
 from backend.session_state import CameraPracticeSession, Event, SessionState
 from backend.content_service import get_signs_for_module
 from backend.model_service import CategoryRecognitionEngine, _registry
+from backend.inference_worker import InferenceWorker
+
+log = logging.getLogger(__name__)
 
 _VRM_DIR = _ROOT / "resources" / "VRM_SIGNS"
+
 
 
 class WordLessonWidget(LessonCameraMixin, QWidget):
@@ -98,12 +103,16 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
 
         # Engine & Session
         self._engine = None
+        self._worker = None
         self._camera_misses = 0
         self._resources_closed = False
         self._session = CameraPracticeSession(targets=self._targets, confidence_threshold=0.20, hold_frames=5, grace_frames=5)
 
+        self._is_ticking = False
+        self._tick_counter = 0
+
         self._timer = QTimer(self)
-        self._timer.setInterval(33)
+        self._timer.setInterval(41)
         self._timer.timeout.connect(self._on_tick)
 
         self._feedback_timer = QTimer(self)
@@ -204,7 +213,7 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
         self._feedback_action = None
         if hasattr(self, "video") and self.video is not None:
             try:
-                self.video.stop()
+                # hide() pauses via SignVideoPlayer.hideEvent; release() does the final teardown.
                 self.video.hide()
             except Exception:
                 pass
@@ -232,42 +241,36 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
             pass
 
     def _on_tick(self):
+        if getattr(self, "_is_ticking", False) or self._engine is None or self._resources_closed:
+            return
+        self._is_ticking = True
         try:
-            if self._engine is None or self._resources_closed:
-                return
-            should_predict = (self._feedback_action is None)
-            try:
-                if hasattr(self._engine, "read_frame"):
-                    import inspect
-                    sig = inspect.signature(self._engine.read_frame)
-                    if "predict" in sig.parameters:
-                        result = self._engine.read_frame(predict=should_predict)
-                    else:
-                        result = self._engine.read_frame()
-                else:
-                    result = None
-            except Exception as error:
-                self._cleanup_resources()
+            # Camera reads + MediaPipe/Keras inference run in InferenceWorker; the UI thread only
+            # consumes the latest frame / latest prediction (older ones are dropped).
+            worker = self._worker
+            if worker is not None and worker.engine is not self._engine:
+                self._stop_inference()
+                worker = None
+            if worker is None:
+                worker = self._worker = InferenceWorker(self._engine)
+            worker.predict_enabled = self._feedback_action is None
+            latest, pred, error = worker.take()
+            if error is not None:
+                self._cleanup_resources("inference worker error: %s" % (error,))
                 self._camera_failed(error)
                 return
-
-            if result is None:
-                self._camera_misses += 1
-                if self._camera_misses < 3:
-                    return
-                self._cleanup_resources()
-                self._camera_failed("Camera disconnected. Reopen the lesson to retry.")
+            if latest is None:
                 return
 
-            self._camera_misses = 0
-            display_frame = result.annotated_bgr if result.annotated_bgr is not None else result.frame_bgr
+            display_frame = latest.annotated_bgr if latest.annotated_bgr is not None else latest.frame_bgr
             if display_frame is not None:
                 import cv2
                 display_frame = cv2.flip(display_frame, 1)
             self._camera_lbl.set_bgr_frame(display_frame)
 
-            if self._feedback_action is not None:
+            if pred is None or self._feedback_action is not None:
                 return
+            result = pred
 
             if not result.hand_detected:
                 self.layout_comp.set_prediction("Waiting for hand...", status="waiting")
@@ -331,8 +334,7 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
                     status="holding"
                 )
             elif event == Event.CORRECT:
-                if hasattr(self._engine, "reset_sequence"):
-                    self._engine.reset_sequence()
+                self._reset_sequence()
                 self.layout_comp.set_prediction(
                     f"Correct! {clean_target_display} ({accuracy_pct}%)",
                     status="correct"
@@ -358,6 +360,24 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
                     )
         except Exception as e:
             pass
+        finally:
+            self._is_ticking = False
+
+    def _reset_sequence(self):
+        """Ask the worker (sole user of the recognizer buffer) to reset; direct call if no worker."""
+        try:
+            if self._worker is not None:
+                self._worker.request_reset()
+            elif self._engine is not None and hasattr(self._engine, "reset_sequence"):
+                self._engine.reset_sequence()
+        except Exception:
+            pass
+
+    def _stop_inference(self):
+        """Stop the worker. True when it is gone (engine safe to close); False when it will
+        close the engine itself after leaving a stuck native call."""
+        worker, self._worker = self._worker, None
+        return True if worker is None else worker.shutdown()
 
     def _on_feedback_timeout(self):
         try:
@@ -375,28 +395,55 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
 
     def _advance(self):
         try:
+            self._timer.stop()
             self._feedback_timer.stop()
             self._feedback_action = None
             if self._resources_closed:
                 return
-            if hasattr(self._engine, "reset_sequence"):
-                try:
-                    self._engine.reset_sequence()
-                except Exception:
-                    pass
+            self._reset_sequence()
             self._session.advance()
             self._refresh_ui()
         except Exception as e:
             pass
+        finally:
+            if self._engine is not None and not self._resources_closed and not self._session.is_done():
+                self._camera_misses = 0
+                if hasattr(self._engine, "_missed_reads"):
+                    self._engine._missed_reads = 0
+                cap = getattr(self._engine, "_cap", None)
+                if cap is not None:
+                    if hasattr(cap, "last_frame"):
+                        from time import monotonic
+                        cap.last_frame = monotonic()
+                    if hasattr(cap, "failed_reads"):
+                        cap.failed_reads = 0
+                self._timer.start()
 
     def _on_skip(self):
-        self._feedback_timer.stop()
-        self._feedback_action = None
-        if self._session.is_done():
-            self._on_back()
-            return
-        self._session.skip()
-        self._refresh_ui()
+        try:
+            self._timer.stop()
+            self._feedback_timer.stop()
+            self._feedback_action = None
+            if self._session.is_done():
+                self._on_back()
+                return
+            self._session.skip()
+            self._refresh_ui()
+        except Exception:
+            pass
+        finally:
+            if self._engine is not None and not self._resources_closed and not self._session.is_done():
+                self._camera_misses = 0
+                if hasattr(self._engine, "_missed_reads"):
+                    self._engine._missed_reads = 0
+                cap = getattr(self._engine, "_cap", None)
+                if cap is not None:
+                    if hasattr(cap, "last_frame"):
+                        from time import monotonic
+                        cap.last_frame = monotonic()
+                    if hasattr(cap, "failed_reads"):
+                        cap.failed_reads = 0
+                self._timer.start()
 
     def _on_back(self):
         self._feedback_timer.stop()
@@ -436,33 +483,76 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
             self._finished_emitted = True
             self.lesson_finished.emit()
 
-    def _cleanup_resources(self):
+    def _cleanup_resources(self, reason="unspecified"):
         if self._resources_closed:
             return
+        import sys
+        caller = sys._getframe(1)
+        log.warning("Word lesson cleanup: reason=%s caller=%s:%s", reason,
+                    caller.f_code.co_name, caller.f_lineno)
         self._resources_closed = True
         self._timer.stop()
         self._feedback_timer.stop()
         self._feedback_action = None
         self._cancel_camera_setup()
         self.loading.cancel()
-        if hasattr(self, "video") and self.video is not None:
-            try:
-                if hasattr(self.video, "release"):
-                    self.video.release()
-                else:
-                    self.video.stop()
-            except Exception:
-                pass
+        # DIAGNOSTIC (temporary): SENYASABI_DIAG_VIDEO_LAST=1 releases the video after the camera,
+        # worker and engine are shut down, to test whether stopping the player with the camera active hangs.
+        import os
+        video_last = os.environ.get("SENYASABI_DIAG_VIDEO_LAST") == "1"
+
+        def release_video():
+            if hasattr(self, "video") and self.video is not None:
+                try:
+                    if hasattr(self.video, "release"):
+                        self.video.release()
+                    else:
+                        self.video.stop()
+                except Exception:
+                    pass
+
+        if not video_last:
+            release_video()
+        worker_gone = self._stop_inference()
         if self._engine is not None:
-            try:
-                self._engine.close()
-            except Exception:
-                pass
+            if worker_gone:  # else the worker closes it when it exits
+                try:
+                    self._engine.close()
+                except Exception:
+                    pass
             self._engine = None
+        if video_last:
+            release_video()
 
     def hideEvent(self, event):
-        self._cleanup_resources()
+        self._timer.stop()
+        if self._worker is not None:
+            self._worker.set_active(False)
+        if hasattr(self, "video") and self.video is not None:
+            try:
+                self.video.pause()
+            except Exception:
+                pass
         super().hideEvent(event)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        if not self._resources_closed and self._engine is not None and not self.loading.busy and not self._session.is_done():
+            if not self._is_paused:
+                self._camera_misses = 0
+                cap = getattr(self._engine, "_cap", None)
+                if cap is not None and hasattr(cap, "last_frame"):
+                    from time import monotonic
+                    cap.last_frame = monotonic()
+                    cap.failed_reads = 0
+                if self._worker is not None:
+                    self._worker.set_active(True)
+                self._timer.start()
+                if hasattr(self, "video") and self.video is not None and getattr(self.video, "media", None) and self.video.media.available:
+                    try:
+                        self.video.resume()
+                    except Exception:
+                        pass
 
     def closeEvent(self, event):
         self._cleanup_resources()

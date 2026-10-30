@@ -5,6 +5,8 @@ import json
 import logging
 from pathlib import Path
 from threading import RLock
+from time import perf_counter
+from time import perf_counter
 
 from .content_service import MODULE_CODES, ROOT
 from .camera_service import open_selected_capture
@@ -208,6 +210,7 @@ class CategoryRecognitionEngine:
         self.preprocessor = (preprocessor_factory or WordLandmarkPreprocessor)(self.recognizer.config)
         self._cap = None
         self._missed_reads = 0
+        self.last_inference_ms = 0.0
 
     def reset_sequence(self):
         self.recognizer.reset()
@@ -234,6 +237,11 @@ class CategoryRecognitionEngine:
         self.close()
         return False
 
+    def camera_open(self):
+        """True while the capture exists and reports healthy (no camera error, thread alive)."""
+        cap = self._cap
+        return cap is not None and bool(cap.isOpened())
+
     def read_frame(self, predict: bool = True):
         if self._cap is None:
             return None
@@ -243,12 +251,15 @@ class CategoryRecognitionEngine:
             self.close()
             raise
         if not ok:
+            # No frame yet is not a disconnect; callers check camera_open() and apply a timeout.
             self._missed_reads += 1
-            if self._missed_reads >= 3:
-                self.close()
             return None
         self._missed_reads = 0
+        if not predict:
+            from .recognition_engine import FrameResult
+            return FrameResult(frame, frame, False, None)
         try:
+            started = perf_counter()
             features, pose_found, hands_found = self.preprocessor.process(frame)
             annotated = self.preprocessor.draw(frame) if hasattr(self.preprocessor, 'draw') else frame.copy()
             prediction = None
@@ -262,6 +273,7 @@ class CategoryRecognitionEngine:
                     while len(self.recognizer.frames) < getattr(self.recognizer.frames, 'maxlen', 24) - 1:
                         self.recognizer.frames.append(features.copy())
                 prediction = self.recognizer.predict_frame(features)
+            self.last_inference_ms = (perf_counter() - started) * 1000
             from .recognition_engine import FrameResult
             return FrameResult(frame, annotated, hands_found > 0, prediction)
         except Exception:
@@ -271,10 +283,19 @@ class CategoryRecognitionEngine:
     def close(self):
         capture, self._cap = self._cap, None
         preprocessor, self.preprocessor = self.preprocessor, None
+        log.warning('[DIAG] CategoryRecognitionEngine.close: enter (has_capture=%s, has_preprocessor=%s)',
+                    capture is not None, preprocessor is not None)
         try:
             if capture is not None:
+                log.warning('[DIAG] CategoryRecognitionEngine.close: before capture.release()')
                 capture.release()
+                log.warning('[DIAG] CategoryRecognitionEngine.close: after capture.release()')
         finally:
+            log.warning('[DIAG] CategoryRecognitionEngine.close: before recognizer.reset()')
             self.recognizer.reset()
+            log.warning('[DIAG] CategoryRecognitionEngine.close: after recognizer.reset()')
             if preprocessor is not None:
+                log.warning('[DIAG] CategoryRecognitionEngine.close: before preprocessor.close()')
                 preprocessor.close()
+                log.warning('[DIAG] CategoryRecognitionEngine.close: after preprocessor.close()')
+            log.warning('[DIAG] CategoryRecognitionEngine.close: exit')

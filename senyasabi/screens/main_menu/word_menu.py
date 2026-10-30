@@ -9,6 +9,7 @@ import sys
 from collections import defaultdict
 from pathlib import Path
 from backend.content_service import MODULE_CODES, get_words_for_module
+from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.navigation import BackButton, install_page_menu
 
 from PySide6.QtCore import Qt, Signal, QSize
@@ -41,10 +42,27 @@ _ROW_HOV = (
     f"background-color:{_CARD_HOV}; border:2px solid {_ACCENT};"
     "border-radius:14px;"
 )
+_ROW_DISABLED = (
+    f"background-color:{_CARD_BG}; border:2px solid {_BORDER};"
+    "border-radius:14px; opacity:0.65;"
+)
 
 
 def _load_categories() -> dict[str, list[str]]:
     return {code.upper(): get_words_for_module(code) for code in MODULE_CODES}
+
+
+def _menu_entries() -> list[dict]:
+    alphabet_words = [ch for letters in LESSON_LETTERS.values() for ch in letters]
+    return [
+        {"number": 1, "code": "alphabet", "title": "FSL Alphabet", "words": alphabet_words, "coming_soon": False},
+        {"number": 2, "code": "number", "title": "Numbers", "words": get_words_for_module("number"), "coming_soon": False},
+        {"number": 3, "code": "family", "title": "Family Members", "words": get_words_for_module("family"), "coming_soon": False},
+        {"number": 4, "code": "greeting", "title": "Basic Communication", "words": get_words_for_module("basic_communication"), "coming_soon": False},
+        {"number": 5, "code": "days", "title": "Days of the Week", "words": get_words_for_module("days"), "coming_soon": False},
+        {"number": 6, "code": "months", "title": "Months of the Year", "words": [], "coming_soon": True},
+        {"number": 7, "code": "actions", "title": "Action Words", "words": [], "coming_soon": True},
+    ]
 
 
 class WordMenuWidget(QWidget):
@@ -74,6 +92,7 @@ class WordMenuWidget(QWidget):
         self.back_button.clicked.connect(self.go_back)
 
         self._categories = _load_categories()
+        self._entries = _menu_entries()
         self._populate_scroll()
 
     def _populate_scroll(self):
@@ -85,18 +104,32 @@ class WordMenuWidget(QWidget):
         layout.setContentsMargins(60, 16, 60, 24)
         layout.setSpacing(12)
 
-        for i, (cat, words) in enumerate(self._categories.items(), start=1):
-            row = self._make_row(i, cat, words)
+        for entry in self._entries:
+            row = self._make_row(
+                entry["number"],
+                entry["title"],
+                entry["words"],
+                code=entry["code"],
+                coming_soon=entry["coming_soon"],
+            )
             layout.addWidget(row)
 
         layout.addStretch()
         scroll.setWidget(container)
 
-    def _make_row(self, number: int, cat: str, words: list[str]) -> QFrame:
+    def _make_row(
+        self,
+        number: int,
+        cat: str,
+        words: list[str],
+        *,
+        code: str | None = None,
+        coming_soon: bool = False,
+    ) -> QFrame:
         frame = QFrame()
         frame.setFixedHeight(80)
-        frame.setStyleSheet(_ROW_STYLE)
-        frame.setCursor(Qt.CursorShape.PointingHandCursor)
+        frame.setStyleSheet(_ROW_DISABLED if coming_soon else _ROW_STYLE)
+        frame.setCursor(Qt.CursorShape.ArrowCursor if coming_soon else Qt.CursorShape.PointingHandCursor)
 
         h = QHBoxLayout(frame)
         h.setContentsMargins(28, 0, 28, 0)
@@ -107,21 +140,22 @@ class WordMenuWidget(QWidget):
         badge.setFixedSize(36, 36)
         badge.setAlignment(Qt.AlignmentFlag.AlignCenter)
         badge.setStyleSheet(
-            f"background:{_ACCENT}; color:#0f1117; font-size:13px;"
+            f"background:{_TEXT_MID if coming_soon else _ACCENT}; color:#0f1117; font-size:13px;"
             "font-weight:800; border-radius:8px;"
         )
 
-        name = QLabel(cat.title())
+        name = QLabel(cat)
         name.setStyleSheet(
             f"color:{_TEXT_W}; font-size:16px; font-weight:700; background:transparent;"
         )
 
-        count = QLabel(f"{len(words)} words")
+        detail_text = "Lesson coming soon" if coming_soon else f"{len(words)} signs"
+        count = QLabel(detail_text)
         count.setStyleSheet(
             f"color:{_TEXT_MID}; font-size:13px; background:transparent;"
         )
 
-        arrow = QLabel("→")
+        arrow = QLabel("" if coming_soon else "→")
         arrow.setStyleSheet(
             f"color:{_ACCENT}; font-size:18px; font-weight:700; background:transparent;"
         )
@@ -132,11 +166,13 @@ class WordMenuWidget(QWidget):
         h.addWidget(count)
         h.addWidget(arrow)
 
-        frame.enterEvent = lambda e, f=frame: f.setStyleSheet(_ROW_HOV)
-        frame.leaveEvent = lambda e, f=frame: f.setStyleSheet(_ROW_STYLE)
-        frame.mousePressEvent = (
-            lambda e, c=cat, w=words: self.category_chosen.emit(c, w)
-        )
+        if not coming_soon:
+            emit_code = (code or cat).upper()
+            frame.enterEvent = lambda e, f=frame: f.setStyleSheet(_ROW_HOV)
+            frame.leaveEvent = lambda e, f=frame: f.setStyleSheet(_ROW_STYLE)
+            frame.mousePressEvent = (
+                lambda e, c=emit_code, w=words: self.category_chosen.emit(c, w)
+            )
         return frame
 
     def resizeEvent(self, event):

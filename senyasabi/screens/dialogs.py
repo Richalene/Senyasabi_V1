@@ -577,7 +577,10 @@ class MenuCalloutPopup(QWidget):
             win.logout()
         else:
             from backend import auth_service
-            auth_service.clear_session()
+            if hasattr(auth_service, 'logout_user'):
+                auth_service.logout_user()
+            elif hasattr(auth_service, 'clear_session'):
+                auth_service.clear_session()
             app = QApplication.instance()
             if app is not None:
                 for top in app.topLevelWidgets():

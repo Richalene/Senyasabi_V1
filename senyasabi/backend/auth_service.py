@@ -374,6 +374,10 @@ def get_access_token() -> str | None:
     return _session["access_token"]
 
 
+def clear_session() -> None:
+    logout_user()
+
+
 def logout_user() -> None:
     user = _current_user
     had_session = _session is not None

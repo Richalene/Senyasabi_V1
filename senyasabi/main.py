@@ -1,12 +1,56 @@
 import os
 import sys
 import traceback
+import threading
+import time
+
+_last_qt_tick = time.time()
+
+def _watchdog_loop():
+    global _last_qt_tick
+    while True:
+        time.sleep(1.0)
+        elapsed = time.time() - _last_qt_tick
+        if elapsed > 4.0:
+            msg = f"\n[{time.strftime('%H:%M:%S')}] *** UI THREAD HUNG FOR {elapsed:.1f}s ***\n"
+            sys.stderr.write(msg)
+            try:
+                with open("lifecycle.log", "a", encoding="utf-8") as lf:
+                    lf.write(msg)
+                    for thread_id, frame in sys._current_frames().items():
+                        lf.write(f"\n--- Thread {thread_id} ---\n")
+                        traceback.print_stack(frame, file=lf)
+            except Exception:
+                pass
+            time.sleep(4.0)
+
+
+_native_log = None  # module-level so the handle lives for the whole process (faulthandler needs it open)
+
+
+def _diag(message):
+    """Timestamped marker in crash_native.log (diagnostic only; never raises)."""
+    try:
+        if _native_log is not None:
+            _native_log.write(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] pid={os.getpid()} {message}\n")
+            _native_log.flush()
+    except Exception:
+        pass
+
 
 try:
+    import atexit
     import faulthandler
-    faulthandler.enable()
+    # Append mode, relative to the launch directory (same place as lifecycle.log / crash.log).
+    _native_log = open("crash_native.log", "a", encoding="utf-8")
+    faulthandler.enable(file=_native_log, all_threads=True)
+    _diag("startup")
+    atexit.register(_diag, "atexit")
 except Exception:
-    pass
+    try:
+        faulthandler.enable()
+    except Exception:
+        pass
 
 def _excepthook(exc_type, exc_value, exc_tb):
     tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
@@ -58,6 +102,14 @@ class SenyaSabiApplication(QApplication):
         super().__init__(argv)
         self.setQuitOnLastWindowClosed(False)
         self.fullscreen = True
+        self._wd_timer = QTimer(self)
+        def _ping():
+            global _last_qt_tick
+            _last_qt_tick = time.time()
+        self._wd_timer.timeout.connect(_ping)
+        self._wd_timer.start(250)
+        self._wd_thread = threading.Thread(target=_watchdog_loop, daemon=True)
+        self._wd_thread.start()
 
     def notify(self, receiver, event):
         screen = (isinstance(receiver, QWidget) and receiver.isWindow()
@@ -85,9 +137,9 @@ class SenyaSabiApplication(QApplication):
                 palette.setColor(QPalette.ColorRole.Window, QColor("#c5d27b"))
                 receiver.setPalette(palette)
                 receiver.setAutoFillBackground(True)
-            if receiver.isFullScreen() != self.fullscreen:
-                QTimer.singleShot(0, lambda window=receiver: self._present(window)
-                                  if window.isVisible() else None)
+                if receiver.isFullScreen() != self.fullscreen:
+                    QTimer.singleShot(0, lambda window=receiver: self._present(window)
+                                      if window.isVisible() else None)
         if screen and event.type() == QEvent.Type.Resize:
             fitted = getattr(receiver, "_fitted_form", None)
             if fitted is not None:
@@ -108,6 +160,7 @@ def main() -> int:
     app = QApplication.instance() or SenyaSabiApplication(sys.argv)
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
+    app.aboutToQuit.connect(lambda: _diag("aboutToQuit"))
     controller.show_welcome()
     return app.exec()      
 

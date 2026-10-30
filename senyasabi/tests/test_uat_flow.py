@@ -165,8 +165,9 @@ class UatFlowTests(unittest.TestCase):
             lesson._session.targets = [sign.label]
             lesson._session.restart()
             lesson._refresh_ui()
-            for _ in range(config.HOLD_FRAMES):
-                lesson._on_tick()
+            # Inference runs in a worker thread; tick consumes its latest prediction.
+            wait_until(lambda: lesson._on_tick() or lesson._session.score == 1)
+            wait_until(lambda: engine.reset_sequence.called)
             self.assertEqual(lesson._session.score, 1)
             self.assertEqual(lesson._word_lbl.text(), sign.label)
             self.assertIn('’', lesson._word_lbl.text())

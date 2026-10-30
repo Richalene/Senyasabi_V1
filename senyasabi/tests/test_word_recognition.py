@@ -205,6 +205,13 @@ class EngineLifecycleTests(unittest.TestCase):
         capture.read.return_value = False, None
         for _ in range(3):
             self.assertIsNone(engine.read_frame())
+        # A short gap in frames must not release the camera ...
+        capture.release.assert_not_called()
+        self.assertTrue(engine.camera_open())
+        # ... a genuinely closed capture is reported, and close() cleans up once.
+        capture.isOpened.return_value = False
+        self.assertFalse(engine.camera_open())
+        engine.close()
         self.assertEqual(engine.buffered_frames, 0)
         capture.release.assert_called_once()
         self.preprocessor.close.assert_called_once()

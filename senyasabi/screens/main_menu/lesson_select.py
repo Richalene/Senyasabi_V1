@@ -11,6 +11,7 @@ from screens.startup import FittedForm
 
 ROOT = Path(__file__).resolve().parents[2]
 _UI_FILE = ROOT / "ui/designer/lesson_select.ui"
+_COMING_SOON_MODULES = {"months", "actions"}
 
 
 class LessonSelectWidget(QWidget):
@@ -88,7 +89,7 @@ class LessonSelectWidget(QWidget):
         for i in range(1, 6):
             btn = self._ui.findChild(QPushButton, f"btnLesson{i}")
             if btn is not None:
-                btn.clicked.connect(lambda checked=False, num=i: self.lesson_chosen.emit(num))
+                btn.clicked.connect(lambda checked=False, num=i: self._on_lesson_clicked(num))
                 self.lesson_buttons.append(btn)
 
         self.set_module(module_code)
@@ -99,16 +100,38 @@ class LessonSelectWidget(QWidget):
         d = ComingSoonDialog(self)
         d.exec()
 
+    def _on_lesson_clicked(self, num: int):
+        if getattr(self, "module_code", "") in _COMING_SOON_MODULES:
+            self._on_expression_clicked()
+            return
+        self.lesson_chosen.emit(num)
+
     def set_module(self, code: str):
         self.module_code = code.lower()
-        if self.module_code == "alphabet":
-            for btn in self.lesson_buttons:
+        is_coming_soon = self.module_code in _COMING_SOON_MODULES
+        for btn_act in (self.btn_quiz, self.btn_sprint, self.btn_quest, self.btn_detective):
+            if btn_act is not None:
+                btn_act.setEnabled(not is_coming_soon)
+
+        if is_coming_soon:
+            for idx, btn in enumerate(self.lesson_buttons):
+                if idx == 0:
+                    btn.setText("Lesson coming soon")
+                    btn.setToolTip("Lesson coming soon")
+                    btn.show()
+                else:
+                    btn.hide()
+        elif self.module_code == "alphabet":
+            for idx, btn in enumerate(self.lesson_buttons, start=1):
+                btn.setText(f"Lesson {idx}")
+                btn.setToolTip("")
                 btn.show()
         else:
             from backend.content_service import get_lessons_for_module
             lessons = get_lessons_for_module(self.module_code)
             count = len(lessons) if lessons else 1
             for idx, btn in enumerate(self.lesson_buttons):
+                btn.setText(f"Lesson {idx + 1}")
                 is_visible = idx < count
                 btn.setVisible(is_visible)
                 if is_visible and idx < len(lessons):

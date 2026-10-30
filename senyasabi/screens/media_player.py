@@ -17,6 +17,7 @@ from backend.media_service import resolve_sign_video
 log = logging.getLogger(__name__)
 
 
+
 class _VideoPauseOverlay(QWidget):
     """Semi-transparent overlay with large amber pause bars shown when paused."""
     def __init__(self, parent=None):
@@ -69,14 +70,12 @@ class SignVideoPlayer(QWidget):
         try:
             from PySide6.QtMultimedia import QMediaPlayer
             if status == QMediaPlayer.MediaStatus.EndOfMedia and self.player is not None:
-                if self.player.loops() != QMediaPlayer.Loops.Infinite:
-                    self.player.setPosition(0)
-                    self.player.play()
+                self.player.setPosition(0)
+                self.player.play()
         except Exception:
             pass
 
     def set_sign(self, module_code, sign_code):
-        self.stop()
         self.media = resolve_sign_video(module_code, sign_code)
         is_avail = bool(getattr(self.media, "available", False))
         if is_avail:
@@ -84,6 +83,7 @@ class SignVideoPlayer(QWidget):
             if self.video is not None:
                 self.video.show()
         else:
+            self.stop()
             msg = getattr(self.media, "message", None) or "Lesson video is not installed yet."
             self.message.setText(msg)
             if self.show_play_button:
@@ -149,8 +149,8 @@ class SignVideoPlayer(QWidget):
 
             self.message.hide()
             self.video.show()
-            if self.player.playbackState() != QMediaPlayer.PlaybackState.StoppedState:
-                self.player.stop()
+            # setSource() resets the player itself; an explicit stop() first was observed
+            # blocking the UI thread inside Qt Multimedia.
             self.player.setSource(target_source)
             self.player.play()
         except Exception as error:
@@ -200,23 +200,38 @@ class SignVideoPlayer(QWidget):
 
     def release(self):
         """Cleanly tear down multimedia pipeline to prevent native backend access violations."""
+        log.warning("[DIAG] SignVideoPlayer.release: enter (has_player=%s, has_audio=%s, has_video=%s)",
+                    self.player is not None, self.audio is not None, self.video is not None)
         if hasattr(self, "pause_overlay") and self.pause_overlay is not None:
             self.pause_overlay.hide()
         if self.player is not None:
+            for sig_name, slot in (("mediaStatusChanged", self._on_media_status),
+                                   ("errorOccurred", self.failed)):
+                try:
+                    getattr(self.player, sig_name).disconnect(slot)
+                except Exception as exc:
+                    log.warning("SignVideoPlayer.release: failed to disconnect %s: %s", sig_name, exc)
             try:
-                self.player.stop()
-                self.player.setSource(QUrl())
+                log.warning("[DIAG] SignVideoPlayer.release: before player.pause()")
+                self.player.pause()
+                log.warning("[DIAG] SignVideoPlayer.release: after player.pause()")
             except Exception:
-                pass
-            self.player = None
+                log.exception("SignVideoPlayer.release: error pausing QMediaPlayer")
         if self.audio is not None:
             try:
+                log.warning("[DIAG] SignVideoPlayer.release: before audio discard")
                 get_audio_service()._outputs.discard(self.audio)
+                log.warning("[DIAG] SignVideoPlayer.release: after audio discard")
             except Exception:
-                pass
-            self.audio = None
-        self.video = None
-
+                log.exception("SignVideoPlayer.release: error discarding QAudioOutput")
+        if self.video is not None:
+            try:
+                log.warning("[DIAG] SignVideoPlayer.release: before video.hide()")
+                self.video.hide()
+                log.warning("[DIAG] SignVideoPlayer.release: after video.hide()")
+            except Exception:
+                log.exception("SignVideoPlayer.release: error hiding QVideoWidget")
+        log.warning("[DIAG] SignVideoPlayer.release: exit")
     def pause(self):
         if self.player is not None:
             try:
@@ -229,5 +244,12 @@ class SignVideoPlayer(QWidget):
             self.pause_overlay.raise_()
 
     def hideEvent(self, event):
-        self.stop()
+        # Pause only: stop() on a looping player was seen blocking the UI thread while the camera
+        # runs. Pause the player directly (no overlay); release() performs the definitive teardown.
+        if self.player is not None:
+            try:
+                self.player.pause()
+            except Exception:
+                pass
         super().hideEvent(event)
+

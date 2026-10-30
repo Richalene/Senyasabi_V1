@@ -34,6 +34,8 @@ class BundledContentRepository:
         if module_code == "alphabet":
             return [SignRecord("alphabet", char.lower(), char, char)
                     for char in "ABCDEFGHIJKLMNOPQRSTUVWXYZ"]
+        if module_code in ("basic_communication", "communication"):
+            return self.get_signs("greeting") + self.get_signs("survival")
         entries = json.loads((ROOT / "resources/data/105labels.json").read_text(encoding="utf-8-sig"))
         matching = [SignRecord(module_code, entry.get("sign_code") or readable_code(entry["label"]),
                                entry["label"], normalize_label(entry.get("recognition_label", entry["label"])))
@@ -69,11 +71,18 @@ def get_sign(module_code, sign_code):
 
 def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
     """Resolve (module_code, lesson_order) to lesson_id from local SQLite cache."""
+    code = module_code.casefold()
+    if code in ("basic_communication", "communication"):
+        if lesson_order <= 3:
+            code = "greeting"
+        else:
+            code = "survival"
+            lesson_order = lesson_order - 3
     try:
         from .database.session import SessionLocal
         from .database.models import Lesson, Module
         with SessionLocal() as db:
-            mod = db.query(Module).filter(Module.module_code == module_code.casefold()).first()
+            mod = db.query(Module).filter(Module.module_code == code).first()
             if not mod:
                 return None
             lesson = db.query(Lesson).filter(
@@ -85,7 +94,7 @@ def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
         # Static fallback if database is not available
         offset = {"alphabet": 72, "greeting": 76, "survival": 79, "number": 82,
                   "calendar": 85, "days": 88, "family": 91, "relationships": 94,
-                  "color": 97, "food": 100, "drink": 103}.get(module_code.casefold())
+                  "color": 97, "food": 100, "drink": 103}.get(code)
         if offset is not None:
             return offset + (lesson_order - 1)
         return None
@@ -139,7 +148,28 @@ MODULE_LESSONS: dict[str, list[dict]] = _load_module_lessons()
 
 
 def get_lessons_for_module(module_code: str) -> list[dict]:
-    return MODULE_LESSONS.get(module_code.casefold(), [])
+    code = module_code.casefold()
+    if code in ("basic_communication", "communication"):
+        lessons = MODULE_LESSONS.get(code)
+        if lessons:
+            return lessons
+        combined = []
+        for idx, item in enumerate(MODULE_LESSONS.get("greeting", []), start=1):
+            combined.append({**item, "lesson_number": idx, "module_code": "greeting"})
+        for item in MODULE_LESSONS.get("survival", []):
+            combined.append({**item, "lesson_number": len(combined) + 1, "module_code": "survival"})
+        return combined
+    return MODULE_LESSONS.get(code, [])
+
+
+def get_lesson_model_code(module_code: str, lesson_order: int = 1) -> str:
+    code = module_code.casefold()
+    for lesson in get_lessons_for_module(code):
+        if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+            return str(lesson["module_code"]).casefold()
+    if code in ("basic_communication", "communication"):
+        return "greeting" if lesson_order <= 3 else "survival"
+    return code
 
 
 def get_words_for_lesson(module_code: str, lesson_order: int = 1) -> list[str]:
