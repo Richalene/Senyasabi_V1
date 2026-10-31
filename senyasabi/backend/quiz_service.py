@@ -6,6 +6,9 @@ from .content_service import ROOT, fingerspell_text, get_module, get_signs_for_m
 from .minigame_service import normalize
 
 
+PASSING_SCORE = 75
+
+
 @dataclass(frozen=True)
 class QuizDefinition:
     quiz_code: str
@@ -16,12 +19,12 @@ class QuizDefinition:
 
 def get_quiz(module_code):
     code = module_code.casefold()
-    module = get_module(code)                 # raises ValueError for unknown modules
-    path = ROOT / "resources/data/quizzes/quizzes.json"
-    entries = json.loads(path.read_text(encoding="utf-8-sig"))["quizzes"] if path.is_file() else []
-    item = next((i for i in entries if i["module_code"].casefold() == code), {})
+    get_signs_for_module(code)  # Validate; never widen to another module.
+    entries = json.loads((ROOT / "resources/data/quizzes/quizzes.json").read_text(encoding="utf-8-sig"))["quizzes"]
+    item = next((item for item in entries if item["module_code"].casefold() == code), {})
+    default_title = f"{code.replace('_', ' ').title()} Quiz"
     return QuizDefinition(item.get("quiz_code", f"{code}_quiz"), code,
-                          item.get("title", f"{module.title} Quiz"), item.get("passing_score", 70))
+                          item.get("title", default_title), PASSING_SCORE)
 
 
 class QuizSession:
@@ -63,3 +66,7 @@ class QuizSession:
     @property
     def percent(self):
         return round(100 * self.score / len(self.questions)) if self.questions else 0
+
+    @property
+    def passed(self):
+        return (100 * self.score >= self.definition.passing_score * len(self.questions)) if self.questions else False

@@ -170,6 +170,9 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self._load_ref_image(letter)
 
         self.layout_comp.feedback_overlay.hide()
+        if hasattr(self.layout_comp, "results_widget") and self.layout_comp.results_widget is not None:
+            self.layout_comp.results_widget.hide()
+            self.layout_comp.card.show()
         self.layout_comp.btn_next.set_green(False)
         self.layout_comp.avatar_card.set_paused(False)
         self.layout_comp.btn_pause.set_kind("pause")
@@ -177,18 +180,27 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
     def _show_completion(self):
         self._timer.stop()
+        self._feedback_timer.stop()
+        self._feedback_action = None
         if hasattr(self, "video") and self.video is not None:
             try:
-                self.video.stop()
                 self.video.hide()
             except Exception:
                 pass
-        pct = self._session.score_percent()
+        pct = self._session.accuracy_percent() if hasattr(self._session, "accuracy_percent") else self._session.score_percent()
         self.layout_comp.feedback_overlay.show_success(
             accuracy_pct=pct,
             message="Lesson Complete! You are a Natural!"
         )
         self.layout_comp.btn_next.set_green(True)
+        if hasattr(self.layout_comp, "results_widget") and self.layout_comp.results_widget is not None:
+            self.layout_comp.card.hide()
+            self.layout_comp.results_widget.show_results(
+                lesson_name=f"FSL Alphabet — Lesson {self._lesson_number}",
+                accuracy_pct=pct,
+                completed_count=self._session.score,
+                total_count=self._session.total,
+            )
 
         try:
             from backend import auth_service, sync_service, content_service

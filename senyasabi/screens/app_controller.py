@@ -257,11 +257,16 @@ class AppController:
         if self.selected_module == "alphabet":
             from screens.lessons.alphabet.alphabet_lesson import AlphabetLessonWidget
             screen = AlphabetLessonWidget(lesson_number=number)
+        elif self.selected_module in ("months", "actions"):
+            if self.module_lessons is not None:
+                self.module_lessons._on_expression_clicked()
+            return
         else:
-            from backend.content_service import get_words_for_lesson, get_words_for_module
+            from backend.content_service import get_lesson_model_code, get_words_for_lesson, get_words_for_module
             words = get_words_for_lesson(self.selected_module, number) or get_words_for_module(self.selected_module)
+            model_code = get_lesson_model_code(self.selected_module, number)
             from screens.lessons.words.word_lesson import WordLessonWidget
-            screen = WordLessonWidget(words, self.selected_module)
+            screen = WordLessonWidget(words, model_code)
         self.active_lesson = screen
         screen.lesson_finished.connect(self._lesson_back)
         self._show_screen(screen)
@@ -269,6 +274,7 @@ class AppController:
     def _dispose_lesson(self):
         screen, self.active_lesson = self.active_lesson, None
         if screen is not None:
+            logging.warning("[DIAG] AppController._dispose_lesson: enter (screen=%s)", type(screen).__name__)
             try:
                 screen.lesson_finished.disconnect(self._lesson_back)
             except Exception:
@@ -276,17 +282,22 @@ class AppController:
             try:
                 from shiboken6 import isValid
                 if isValid(screen):
+                    logging.warning("[DIAG] AppController._dispose_lesson: before screen.close() / deleteLater()")
                     screen.close()
                     screen.deleteLater()
+                    logging.warning("[DIAG] AppController._dispose_lesson: after screen.close() / deleteLater()")
             except Exception:
-                pass
+                logging.exception("[DIAG] AppController._dispose_lesson: error")
+            logging.warning("[DIAG] AppController._dispose_lesson: exit")
 
     def _lesson_back(self):
+        logging.warning("[DIAG] AppController._lesson_back: enter")
         try:
             self.main_menu.refresh_home_stats()
         except Exception:
             pass
         self.show_module_choices()
+        logging.warning("[DIAG] AppController._lesson_back: exit")
 
     def open_module_quiz(self):
         if auth_service.get_current_user() is None:
@@ -294,6 +305,10 @@ class AppController:
             return
         if self.selected_module is None:
             self.show_module_map()
+            return
+        if self.selected_module in ("months", "actions"):
+            if self.module_lessons is not None:
+                self.module_lessons._on_expression_clicked()
             return
         if self.quiz is not None and self.quiz.isVisible() and self.quiz.module_code == self.selected_module:
             return
@@ -348,6 +363,10 @@ class AppController:
             return
         if self.selected_module is None:
             self.show_module_map()
+            return
+        if self.selected_module in ("months", "actions"):
+            if self.module_lessons is not None:
+                self.module_lessons._on_expression_clicked()
             return
         if self.minigames is not None and self.minigames.isVisible() and self.minigames.game is not None:
             return

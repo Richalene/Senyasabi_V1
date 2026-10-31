@@ -1,6 +1,8 @@
 """Local camera choice and exclusive capture. No recording, upload or DB access."""
 from dataclasses import dataclass, field
 import logging
+import os
+import sys
 from queue import Empty, Full, Queue
 from threading import Event, Lock
 from time import monotonic
@@ -13,6 +15,16 @@ log = logging.getLogger(__name__)
 
 class CameraError(RuntimeError):
     pass
+
+
+def _caller(depth=2):
+    """Short caller chain (file:function:line) for shutdown diagnostics."""
+    parts, frame = [], sys._getframe(depth)
+    while frame is not None and len(parts) < 3:
+        code = frame.f_code
+        parts.append(f'{os.path.basename(code.co_filename)}:{code.co_name}:{frame.f_lineno}')
+        frame = frame.f_back
+    return ' <- '.join(parts)
 
 
 @dataclass(frozen=True)
@@ -134,14 +146,20 @@ class _QtCapture:
         if self.closed:
             return
         self.closed = True
+        log.warning('[DIAG] _QtCapture.release: enter (thread.isRunning=%s)', self.thread.isRunning())
         if self.thread.isRunning():
             try:
+                log.warning('[DIAG] _QtCapture.release: before stop_requested.emit()')
                 self.worker.stop_requested.emit()
+                log.warning('[DIAG] _QtCapture.release: after stop_requested.emit()')
             except RuntimeError:
                 if self.thread.isRunning():
                     raise
         # Closing is bounded; retain the thread until the OS finishes stopping it.
-        self.thread.wait(1500)
+        log.warning('[DIAG] _QtCapture.release: before thread.wait(1500)')
+        waited = self.thread.wait(1500)
+        log.warning('[DIAG] _QtCapture.release: after thread.wait(1500) -> returned=%s, thread.isRunning=%s',
+                    waited, self.thread.isRunning())
         if self.thread.isRunning():
             _STOPPING_CAPTURES.add(self)
             self.thread.finished.connect(lambda: _STOPPING_CAPTURES.discard(self), Qt.ConnectionType.DirectConnection)
@@ -168,15 +186,17 @@ class _OwnedCapture:
             self.failed_reads = 0
             self.last_frame = monotonic()
         else:
+            # A short gap in frames is not a disconnect. Real disconnects surface through
+            # isOpened() (camera error / dead capture thread) or the caller's longer timeout.
             self.failed_reads += 1
-            if self.failed_reads >= 3 or monotonic()-self.last_frame > 1.5:
-                self.release()
         return ok, frame
 
     def release(self):
         if self.closed:
             return
         self.closed = True
+        log.warning('Camera capture released (owner=%s, error=%r, caller=%s)',
+                    type(self.owner).__name__, getattr(self.capture, 'error', None), _caller())
         try:
             self.capture.release()
         finally:

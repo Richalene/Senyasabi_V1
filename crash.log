@@ -16,3 +16,83 @@ Traceback (most recent call last):
 KeyboardInterrupt
 
 ================================================
+
+--- APPLICATION START ---
+
+--- APPLICATION START ---
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dialogs.py", line 580, in _on_sign_out
+    auth_service.clear_session()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'backend.auth_service' has no attribute 'clear_session'. Did you mean: '_clear_session'?
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<string>", line 48, in <module>
+ModuleNotFoundError: No module named 'screens'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import senyasabi.main; print('main imported successfully')
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 74, in <module>
+    from screens.startup import FittedForm
+ModuleNotFoundError: No module named 'screens'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys; sys.path.insert(0, 'senyasabi'); import main; print('main imported successfully')
+                                                 ^^^^^^^^^^^
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 76, in <module>
+    from screens.app_controller import AppController
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 8, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\auth_service.py", line 25, in <module>
+    from .database import repository as repo
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\database\__init__.py", line 1, in <module>
+    from .engine import engine
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\database\engine.py", line 1, in <module>
+    from sqlalchemy import create_engine, event
+ModuleNotFoundError: No module named 'sqlalchemy'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================

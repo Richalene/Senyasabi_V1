@@ -95,6 +95,38 @@
       "title": "Understanding & Pacing",
       "words": ["UNDERSTAND", "DONT UNDERSTAND", "KNOW", "DONT KNOW", "SLOW", "FAST"]
     }
+  ],
+  "basic_communication": [
+    {
+      "lesson_number": 1,
+      "module_code": "greeting",
+      "title": "Daily Greetings & Farewells",
+      "words": ["GOOD MORNING", "GOOD AFTERNOON", "GOOD EVENING", "HELLO", "SEE YOU TOMORROW"]
+    },
+    {
+      "lesson_number": 2,
+      "module_code": "greeting",
+      "title": "Courtesy",
+      "words": ["THANK YOU", "YOURE WELCOME"]
+    },
+    {
+      "lesson_number": 3,
+      "module_code": "greeting",
+      "title": "Introductions & Small Talk",
+      "words": ["NICE TO MEET YOU", "HOW ARE YOU", "IM FINE"]
+    },
+    {
+      "lesson_number": 4,
+      "module_code": "survival",
+      "title": "Responses & Answers",
+      "words": ["YES", "NO", "CORRECT", "WRONG"]
+    },
+    {
+      "lesson_number": 5,
+      "module_code": "survival",
+      "title": "Understanding & Pacing",
+      "words": ["UNDERSTAND", "DONT UNDERSTAND", "KNOW", "DONT KNOW", "SLOW", "FAST"]
+    }
   ]
 }
 

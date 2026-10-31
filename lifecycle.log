@@ -1,0 +1,355 @@
+
+[18:02:09] *** UI THREAD HUNG FOR 14.4s ***
+
+--- Thread 32108 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 22, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 4192 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 147, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 140, in main
+    controller = AppController()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 19, in __init__
+    self.main_menu = DashboardWindow()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 330, in __init__
+    self.ui.setupUi(self)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 27, in _ensure_cherry_bomb_font
+    QFontDatabase.addApplicationFont(font_path)
+
+[18:13:22] inference worker started
+Timeout (0:00:08)!
+Thread 0x00005f24 (most recent call first):
+  <no Python frame>
+
+Thread 0x00002ae8 (most recent call first):
+  <no Python frame>
+
+Thread 0x000042b8 (most recent call first):
+  <no Python frame>
+
+Thread 0x00008110 (most recent call first):
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 359 in wait
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\queue.py", line 180 in get
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 141 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 178 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 249 in read_frame
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 97 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00004abc (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x000051a4 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 153 in play
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 172 in _load_ref_media
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 202 in _refresh_ui
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 405 in _advance
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 389 in _on_feedback_timeout
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 109 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 143 in main
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 147 in <module>
+
+[18:20:37] inference worker started
+Timeout (0:00:08)!
+Thread 0x00007a5c (most recent call first):
+  <no Python frame>
+
+Thread 0x00001e70 (most recent call first):
+  <no Python frame>
+
+Thread 0x00003fa4 (most recent call first):
+  <no Python frame>
+
+Thread 0x00000cbc (most recent call first):
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 359 in wait
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\queue.py", line 180 in get
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 141 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 178 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 249 in read_frame
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 97 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00008f54 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00004914 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 197 in stop
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 216 in _show_completion
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 191 in _refresh_ui
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 405 in _advance
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 389 in _on_feedback_timeout
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 109 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 143 in main
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 147 in <module>
+
+[18:26:05] inference worker started
+Timeout (0:00:08)!
+Thread 0x00006f00 (most recent call first):
+  <no Python frame>
+
+Thread 0x00008e50 (most recent call first):
+  <no Python frame>
+
+Thread 0x00005650 (most recent call first):
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 359 in wait
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\queue.py", line 180 in get
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 141 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 178 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 249 in read_frame
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 97 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00006640 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x000041dc (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 207 in release
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 502 in _cleanup_resources
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 477 in _on_back
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 109 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 109 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 143 in main
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 147 in <module>
+
+[18:32:46] inference worker started
+Timeout (0:00:08)!
+Thread 0x00002954 (most recent call first):
+  <no Python frame>
+
+Thread 0x0000318c (most recent call first):
+  <no Python frame>
+
+Thread 0x00008c78 (most recent call first):
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 359 in wait
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\queue.py", line 180 in get
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 141 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 178 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 249 in read_frame
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 97 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x000065e4 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00007f98 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 207 in release
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 502 in _cleanup_resources
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 477 in _on_back
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 165 in main
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 169 in <module>
+
+[18:37:06] inference worker started
+
+[18:39:49] inference worker started
+
+[18:46:08] inference worker started
+
+[18:48:19] inference worker started
+
+[18:54:20] inference worker started
+
+[19:02:07] inference worker started
+Timeout (0:00:08)!
+Thread 0x00002154 (most recent call first):
+  <no Python frame>
+
+Thread 0x00001528 (most recent call first):
+  <no Python frame>
+
+Thread 0x000080e0 (most recent call first):
+  <no Python frame>
+
+Thread 0x00008d9c (most recent call first):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\.venv\Lib\site-packages\mediapipe\tasks\python\vision\core\base_vision_task_api.py", line 95 in _process_image_data
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\.venv\Lib\site-packages\mediapipe\tasks\python\vision\pose_landmarker.py", line 352 in detect
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\word_landmarks.py", line 136 in detect
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\word_landmarks.py", line 28 in frame_to_features
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\word_landmarks.py", line 237 in process
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 263 in read_frame
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 102 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x0000777c (most recent call first):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00008abc (most recent call first):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 218 in release
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 508 in release_video
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 515 in _cleanup_resources
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 477 in _on_back
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 428 in _on_skip
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 165 in main
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 169 in <module>
+
+[19:09:06] inference worker started
+Timeout (0:00:08)!
+Thread 0x00006660 (most recent call first):
+  <no Python frame>
+
+Thread 0x00001004 (most recent call first):
+  <no Python frame>
+
+Thread 0x000055e0 (most recent call first):
+  <no Python frame>
+
+Thread 0x000080f8 (most recent call first):
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 359 in wait
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\queue.py", line 180 in get
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 141 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\camera_service.py", line 184 in read
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 249 in read_frame
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 102 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x000067cc (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00006eb4 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 219 in release
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 508 in release_video
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 515 in _cleanup_resources
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 477 in _on_back
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 165 in main
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 169 in <module>
+
+[19:12:27] *** UI THREAD HUNG FOR 4.1s ***
+
+--- Thread 33284 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 22, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 9964 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 169, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 165, in main
+    return app.exec()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130, in notify
+    result = super().notify(receiver, event)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130, in notify
+    result = super().notify(receiver, event)
+
+[19:12:49] inference worker started
+Timeout (0:00:08)!
+Thread 0x00007408 (most recent call first):
+  <no Python frame>
+
+Thread 0x00008f4c (most recent call first):
+  <no Python frame>
+
+Thread 0x00006d7c (most recent call first):
+  <no Python frame>
+
+Thread 0x0000863c (most recent call first):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\.venv\Lib\site-packages\mediapipe\tasks\python\vision\core\base_vision_task_api.py", line 95 in _process_image_data
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\.venv\Lib\site-packages\mediapipe\tasks\python\vision\hand_landmarker.py", line 401 in detect
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\word_landmarks.py", line 136 in detect
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\word_landmarks.py", line 29 in frame_to_features
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\word_landmarks.py", line 237 in process
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\model_service.py", line 263 in read_frame
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\inference_worker.py", line 102 in _loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x00008204 (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 12 in _watchdog_loop
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012 in run
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075 in _bootstrap_inner
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032 in _bootstrap
+
+Thread 0x000026ec (most recent call first):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\media_player.py", line 219 in release
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 508 in release_video
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 515 in _cleanup_resources
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\lessons\words\word_lesson.py", line 477 in _on_back
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 130 in notify
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 165 in main
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 169 in <module>
+
+[19:21:19] inference worker started
+
+[19:21:26] inference worker started
+
+[19:46:21] inference worker started
+
+[19:46:47] inference worker started
+
+[00:14:47] inference worker started
+
+[01:22:30] *** UI THREAD HUNG FOR 8.0s ***
+
+--- Thread 26428 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 22, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 22040 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 169, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 161, in main
+    controller = AppController()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 19, in __init__
+    self.main_menu = DashboardWindow()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 330, in __init__
+    self.ui.setupUi(self)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 27, in _ensure_cherry_bomb_font
+    QFontDatabase.addApplicationFont(font_path)
+
+[01:24:49] inference worker started
+
+[22:04:22] inference worker started

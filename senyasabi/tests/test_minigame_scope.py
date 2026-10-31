@@ -46,7 +46,7 @@ class MinigameContentScopeTests(unittest.TestCase):
                 self.assertCountEqual(session.words, expected)
 
     def test_module_sessions_never_fall_back_to_global_and_alphabet_still_works(self):
-        for module_code in ("survival", "greeting", "alphabet"):
+        for module_code in ("survival", "greeting", "basic_communication", "alphabet"):
             allowed = get_words_for_module(module_code)
             for kind in CONFIG:
                 with self.subTest(module_code=module_code, kind=kind):
@@ -150,7 +150,7 @@ class MinigameNavigationScopeTests(unittest.TestCase):
 
     def test_food_back_to_main_then_minigames_ignores_food_and_preserves_learning_state(self):
         c = self.controller
-        self.open_module_from_menu("survival")
+        self.open_module_from_menu("basic_communication")
         self.module_menu_button("backBtn").click()
         self.only(c.module_map)
         c.module_map.back_button.click()
@@ -160,7 +160,7 @@ class MinigameNavigationScopeTests(unittest.TestCase):
         self.assertIs(c.minigames.stack.currentWidget(), c.minigames.menu)
         self.assertEqual(c.minigames.scope, "global")
         self.assertIsNone(c.minigames.module_code)
-        self.assertEqual(c.selected_module, "survival")
+        self.assertEqual(c.selected_module, "basic_communication")
 
     def test_global_sprint_back_returns_to_global_hub_then_main_menu(self):
         c = self.controller
@@ -178,22 +178,22 @@ class MinigameNavigationScopeTests(unittest.TestCase):
 
     def test_food_sprint_back_uses_the_captured_module_hub(self):
         c = self.controller
-        self.open_module_from_menu("survival")
+        self.open_module_from_menu("basic_communication")
         c.module_lessons.game_buttons["sprint"].click()
-        game = self.assert_game_context("sprint", "module", "survival")
+        game = self.assert_game_context("sprint", "module", "basic_communication")
         # A later learning selection must not alter an active game's return target.
-        c.selected_module = "greeting"
+        c.selected_module = "number"
         game.back_button.click()
         self.only(c.module_lessons)
-        self.assertEqual(c.module_lessons.module_code, "survival")
-        self.assertEqual(c.selected_module, "survival")
+        self.assertEqual(c.module_lessons.module_code, "basic_communication")
+        self.assertEqual(c.selected_module, "basic_communication")
         self.assertIsNone(c.minigames.game)
 
     def test_greeting_detective_then_global_detective_does_not_inherit_greeting(self):
         c = self.controller
-        self.open_module_from_menu("greeting")
+        self.open_module_from_menu("number")
         c.module_lessons.game_buttons["detective"].click()
-        game = self.assert_game_context("detective", "module", "greeting")
+        game = self.assert_game_context("detective", "module", "number")
         game.back_button.click()
         self.only(c.module_lessons)
         self.module_menu_button("menuBtn").click()
@@ -201,15 +201,15 @@ class MinigameNavigationScopeTests(unittest.TestCase):
         c.main_menu.ui.btnMinigames.click()
         c.minigames.game_buttons["detective"].click()
         game = self.assert_game_context("detective", "global", None)
-        self.assertGreater(len(game.session.pool), len(get_words_for_module("greeting")))
+        self.assertGreater(len(game.session.pool), len(get_words_for_module("number")))
         game.back_button.click()
         self.only(c.minigames)
-        self.assertEqual(c.selected_module, "greeting")
+        self.assertEqual(c.selected_module, "number")
 
     def test_repeated_global_module_switches_include_all_games_and_alphabet(self):
         c = self.controller
         for _ in range(2):
-            for module_code, kind in (("survival", "sprint"), ("greeting", "detective"), ("alphabet", "quest")):
+            for module_code, kind in (("basic_communication", "sprint"), ("number", "detective"), ("alphabet", "quest")):
                 with self.subTest(module_code=module_code, kind=kind):
                     self.open_module_from_menu(module_code)
                     c.module_lessons.game_buttons[kind].click()

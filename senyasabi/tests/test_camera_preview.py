@@ -223,6 +223,14 @@ class CameraPreviewTests(unittest.TestCase):
                        WordLessonWidget(['HELLO'], category='greeting')):
             screen._engine = Mock(read_frame=Mock(return_value=result))
             screen._on_tick()
+            if isinstance(screen, WordLessonWidget):  # inference runs in a worker thread
+                from time import sleep
+                for _ in range(200):
+                    if screen._camera_lbl.pixmap() is not None and not screen._camera_lbl.pixmap().isNull():
+                        break
+                    sleep(0.01)
+                    screen._on_tick()
+                screen._cleanup_resources('test')
             previews.append(screen._camera_lbl)
             self.assertIs(screen._ui.findChild(QLabel, 'cameraLabel'), screen._camera_lbl)
         quest = FingerSpellQuest(module_code='greeting')
