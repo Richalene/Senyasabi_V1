@@ -83,13 +83,13 @@ class UatFlowTests(unittest.TestCase):
         self.login()
         c.main_menu.ui.btnStartLearning.click()
         self.only(c.module_map)
-        food = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "survival")
+        food = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "basic_communication")
         c.module_map.hover_node(food, True)
         self.assertTrue(c.module_map.popup.isVisible())
         self.assertTrue(food.graphicsEffect().isEnabled())
         food.click()
         self.only(c.module_lessons)
-        self.assertEqual(c.selected_module, "survival")
+        self.assertEqual(c.selected_module, "basic_communication")
         self.assertFalse(c.module_map.popup.isVisible())
         from backend.model_service import ModelState
         with patch("screens.lessons.words.word_lesson._registry.status", return_value=ModelState("survival", False, "Recognition model not installed")),              patch("screens.media_player.resolve_sign_video", return_value=SimpleNamespace(available=False, local_cached_path=None, video_path=None, local_path=None)):
@@ -104,7 +104,7 @@ class UatFlowTests(unittest.TestCase):
         self.only(c.module_lessons)
         c.module_lessons.quiz_button.click()
         self.only(c.quiz)
-        self.assertEqual(c.quiz.module_code, "survival")
+        self.assertEqual(c.quiz.module_code, "basic_communication")
         while not c.quiz.session.complete:
             c.quiz.answer.setText(c.quiz.session.current.label)
             c.quiz.check_button.click()

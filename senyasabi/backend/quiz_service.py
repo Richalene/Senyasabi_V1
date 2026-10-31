@@ -6,6 +6,9 @@ from .content_service import ROOT, get_signs_for_module
 from .minigame_service import normalize
 
 
+PASSING_SCORE = 75
+
+
 @dataclass(frozen=True)
 class QuizDefinition:
     quiz_code: str
@@ -21,7 +24,7 @@ def get_quiz(module_code):
     item = next((item for item in entries if item["module_code"].casefold() == code), {})
     default_title = f"{code.replace('_', ' ').title()} Quiz"
     return QuizDefinition(item.get("quiz_code", f"{code}_quiz"), code,
-                          item.get("title", default_title), item.get("passing_score", 70))
+                          item.get("title", default_title), PASSING_SCORE)
 
 
 class QuizSession:
@@ -57,3 +60,7 @@ class QuizSession:
     @property
     def percent(self):
         return round(100 * self.score / len(self.questions)) if self.questions else 0
+
+    @property
+    def passed(self):
+        return (100 * self.score >= self.definition.passing_score * len(self.questions)) if self.questions else False

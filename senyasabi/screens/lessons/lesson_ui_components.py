@@ -1,13 +1,240 @@
 """Reusable modern Lesson UI layout matching the updated Figma design."""
 from pathlib import Path
 from PySide6.QtCore import Qt, Signal, QRectF, QTimer
-from PySide6.QtGui import QPainter, QPixmap, QColor, QPainterPath
+from PySide6.QtGui import QPainter, QPixmap, QColor, QPainterPath, QPen, QFont
 from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout,
                               QHBoxLayout, QSizePolicy)
 from screens.camera_preview import RoundedCameraPreview
 from screens.minigames.minigame_ui_components import CircularActionButton
 
 ROOT = Path(__file__).resolve().parents[2]
+
+
+class _CircularAccuracyGauge(QWidget):
+    """Circular percentage ring indicator for LessonResultsWidget."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(165, 165)
+        self._percent = 0
+
+    def set_percent(self, percent: int):
+        try:
+            import math
+            val = float(percent)
+            if not math.isfinite(val):
+                val = 0.0
+        except Exception:
+            val = 0.0
+        self._percent = max(0, min(100, int(round(val))))
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
+
+        rect = QRectF(14, 14, self.width() - 28, self.height() - 28)
+
+        # Soft inner fill
+        painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(QColor("#FFFDF0"))
+        painter.drawEllipse(rect)
+
+        # Background track ring
+        track_pen = QPen(QColor("#E2D9C8"), 15, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+        painter.setPen(track_pen)
+        painter.setBrush(Qt.BrushStyle.NoBrush)
+        painter.drawEllipse(rect)
+
+        # Progress arc starting at 12 o'clock (90 degrees), clockwise
+        if self._percent > 0:
+            arc_color = QColor("#8C9F3E") if self._percent >= 75 else QColor("#FFAE00")
+            arc_pen = QPen(arc_color, 15, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap)
+            painter.setPen(arc_pen)
+            span_angle = int(-360 * 16 * (self._percent / 100.0))
+            painter.drawArc(rect, 90 * 16, span_angle)
+
+        # Center percentage text
+        painter.setPen(QColor("#5C3B28"))
+        font = QFont("Cherry Bomb One", 26, QFont.Weight.Bold)
+        painter.setFont(font)
+        painter.drawText(rect, Qt.AlignmentFlag.AlignCenter, f"{self._percent}%")
+        painter.end()
+
+
+class LessonResultsWidget(QWidget):
+    """
+    Dedicated Accuracy Results Screen shown when a learner completes a lesson.
+    Styled consistently with SenyaSabi's quiz results screen (scores_bg.png,
+    warm amber/cream/brown palette, circular accuracy ring, and Back to Lessons button).
+    """
+    back_requested = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.resize(1920, 1080)
+        self.setObjectName("lessonResultsWidget")
+        self.hide()
+
+        self.bg_label = QLabel(self)
+        self.bg_label.setGeometry(0, 0, 1920, 1080)
+        self.bg_label.setPixmap(QPixmap(str(ROOT / "resources/img/scores_bg.png")))
+        self.bg_label.setScaledContents(True)
+
+        self.btn_close = QPushButton(self)
+        self.btn_close.setGeometry(1810, 30, 60, 60)
+        self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_icon_path = str(ROOT / "resources/img/ui/close_btn.png").replace("\\", "/")
+        self.btn_close.setStyleSheet(
+            f"QPushButton {{ background: transparent; border: none; border-image: url({close_icon_path}) 0 0 0 0 stretch stretch; }} "
+            "QPushButton:hover { transform: scale(1.1); }"
+        )
+        self.btn_close.clicked.connect(self.back_requested.emit)
+
+        # Covers baked 'Excellent!' inside the yellow blob (x: 176..1164, y: 331..511)
+        self.title_banner = QLabel("Lesson Completed!", self)
+        self.title_banner.setGeometry(160, 310, 1020, 180)
+        self.title_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_banner.setStyleSheet(
+            "QLabel {"
+            "  background-color: #FFDE59;"
+            "  color: #704833;"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            "  font-size: 82px;"
+            "  font-weight: bold;"
+            "}"
+        )
+
+        # Lesson Name subtitle neatly centered inside the lower half of the yellow blob
+        self.lbl_lesson_name = QLabel("FSL Lesson", self)
+        self.lbl_lesson_name.setGeometry(160, 480, 1020, 65)
+        self.lbl_lesson_name.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_lesson_name.setStyleSheet(
+            "QLabel {"
+            "  background-color: #FFDE59;"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 32px;"
+            "  font-weight: 800;"
+            "  color: #704833;"
+            "}"
+        )
+
+        # Aligned directly next to baked 'Score:' in scores_bg.png (y: 682..748)
+        self.lbl_score_val = QLabel("100%", self)
+        self.lbl_score_val.setGeometry(475, 640, 260, 140)
+        self.lbl_score_val.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_score_val.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            "  font-size: 80px;"
+            "  font-weight: bold;"
+            "  color: #704833;"
+            "  background: transparent;"
+            "}"
+        )
+
+        self.badge_acc = QLabel("100% Accuracy", self)
+        self.badge_acc.setGeometry(730, 676, 240, 68)
+        self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.badge_acc.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 24px;"
+            "  font-weight: 700;"
+            "  color: #2D4014;"
+            "  background-color: #BFD379;"
+            "  border-radius: 34px;"
+            "}"
+        )
+
+        self.gauge = _CircularAccuracyGauge(self)
+        self.gauge.move(1000, 625)
+
+        self.lbl_message = QLabel(
+            "Wonderful job practicing your signs! Keep up the great momentum!",
+            self,
+        )
+        self.lbl_message.setGeometry(170, 795, 980, 72)
+        self.lbl_message.setWordWrap(True)
+        self.lbl_message.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_message.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 23px;"
+            "  font-weight: 700;"
+            "  color: #5C3B28;"
+            "  background-color: rgba(255, 248, 225, 220);"
+            "  border: 2px solid #E2D9C8;"
+            "  border-radius: 24px;"
+            "  padding: 8px 24px;"
+            "}"
+        )
+
+        self.btn_back = QPushButton("Back to Lessons", self)
+        self.btn_back.setGeometry(170, 890, 380, 85)
+        self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_back.setStyleSheet(
+            "QPushButton {"
+            "  background-color: #8C9F3E;"
+            "  color: #FFFFFF;"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 30px;"
+            "  font-weight: 700;"
+            "  border-radius: 42px;"
+            "  border: none;"
+            "}"
+            "QPushButton:hover { background-color: #9DB446; }"
+            "QPushButton:pressed { background-color: #788934; }"
+        )
+        self.btn_back.clicked.connect(self.back_requested.emit)
+
+    def show_results(
+        self,
+        lesson_name: str,
+        accuracy_pct: int | float,
+        completed_count: int | None = None,
+        total_count: int | None = None,
+        message: str | None = None,
+    ):
+        try:
+            import math
+            val = float(accuracy_pct) if accuracy_pct is not None else 0.0
+            if not math.isfinite(val):
+                val = 0.0
+        except Exception:
+            val = 0.0
+        pct = max(0, min(100, int(round(val))))
+
+        clean_name = str(lesson_name or "Lesson").strip()
+        self.lbl_lesson_name.setText(clean_name)
+
+        if completed_count is not None and total_count is not None and total_count > 0:
+            self.lbl_score_val.setText(f"{completed_count}/{total_count}")
+        else:
+            self.lbl_score_val.setText(f"{pct}%")
+
+        self.badge_acc.setText(f"{pct}% Accuracy")
+        self.gauge.set_percent(pct)
+
+        if pct >= 85:
+            default_msg = "You are a natural! Amazing sign recognition accuracy in this lesson!"
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #2D4014; background-color: #BFD379; border-radius: 33px; }"
+            )
+        elif pct >= 60:
+            default_msg = "Great effort! Keep practicing these signs to build even stronger fluency!"
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFDE59; border-radius: 33px; }"
+            )
+        else:
+            default_msg = "Good start completing this lesson! Practice the signs again anytime to boost your accuracy!"
+            self.badge_acc.setStyleSheet(
+                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFE082; border: 2px solid #FFAE00; border-radius: 33px; }"
+            )
+
+        self.lbl_message.setText(message or default_msg)
+        self.show()
+        self.raise_()
 
 
 class LessonHeader(QWidget):
@@ -361,6 +588,12 @@ class ModernLessonLayout(QWidget):
         self.feedback_overlay = LessonFeedbackOverlay(self.camera_container)
         self.feedback_overlay.setGeometry(0, 0, 760, 700)
 
+        # Dedicated Lesson Accuracy Results Screen Overlay (shown on lesson completion)
+        self.results_widget = LessonResultsWidget(self)
+        self.results_widget.setGeometry(0, 0, 1920, 1080)
+        self.results_widget.hide()
+        self.results_widget.back_requested.connect(self.back_requested.emit)
+
 
     def set_target(self, word: str, category: str = "SIGN THIS WORD", progress: str = ""):
         self.lbl_target_word.setText(str(word).upper())
@@ -406,4 +639,3 @@ class ModernLessonLayout(QWidget):
             f"QPushButton {{ background: transparent; border: none; border-image: url({path}) 0 0 0 0 stretch stretch; }} "
             "QPushButton:hover { transform: scale(1.08); }"
         )
-

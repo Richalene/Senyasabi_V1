@@ -139,7 +139,7 @@ class StatisticsDashboardWindow(QWidget):
             self.ui.imgStatsChart.setPixmap(chart_pix)
 
     def _draw_spider_chart(self, module_perf_list, lesson_progress_list=None):
-        """Draw 6-axis performance spider chart across the core modules."""
+        """Draw 7-axis performance spider chart across the lesson menu lineup."""
         width, height = 450, 450
         pixmap = QPixmap(width, height)
         pixmap.fill(Qt.GlobalColor.transparent)
@@ -151,14 +151,15 @@ class StatisticsDashboardWindow(QWidget):
         cy = height / 2.0
         max_radius = min(cx, cy) - 58.0
 
-        # Clockwise 6 core modules starting from 12 o'clock
+        # Clockwise 7 lesson menu entries starting from 12 o'clock
         CORE_MODULES = [
-            ("alphabet", "Module 1"),
-            ("greeting", "Module 2"),
-            ("survival", "Module 3"),
-            ("number", "Module 4"),
-            ("days", "Module 5"),
-            ("family", "Module 6"),
+            ("alphabet", "FSL Alphabet"),
+            ("number", "Numbers"),
+            ("family", "Family Members"),
+            ("basic_communication", "Basic Communication"),
+            ("days", "Days of the Week"),
+            ("months", "Months of the Year"),
+            ("actions", "Action Words"),
         ]
         num_axes = len(CORE_MODULES)
         angles = [-math.pi / 2.0 + i * (2.0 * math.pi / num_axes) for i in range(num_axes)]
@@ -167,29 +168,59 @@ class StatisticsDashboardWindow(QWidget):
 
         # Calculate module lesson completion percentage as baseline
         completed_lessons = set()
+        progress_by_lesson = {}
         for lp in (lesson_progress_list or []):
-            if lp.get("status") == "Completed":
-                completed_lessons.add(lp.get("lesson_id"))
+            lid = lp.get("lesson_id")
+            if lid is not None:
+                progress_by_lesson[lid] = float(lp.get("completion_percentage") or 0.0)
+                if lp.get("status") == "Completed":
+                    completed_lessons.add(lid)
 
         # Fallback completion map by checking completed lessons count
         fallback_scores = {}
         if completed_lessons:
             try:
                 from backend import content_service
-                for code, _ in CORE_MODULES:
-                    lessons = content_service.list_lessons_for_module(code)
-                    if lessons:
-                        cnt = sum(1 for les in lessons if getattr(les, "lesson_id", None) in completed_lessons)
-                        fallback_scores[code] = round((cnt / len(lessons)) * 100.0, 1)
+                for code in ("alphabet", "number", "family", "greeting", "survival", "days", "basic_communication"):
+                    lessons = content_service.get_lessons_for_module(code)
+                    if not lessons:
+                        continue
+                    lesson_ids = []
+                    for idx, les in enumerate(lessons, start=1):
+                        lid = les.get("lesson_id") if isinstance(les, dict) else getattr(les, "lesson_id", None)
+                        if lid is None:
+                            order = les.get("lesson_number", idx) if isinstance(les, dict) else idx
+                            sub_code = (les.get("module_code") if isinstance(les, dict) else None) or code
+                            sub_order = order - 3 if (code == "basic_communication" and sub_code == "survival" and order > 3) else order
+                            lid = content_service.get_lesson_id(sub_code, sub_order)
+                        if lid is not None:
+                            lesson_ids.append(lid)
+                    if lesson_ids:
+                        cnt = sum(1 for lid in lesson_ids if lid in completed_lessons)
+                        if cnt > 0:
+                            fallback_scores[code] = round((cnt / len(lesson_ids)) * 100.0, 1)
             except Exception:
                 pass
 
         axes_scores = []
         for code, title in CORE_MODULES:
-            perf = perf_by_code.get(code, {})
-            score = float(perf.get("score") or 0.0)
-            if score <= 0.0 and code in fallback_scores:
-                score = float(fallback_scores[code])
+            if code in ("months", "actions"):
+                score = 0.0
+            elif code == "basic_communication":
+                direct = perf_by_code.get("basic_communication") or perf_by_code.get("communication") or {}
+                score = float(direct.get("score") or 0.0)
+                if score <= 0.0:
+                    g_score = float((perf_by_code.get("greeting") or {}).get("score") or fallback_scores.get("greeting", 0.0))
+                    s_score = float((perf_by_code.get("survival") or {}).get("score") or fallback_scores.get("survival", 0.0))
+                    if g_score > 0.0 or s_score > 0.0:
+                        score = round((g_score + s_score) / 2.0, 1)
+                    elif "basic_communication" in fallback_scores:
+                        score = float(fallback_scores["basic_communication"])
+            else:
+                perf = perf_by_code.get(code, {})
+                score = float(perf.get("score") or 0.0)
+                if score <= 0.0 and code in fallback_scores:
+                    score = float(fallback_scores[code])
             axes_scores.append((title, score))
 
         # 1. Concentric web levels (20%, 40%, 60%, 80%, 100%)
@@ -236,8 +267,10 @@ class StatisticsDashboardWindow(QWidget):
         point_pen = QPen(QColor(180, 30, 20) if has_any_score else QColor(140, 160, 90))
         point_pen.setWidthF(2.5)
 
-        font = QFont("Segoe UI", 11, QFont.Weight.Bold)
+        font = QFont("Segoe UI", 10, QFont.Weight.Bold)
         painter.setFont(font)
+        fm = painter.fontMetrics()
+        text_flags = int(Qt.AlignmentFlag.AlignCenter | Qt.TextFlag.TextWordWrap)
 
         for i, (title, score) in enumerate(axes_scores):
             capped = max(0.0, min(100.0, score))
@@ -249,17 +282,21 @@ class StatisticsDashboardWindow(QWidget):
             painter.drawEllipse(pt, 4.5, 4.5)
 
             # Axis outer text
-            label_r = max_radius + 30.0
+            label_r = max_radius + 28.0
             lx = cx + label_r * math.cos(angles[i])
             ly = cy + label_r * math.sin(angles[i])
 
             score_str = f"{int(capped)}%" if capped > 0 else "0%"
             full_text = f"{title}\n{score_str}"
 
-            label_w, label_h = 110, 40
-            label_rect = QRectF(lx - label_w / 2.0, ly - label_h / 2.0, label_w, label_h)
+            tb = fm.boundingRect(0, 0, 115, 65, text_flags, full_text)
+            label_w = max(float(tb.width()) + 8.0, 96.0)
+            label_h = max(float(tb.height()) + 4.0, 44.0)
+            rx = max(2.0, min(width - label_w - 2.0, lx - label_w / 2.0))
+            ry = max(2.0, min(height - label_h - 2.0, ly - label_h / 2.0))
+            label_rect = QRectF(rx, ry, label_w, label_h)
             painter.setPen(QColor(92, 59, 40))
-            painter.drawText(label_rect, Qt.AlignmentFlag.AlignCenter, full_text)
+            painter.drawText(label_rect, text_flags, full_text)
 
         painter.end()
         return pixmap

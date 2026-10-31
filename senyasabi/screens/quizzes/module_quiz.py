@@ -24,6 +24,137 @@ from screens.minigames.minigame_ui_components import MinigameHeader, MinigameSco
 from screens.startup import FittedForm
 
 
+class QuizRetryWidget(QWidget):
+    """
+    Encouraging quiz retry overlay shown when a learner scores below 75%.
+    Matches SenyaSabi's warm cream/amber/brown visual styling.
+    """
+    retry_requested = Signal()
+    back_requested = Signal()
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.resize(1920, 1080)
+        self.setObjectName("quizRetryWidget")
+
+        self.bg_label = QLabel(self)
+        self.bg_label.setGeometry(0, 0, 1920, 1080)
+        self.bg_label.setPixmap(QPixmap(str(ROOT / "resources/img/scores_bg.png")))
+        self.bg_label.setScaledContents(True)
+
+        self.btn_close = QPushButton(self)
+        self.btn_close.setGeometry(1810, 30, 60, 60)
+        self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        close_icon_path = str(ROOT / "resources/img/ui/close_btn.png").replace("\\", "/")
+        self.btn_close.setStyleSheet(
+            f"QPushButton {{ background: transparent; border: none; border-image: url({close_icon_path}) 0 0 0 0 stretch stretch; }} "
+            "QPushButton:hover { transform: scale(1.1); }"
+        )
+        self.btn_close.clicked.connect(self.back_requested.emit)
+
+        self.title_banner = QLabel("Not Quite Yet!", self)
+        self.title_banner.setGeometry(160, 310, 1020, 220)
+        self.title_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.title_banner.setStyleSheet(
+            "QLabel {"
+            "  background-color: #FFDE59;"
+            "  color: #704833;"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            "  font-size: 92px;"
+            "  font-weight: bold;"
+            "}"
+        )
+
+        self.lbl_score_val = QLabel("0/5", self)
+        self.lbl_score_val.setGeometry(475, 580, 300, 130)
+        self.lbl_score_val.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_score_val.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            "  font-size: 80px;"
+            "  font-weight: bold;"
+            "  color: #704833;"
+            "  background: transparent;"
+            "}"
+        )
+
+        self.badge_acc = QLabel("0% Score", self)
+        self.badge_acc.setGeometry(740, 610, 240, 68)
+        self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.badge_acc.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 24px;"
+            "  font-weight: 700;"
+            "  color: #5C3B28;"
+            "  background-color: #FFE082;"
+            "  border: 2.5px solid #FFAE00;"
+            "  border-radius: 34px;"
+            "}"
+        )
+
+        self.lbl_message = QLabel(
+            "You need at least 75% to pass. Review the signs and try again!",
+            self,
+        )
+        self.lbl_message.setGeometry(165, 710, 960, 80)
+        self.lbl_message.setWordWrap(True)
+        self.lbl_message.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.lbl_message.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 26px;"
+            "  font-weight: 700;"
+            "  color: #5C3B28;"
+            "  background-color: rgba(255, 248, 225, 220);"
+            "  border: 2px solid #E2D9C8;"
+            "  border-radius: 24px;"
+            "  padding: 10px 24px;"
+            "}"
+        )
+
+        self.btn_retry = QPushButton("Try Again", self)
+        self.btn_retry.setGeometry(170, 815, 340, 85)
+        self.btn_retry.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_retry.setStyleSheet(
+            "QPushButton {"
+            "  background-color: #FFAE00;"
+            "  color: #5C3B28;"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 30px;"
+            "  font-weight: 700;"
+            "  border-radius: 42px;"
+            "  border: none;"
+            "}"
+            "QPushButton:hover { background-color: #FFBE33; }"
+            "QPushButton:pressed { background-color: #E69D00; }"
+        )
+        self.btn_retry.clicked.connect(self.retry_requested.emit)
+
+        self.btn_back = QPushButton("Back to Lessons", self)
+        self.btn_back.setGeometry(540, 815, 340, 85)
+        self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_back.setStyleSheet(
+            "QPushButton {"
+            "  background-color: #FFFDF0;"
+            "  color: #704833;"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 26px;"
+            "  font-weight: 700;"
+            "  border-radius: 42px;"
+            "  border: 3.5px solid #D5C9A9;"
+            "}"
+            "QPushButton:hover { background-color: #FFF8E7; border-color: #B8A783; }"
+            "QPushButton:pressed { background-color: #F5ECCE; }"
+        )
+        self.btn_back.clicked.connect(self.back_requested.emit)
+
+    def set_score(self, score: int, total: int, percent: int | None = None):
+        pct = round(100 * score / total) if (percent is None and total > 0) else (percent or 0)
+        self.lbl_score_val.setText(f"{score}/{total}")
+        self.badge_acc.setText(f"{int(pct)}%")
+
+
 class ModuleQuiz(GameCanvas):
     back_requested = Signal()
 
@@ -238,6 +369,13 @@ class ModuleQuiz(GameCanvas):
         self.score_widget.close_requested.connect(self.back_requested.emit)
         self.score_widget.replay_requested.connect(self.restart_quiz)
 
+        # Retry Screen overlay (shown when score < 75%)
+        self.retry_widget = QuizRetryWidget(self)
+        self.retry_widget.setGeometry(0, 0, 1920, 1080)
+        self.retry_widget.hide()
+        self.retry_widget.retry_requested.connect(self.restart_quiz)
+        self.retry_widget.back_requested.connect(self.back_requested.emit)
+
         self._fitted_form = FittedForm(self)
         self.render()
         install_page_menu(self)
@@ -288,6 +426,7 @@ class ModuleQuiz(GameCanvas):
     def restart_quiz(self):
         self.session = QuizSession(self.module_code)
         self.score_widget.hide()
+        self.retry_widget.hide()
         self.card.show()
         self.render()
 
@@ -303,17 +442,25 @@ class ModuleQuiz(GameCanvas):
             btn.setEnabled(not self.session.complete)
 
         if self.session.complete:
-            self.video.stop()
             self.scroll.hide()
             self.video.hide()
             self.card.hide()
-            self.score_widget.set_score(self.session.score, len(self.session.questions))
-            self.score_widget.show()
+            total = len(self.session.questions)
+            pct = self.session.percent
+            if self.session.passed:
+                self.retry_widget.hide()
+                self.score_widget.set_score(self.session.score, total)
+                self.score_widget.show()
+            else:
+                self.score_widget.hide()
+                self.retry_widget.set_score(self.session.score, total, pct)
+                self.retry_widget.show()
             self._record_progress()
             return
 
         self.card.show()
         self.score_widget.hide()
+        self.retry_widget.hide()
         total_q = len(self.session.questions)
         self.progress.setText(f"Question {self.session.index + 1} of {total_q}")
 
@@ -349,11 +496,9 @@ class ModuleQuiz(GameCanvas):
                         token = self._play_token
                         QTimer.singleShot(0, lambda t=token: self._play_if_ready(t))
                 else:
-                    self.video.stop()
                     self.video.hide()
                     self.scroll.show()
             except Exception:
-                self.video.stop()
                 self.video.hide()
                 self.scroll.show()
 
@@ -450,7 +595,7 @@ class ModuleQuiz(GameCanvas):
                             score=self.session.score,
                             max_score=len(self.session.questions),
                             percentage=float(self.session.percent),
-                            passed=(self.session.percent >= self.session.definition.passing_score),
+                            passed=self.session.passed,
                         )
         except Exception:
             pass
@@ -475,5 +620,5 @@ class ModuleQuiz(GameCanvas):
 
     def hideEvent(self, event):
         if hasattr(self, "video") and self.video is not None:
-            self.video.stop()
+            self.video.pause()
         super().hideEvent(event)

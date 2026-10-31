@@ -68,6 +68,7 @@ class CameraPracticeSession:
     state: SessionState = field(default=SessionState.WAITING, init=False)
     _hold: int = field(default=0, init=False)
     _grace: int = field(default=0, init=False)
+    _confidences: List[float] = field(default_factory=list, init=False)
 
     # ---- queries --------------------------------------------------------
     @property
@@ -89,7 +90,30 @@ class CameraPracticeSession:
         return self.state is SessionState.DONE
 
     def score_percent(self) -> int:
-        return int(self.score / self.total * 100) if self.total else 0
+        if not self.total:
+            return 0
+        try:
+            pct = int(round((self.score / self.total) * 100.0))
+        except Exception:
+            pct = 0
+        return max(0, min(100, pct))
+
+    def accuracy_percent(self) -> int:
+        """Overall lesson recognition accuracy (0-100), safe against empty/NaN data."""
+        if not self.total:
+            return 0
+        if self._confidences and len(self._confidences) == self.score and self.score > 0:
+            try:
+                import math
+                valid = [float(c) for c in self._confidences if c is not None and math.isfinite(float(c))]
+                if valid:
+                    avg_conf = sum(valid) / len(valid)
+                    completion_ratio = self.score / self.total
+                    pct = int(round(avg_conf * 100.0 * completion_ratio))
+                    return max(0, min(100, pct))
+            except Exception:
+                pass
+        return self.score_percent()
 
     # ---- input ------------------------------------------------------------
     def process_prediction(self, label: str, confidence: float) -> Event:
@@ -105,6 +129,13 @@ class CameraPracticeSession:
             self._grace = 0
             if self._hold >= self.hold_frames:
                 self.score += 1
+                try:
+                    import math
+                    val = float(confidence)
+                    if math.isfinite(val):
+                        self._confidences.append(max(0.0, min(1.0, val)))
+                except Exception:
+                    pass
                 self.state = SessionState.FEEDBACK
                 return Event.CORRECT
             return Event.HOLDING
@@ -138,6 +169,7 @@ class CameraPracticeSession:
         self.state = SessionState.WAITING
         self._hold = 0
         self._grace = 0
+        self._confidences.clear()
 
 
 @dataclass
