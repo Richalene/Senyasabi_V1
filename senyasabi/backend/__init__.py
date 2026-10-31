@@ -8,6 +8,12 @@ server and scripts can import backend.* without loading them.
 from importlib import import_module
 from typing import TYPE_CHECKING
 
+# Import version from parent package
+try:
+    from .. import __version__
+except ImportError:
+    __version__ = "1.0.0"
+
 _LAZY = {
     "SignRecognitionEngine": ".recognition_engine",
     "HandLandmarkExtractor": ".recognition_engine",

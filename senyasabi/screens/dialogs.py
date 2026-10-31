@@ -2,13 +2,14 @@
 Shared dialogs matching wireframe specifications:
 - WaitConfirmDialog (Pages 90 & 91)
 - ComingSoonDialog (Page 26)
+- ErrorDialog (General error display for user-facing errors)
 """
 from pathlib import Path
 from PySide6.QtCore import Qt, Signal, QRectF, QPointF
 from PySide6.QtGui import QFontDatabase, QColor, QPainter, QPen, QBrush, QPainterPath
 from PySide6.QtWidgets import (
     QApplication, QDialog, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
-    QGraphicsDropShadowEffect
+    QGraphicsDropShadowEffect, QTextEdit
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -593,3 +594,125 @@ class MenuCalloutPopup(QWidget):
             pos = self.anchor.mapToGlobal(self.anchor.rect().bottomLeft())
             self.move(pos.x() - self.width() + self.anchor.width() + 14, pos.y() + 6)
             self.show()
+
+
+class ErrorDialog(QDialog):
+    """
+    General error dialog for user-facing errors.
+    - Amber/yellow pill container with 'Error' in Cherry Bomb One
+    - Error message with optional details
+    - 'OK' button to dismiss
+    """
+    def __init__(self, title: str = "Error", message: str = "", details: str = "", parent: QWidget | None = None):
+        super().__init__(parent)
+        _ensure_font()
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.resize(680, 400)
+
+        # Main backdrop container
+        container = QWidget(self)
+        container.setGeometry(0, 0, 680, 400)
+        container.setStyleSheet(
+            "background-color: #FFFDF0; "
+            "border: 4px solid #E57373; "
+            "border-radius: 40px;"
+        )
+
+        shadow = QGraphicsDropShadowEffect(container)
+        shadow.setColor(QColor(0, 0, 0, 60))
+        shadow.setBlurRadius(30)
+        shadow.setOffset(0, 8)
+        container.setGraphicsEffect(shadow)
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(40, 36, 40, 36)
+        layout.setSpacing(18)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Title Pill Banner
+        title_banner = QWidget(container)
+        title_banner.setFixedHeight(80)
+        title_banner.setStyleSheet(
+            "background-color: #FF6B6B; "
+            "border-radius: 35px; "
+            "border: none;"
+        )
+        banner_layout = QHBoxLayout(title_banner)
+        banner_layout.setContentsMargins(0, 0, 0, 0)
+        banner_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        lbl_title = QLabel(title, title_banner)
+        lbl_title.setStyleSheet(
+            "font-family: 'Cherry Bomb One', cursive, sans-serif; "
+            "font-size: 48px; "
+            "color: #FFFFFF; "
+            "background: transparent;"
+        )
+        banner_layout.addWidget(lbl_title)
+        layout.addWidget(title_banner)
+
+        # Message Text
+        lbl_msg = QLabel(message, container)
+        lbl_msg.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        lbl_msg.setWordWrap(True)
+        lbl_msg.setStyleSheet(
+            "font-family: 'Segoe UI', sans-serif; "
+            "font-size: 18px; "
+            "color: #4F3222; "
+            "background: transparent;"
+        )
+        layout.addWidget(lbl_msg)
+
+        # Details (if provided)
+        if details:
+            details_box = QTextEdit(container)
+            details_box.setPlainText(details)
+            details_box.setReadOnly(True)
+            details_box.setMaximumHeight(100)
+            details_box.setStyleSheet(
+                "QTextEdit { "
+                "  font-family: 'Segoe UI', sans-serif; "
+                "  font-size: 12px; "
+                "  color: #666666; "
+                "  background-color: #F5F5F5; "
+                "  border: 1px solid #DDDDDD; "
+                "  border-radius: 8px; "
+                "  padding: 8px; "
+                "}"
+            )
+            layout.addWidget(details_box)
+
+        # OK Button
+        btn_ok = QPushButton("OK", container)
+        btn_ok.setFixedSize(160, 55)
+        btn_ok.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_ok.setStyleSheet(
+            "QPushButton { "
+            "  font-family: 'Cherry Bomb One', cursive, sans-serif; "
+            "  font-size: 28px; "
+            "  color: #4F3222; "
+            "  background-color: #BFD379; "
+            "  border-radius: 30px; "
+            "  border: none; "
+            "} "
+            "QPushButton:hover { "
+            "  background-color: #ADC362; "
+            "}"
+        )
+        btn_ok.clicked.connect(self.accept)
+        layout.addWidget(btn_ok)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        parent = self.parentWidget()
+        if parent:
+            top = parent.window()
+            if top:
+                self.move(top.geometry().center() - self.rect().center())
+
+
+def show_error_dialog(title: str, message: str, details: str = "", parent: QWidget | None = None):
+    """Convenience function to show an error dialog."""
+    dialog = ErrorDialog(title, message, details, parent)
+    dialog.exec()

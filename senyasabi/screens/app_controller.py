@@ -1,12 +1,12 @@
 import logging
 from PySide6.QtWidgets import QLineEdit
 
-from screens.auth import login as dev_config
 from screens.auth.login import LoginScreen
 from screens.auth.register import RegisterScreen
 from screens.startup import WelcomeScreen, LandingScreen
 from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
 from backend import auth_service
+from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY
 
 
 class AppController:
@@ -35,8 +35,6 @@ class AppController:
         self.main_menu.logout_requested.connect(self.logout)
         self.main_menu.camera_settings_requested.connect(self.show_camera_settings)
 
-        self.login.dev_login_requested.connect(self.dev_login)
-        self.register.dev_login_requested.connect(self.dev_login)
         self.login.continue_requested.connect(self.login_user)
         self.login.register_requested.connect(self.show_register)
         self.login.back_requested.connect(self.show_landing)
@@ -79,18 +77,6 @@ class AppController:
         if hasattr(self.register, 'confirm_password_input'):
             self.register.confirm_password_input.clear()
 
-    def dev_login(self):
-        if not dev_config.DEV_MODE:
-            return
-        # TEMPORARY: use the existing in-memory session; never persist a dev account.
-        auth_service._current_user = {
-            "user_id": "dev-session", "username": "dev",
-            "display_name": "Dev User", "email": "dev@example.invalid",
-            "notifications_enabled": False, "dark_mode": False,
-        }
-        self._clear_passwords()
-        self.show_main_menu()
-
     def login_user(self):
         screen = self.login
         if screen.loading.busy:
@@ -104,14 +90,18 @@ class AppController:
             auth_service.establish_session(user)
             self.show_main_menu()
 
-        screen.loading.run(
-            lambda: auth_service.authenticate_user(identifier, password, establish_session=False),
-            signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
-            message="Signing you in…", controls=self._auth_controls(screen))
-
-    @staticmethod
-    def _auth_controls(screen):
-        return (screen._ui, screen.dev_button) if hasattr(screen, "dev_button") else (screen._ui,)
+        # In production, use Supabase anon key authentication directly
+        # In development, use FastAPI backend
+        if PRODUCTION:
+            screen.loading.run(
+                lambda: auth_service.authenticate_with_supabase(identifier, password, establish_session=False),
+                signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
+                message="Signing you in…", controls=(screen._ui,))
+        else:
+            screen.loading.run(
+                lambda: auth_service.authenticate_user(identifier, password, establish_session=False),
+                signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
+                message="Signing you in…", controls=(screen._ui,))
 
     @staticmethod
     def _auth_failed(screen, error, action):
@@ -167,7 +157,7 @@ class AppController:
 
         screen.loading.run(lambda: auth_service.register_user(username, email, password, name),
                            registered, lambda error: self._auth_failed(screen, error, "create your account"),
-                           message="Creating your account…", controls=self._auth_controls(screen))
+                           message="Creating your account…", controls=(screen._ui,))
 
     def logout(self):
         self.login.loading.cancel()
@@ -368,3 +358,75 @@ class AppController:
             self.show_main_menu()
         else:
             self.show_module_choices(self.minigames.module_code)
+
+    def test_connection(self) -> dict:
+        """
+        Test connection to Supabase and FastAPI backend.
+        
+        Returns:
+            Dict with 'supabase' (bool), 'fastapi' (bool), 'message' (str)
+        """
+        logger = logging.getLogger(__name__)
+        result = {
+            "supabase": False,
+            "fastapi": False,
+            "message": ""
+        }
+        
+        # Test Supabase connection
+        if PRODUCTION and SUPABASE_URL and SUPABASE_ANON_KEY:
+            try:
+                import requests
+                # Test Supabase health endpoint
+                response = requests.get(f"{SUPABASE_URL}/rest/v1/", 
+                                      headers={"apikey": SUPABASE_ANON_KEY},
+                                      timeout=5)
+                result["supabase"] = response.status_code in (200, 401)  # 401 means server is reachable
+                if result["supabase"]:
+                    logger.info("Supabase connection test passed")
+                else:
+                    logger.warning("Supabase connection test failed: %s", response.status_code)
+            except requests.exceptions.Timeout:
+                logger.warning("Supabase connection test timed out")
+                result["message"] = "Supabase connection timed out"
+            except requests.exceptions.ConnectionError:
+                logger.warning("Supabase connection test failed: connection error")
+                result["message"] = "Could not connect to Supabase"
+            except Exception as e:
+                logger.warning("Supabase connection test error: %s", e)
+                result["message"] = f"Supabase connection error: {str(e)}"
+        else:
+            logger.info("Skipping Supabase connection test (not in production or not configured)")
+            result["supabase"] = None  # Not applicable
+        
+        # Test FastAPI backend connection (if configured)
+        try:
+            from backend.config import FASTAPI_HOST, FASTAPI_PORT, API_BASE_URL
+            import requests
+            api_url = API_BASE_URL or f"http://{FASTAPI_HOST}:{FASTAPI_PORT}"
+            response = requests.get(f"{api_url}/health", timeout=5)
+            result["fastapi"] = response.status_code == 200
+            if result["fastapi"]:
+                logger.info("FastAPI connection test passed")
+            else:
+                logger.warning("FastAPI connection test failed: %s", response.status_code)
+        except requests.exceptions.Timeout:
+            logger.warning("FastAPI connection test timed out")
+            if not result["message"]:
+                result["message"] = "FastAPI connection timed out"
+        except requests.exceptions.ConnectionError:
+            logger.warning("FastAPI connection test failed: connection error")
+            if not result["message"]:
+                result["message"] = "Could not connect to FastAPI backend"
+        except Exception as e:
+            logger.warning("FastAPI connection test error: %s", e)
+            if not result["message"]:
+                result["message"] = f"FastAPI connection error: {str(e)}"
+        
+        # Set overall message if both failed
+        if not result["supabase"] and not result["fastapi"] and not result["message"]:
+            result["message"] = "Could not connect to any backend service"
+        elif result["supabase"] or result["fastapi"]:
+            result["message"] = "Connection successful"
+        
+        return result

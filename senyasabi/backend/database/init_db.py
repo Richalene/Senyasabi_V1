@@ -10,9 +10,13 @@ This module handles:
 from pathlib import Path
 import shutil
 import sqlite3
+import logging
 
 from ..config import DATABASE_PATH
 from .session import engine, Base
+from .migrations import run_migrations, get_migration_status
+
+logger = logging.getLogger(__name__)
 
 SCHEMA_VERSION = 2
 
@@ -61,7 +65,7 @@ def initialize_database(force_rebuild: bool = False):
     Args:
         force_rebuild: If True, will delete and recreate the database even if it exists.
     """
-    print(f"Initializing database at: {DATABASE_PATH}")
+    logger.info("Initializing database at: %s", DATABASE_PATH)
 
     # Ensure directory exists
     ensure_database_directory()
@@ -69,23 +73,33 @@ def initialize_database(force_rebuild: bool = False):
     # Check if database already exists
     db_path = Path(DATABASE_PATH)
     if db_path.exists() and not force_rebuild:
-        print("Database already exists. Skipping initialization.")
+        logger.info("Database already exists. Running migrations...")
+        migration_result = run_migrations()
+        if migration_result["success"]:
+            logger.info("Migrations completed: %d applied", migration_result["applied"])
+        else:
+            logger.warning("Some migrations failed: %d applied, %d failed", 
+                         migration_result["applied"], migration_result["failed"])
         return
 
     # Delete existing database if forcing rebuild
     if db_path.exists() and force_rebuild:
         db_path.unlink()
-        print("Deleted existing database for rebuild.")
+        logger.info("Deleted existing database for rebuild.")
 
     # Run schema to create tables
-    print("Creating database schema...")
+    logger.info("Creating database schema...")
     run_schema_sql()
 
+    # Run initial migration
+    logger.info("Running initial migration...")
+    run_migrations()
+
     # Seed initial content version
-    print("Seeding initial data...")
+    logger.info("Seeding initial data...")
     seed_initial_data()
 
-    print("Database initialization complete.")
+    logger.info("Database initialization complete.")
 
 
 def seed_initial_data():

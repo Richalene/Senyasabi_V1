@@ -22,11 +22,17 @@ from .api.leaderboard import router as leaderboard_router
 from .api.packages import router as packages_router
 from .api.auth import router as auth_router
 
+# Import version from parent package
+try:
+    from .. import __version__
+except ImportError:
+    __version__ = "1.0.0"
+
 # Create FastAPI app
 app = FastAPI(
     title="SenyaSabi API",
     description="Backend API for SenyaSabi sign language learning app",
-    version="1.0.0",
+    version=__version__,
     docs_url="/docs",
     redoc_url="/redoc"
 )
@@ -65,7 +71,7 @@ async def root():
     """Root endpoint with API information."""
     return {
         "name": "SenyaSabi API",
-        "version": "1.0.0",
+        "version": __version__,
         "docs": "/docs",
         "status": "PostgreSQL integration in progress"
     }

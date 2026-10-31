@@ -21,6 +21,7 @@ datas = [
     (str(senyasabi_root / "resources" / "videos"), "resources/videos"),
     (str(senyasabi_root / "ui" / "designer"), "ui/designer"),
     (str(senyasabi_root / "ui" / "generated"), "ui/generated"),
+    (str(senyasabi_root / ".env.example"), "."),
 ]
 
 # MediaPipe modules data

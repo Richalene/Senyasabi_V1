@@ -170,11 +170,23 @@ def get_credential_store() -> CredentialStore | InMemoryCredentialStore:
     """
     Get the appropriate credential store instance.
 
+    In production mode, requires secure credential store (keyring).
+    In development mode, falls back to in-memory store if keyring unavailable.
+
     Returns:
         CredentialStore if keyring is available, InMemoryCredentialStore otherwise
+        
+    Raises:
+        RuntimeError: If in production mode and keyring is not available
     """
     if CredentialStore.is_available():
         return CredentialStore
     else:
-        print("Using in-memory credential store (NOT SECURE - for development only)")
+        from .config import PRODUCTION
+        if PRODUCTION:
+            raise RuntimeError(
+                "Secure credential store (keyring) is required for production mode. "
+                "Please install keyring: pip install keyring"
+            )
+        print("WARNING: Using in-memory credential store (NOT SECURE - for development only)")
         return InMemoryCredentialStore

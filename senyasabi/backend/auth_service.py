@@ -20,6 +20,9 @@ from .config import (
     OFFLINE_AUTH_LOCKOUT_MINUTES,
     OFFLINE_AUTH_MAX_DAYS,
     OFFLINE_AUTH_MAX_FAILED_ATTEMPTS,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    PRODUCTION,
 )
 from .credential_store import get_credential_store
 from .database import repository as repo
@@ -29,6 +32,7 @@ __all__ = [
     "AuthError", "NetworkError", "User", "UserRepository",
     "InMemoryUserRepository", "SQLiteUserRepository",
     "register_user", "authenticate_user", "authenticate_offline",
+    "authenticate_with_supabase",
     "establish_session", "logout_user", "get_current_user", "get_access_token",
 ]
 
@@ -167,6 +171,134 @@ def _apply_tokens(user_id: uuid.UUID, tokens: dict) -> None:
 
 
 # ── registration ──────────────────────────────────────────────────────────────
+
+def authenticate_with_supabase(identifier: str, password: str, *, establish_session: bool = True) -> dict:
+    """Authenticate directly with Supabase using anon key for distributed builds.
+    
+    This calls Supabase auth endpoints directly, bypassing the FastAPI backend.
+    Used in production distributed builds where the client has the anon key.
+    
+    Args:
+        identifier: Email address (Supabase auth requires email)
+        password: User password
+        establish_session: Whether to establish the session after authentication
+        
+    Returns:
+        User profile dict with session tokens
+        
+    Raises:
+        AuthError: If authentication fails
+        NetworkError: If Supabase is unreachable
+        RuntimeError: If Supabase configuration is missing
+    """
+    global _current_user
+    if establish_session:
+        _clear_session()
+    
+    identifier = (identifier or "").strip()
+    if not identifier or not password:
+        raise AuthError("Email and password are required.")
+    
+    # For Supabase auth, we need an email. If identifier doesn't contain @, 
+    # we need to look up the email from local SQLite first
+    if "@" not in identifier:
+        with session_scope() as db:
+            user = repo.get_user_by_username(db, identifier)
+            if not user:
+                raise AuthError("User not found. Please use your email to sign in.")
+            identifier = user.email or ""
+            if not identifier or "@" not in identifier:
+                raise AuthError("User has no email address. Please contact support.")
+    
+    # Validate Supabase configuration
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        raise RuntimeError("Supabase URL and ANON_KEY must be configured for distributed authentication.")
+    
+    # Validate HTTPS in production
+    if PRODUCTION and not SUPABASE_URL.startswith("https://"):
+        raise RuntimeError("HTTPS is required for Supabase in production mode.")
+    
+    import requests
+    
+    # Call Supabase auth endpoint directly
+    auth_url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
+    headers = {
+        "apikey": SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+    }
+    
+    payload = {
+        "email": identifier,
+        "password": password,
+    }
+    
+    try:
+        response = requests.post(auth_url, json=payload, headers=headers, timeout=10)
+    except requests.exceptions.Timeout:
+        raise NetworkError("Connection to Supabase timed out. Please check your internet connection.") from None
+    except requests.exceptions.ConnectionError:
+        raise NetworkError("Could not connect to Supabase. Please check your internet connection.") from None
+    except requests.exceptions.RequestException as e:
+        raise NetworkError(f"Network error connecting to Supabase: {str(e)}") from e
+    
+    if response.status_code >= 500:
+        raise NetworkError(f"Supabase server error: {response.status_code}")
+    
+    if response.status_code >= 400:
+        try:
+            error_data = response.json()
+            error_msg = error_data.get("error_description") or error_data.get("message", "Authentication failed")
+        except (ValueError, KeyError):
+            error_msg = "Authentication failed"
+        raise AuthError(error_msg)
+    
+    data = response.json()
+    
+    # Extract user data from Supabase response
+    user_data = data.get("user", {})
+    access_token = data.get("access_token")
+    refresh_token = data.get("refresh_token")
+    expires_in = data.get("expires_in", 3600)  # Default 1 hour
+    
+    if not access_token or not refresh_token:
+        raise AuthError("Invalid response from Supabase: missing tokens")
+    
+    # Convert to our internal format
+    user_id = user_data.get("id")
+    if not user_id:
+        raise AuthError("Invalid response from Supabase: missing user ID")
+    
+    # Store in SQLite for offline support
+    uid = uuid.UUID(user_id)
+    verifier = _hasher.hash(password)
+    
+    with session_scope() as db:
+        # Get user metadata
+        metadata = user_data.get("user_metadata", {})
+        username = metadata.get("username") or user_data.get("email", "").split("@")[0]
+        email = user_data.get("email", "")
+        display_name = metadata.get("display_name") or username
+        
+        user = repo.upsert_user(db, uid, username, email, display_name)
+        repo.upsert_offline_auth(db, uid, verifier, _utcnow())
+        public = _public_user(user)
+    
+    # Store tokens
+    tokens = {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_at": time.time() + expires_in,
+    }
+    
+    if establish_session:
+        _current_user = dict(public)
+        _apply_tokens(uid, tokens)
+    else:
+        _pending_tokens[str(uid)] = dict(tokens)
+    
+    return dict(public)
+
 
 def register_user(username, email, password, display_name=None) -> dict:
     username = (username or "").strip()
@@ -335,10 +467,15 @@ def _restore_session(user_id: uuid.UUID) -> None:
         return
     try:
         data = auth_client.refresh(token)
-    except NetworkError:
+    except NetworkError as e:
+        logging.getLogger(__name__).debug("Failed to refresh token (network): %s", e)
         return                                   # still offline; try again on next token request
-    except AuthError:
+    except AuthError as e:
+        logging.getLogger(__name__).warning("Failed to refresh token (auth): %s", e)
         store.delete_refresh_token(str(user_id))  # revoked/expired: password login needed
+        return
+    except Exception as e:
+        logging.getLogger(__name__).exception("Unexpected error refreshing token: %s", e)
         return
     _apply_tokens(user_id, data["session"])
 

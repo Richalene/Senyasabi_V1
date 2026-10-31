@@ -111,7 +111,70 @@ $env:PYTHONPATH="senyasabi;.venv/Lib/site-packages"
 
 ---
 
-## 7. Packaging as a Windows Executable
+## 7. Distributed Production Builds
+
+For distributed releases, SenyaSabi uses Supabase for authentication and backend services. The application requires the following environment variables to be configured:
+
+### Required Environment Variables
+
+Create a `.env` file in the application directory or set these environment variables:
+
+```bash
+# Supabase Configuration (Required for distributed builds)
+SUPABASE_URL=https://your-project.supabase.co
+SUPABASE_ANON_KEY=your-anon-key-here
+
+# FastAPI Backend Configuration (Optional - for development)
+FASTAPI_HOST=127.0.0.1
+FASTAPI_PORT=8000
+API_BASE_URL=http://127.0.0.1:8000
+
+# Production Mode
+PRODUCTION=true  # Set to 'true' for distributed builds
+
+# Database Configuration (Local SQLite cache)
+SENYASABI_DB=senyasabi/resources/data/senyasabi.db
+```
+
+### Security Notes
+
+- **SUPABASE_ANON_KEY**: This is a public key intended for client-side use. It is safe to include in distributed builds.
+- **SUPABASE_SERVICE_ROLE_KEY**: Never include this in distributed builds. It should only be used server-side.
+- **HTTPS**: In production mode (`PRODUCTION=true`), the application enforces HTTPS for all Supabase and API connections.
+
+### Authentication Flow
+
+1. Users authenticate with Supabase using their email and password
+2. JWT access tokens are obtained and stored securely in the OS credential store (keyring)
+3. The API client uses these tokens for authenticated requests to the FastAPI backend
+4. Offline mode is supported with local SQLite caching and sync queue
+
+### Offline Support
+
+- The application maintains a local SQLite cache for offline operation
+- Progress, quiz attempts, and minigame scores are queued when offline
+- Data automatically syncs to the server when connection is restored
+- A connection status indicator shows online/offline state in the UI
+
+### Connection Testing
+
+The application includes a connection test function (`AppController.test_connection()`) that verifies connectivity to:
+
+1. **Supabase**: Tests if the Supabase backend is reachable (production mode only)
+2. **FastAPI Backend**: Tests if the local FastAPI backend is running
+
+The test returns a dictionary with connection status for each service and an overall message. This can be used in setup wizards or diagnostic tools to verify configuration.
+
+### Error Handling
+
+- User-facing errors are displayed using the `ErrorDialog` class in `screens/dialogs.py`
+- Network errors are caught and logged with appropriate fallback behavior
+- Authentication errors provide clear user feedback
+- Offline mode gracefully degrades functionality while preserving local data
+
+---
+
+## 8. Packaging as a Windows Executable
 
 The project includes a standalone PyInstaller configuration (`senyasabi.spec`) that bundles all models, fonts, styles, Qt Designer UI files, and video assets into a distributable Windows executable:
 
@@ -121,4 +184,16 @@ pyinstaller senyasabi.spec
 ```
 
 The compiled standalone executable and asset bundle will be generated in `dist/SenyaSabi/SenyaSabi.exe`.
+
+### Distributed Build Checklist
+
+Before creating a distributed build:
+
+1. ✅ Remove DEV_MODE authentication (completed)
+2. ✅ Configure production environment variables
+3. ✅ Set `PRODUCTION=true` in environment
+4. ✅ Ensure Supabase URL and anon key are configured
+5. ✅ Verify HTTPS enforcement is active
+6. ✅ Test offline mode functionality
+7. ✅ Verify credential store (keyring) availability on target platform
 

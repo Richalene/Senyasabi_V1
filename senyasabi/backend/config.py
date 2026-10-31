@@ -72,6 +72,34 @@ FASTAPI_PORT = int(os.getenv("FASTAPI_PORT", "8000"))
 FASTAPI_DEBUG = os.getenv("FASTAPI_DEBUG", "false").lower() == "true"
 API_BASE_URL = os.getenv("API_BASE_URL", f"http://{FASTAPI_HOST}:{FASTAPI_PORT}")
 
+# ---- Production Mode -------------------------------------------------
+PRODUCTION = os.getenv("SENAYASABI_ENV", "development") == "production"
+
+
+def validate_production_config():
+    """Validate required configuration for distributed production builds.
+    
+    Raises:
+        RuntimeError: If required configuration is missing in production mode.
+    """
+    if not PRODUCTION:
+        # In development, skip validation
+        return
+    
+    required = {
+        "SUPABASE_URL": SUPABASE_URL,
+        "SUPABASE_ANON_KEY": SUPABASE_ANON_KEY,
+    }
+    
+    missing = [k for k, v in required.items() if not v]
+    if missing:
+        raise RuntimeError(
+            f"SenyaSabi is not properly configured for production.\n\n"
+            f"Missing required environment variables:\n"
+            f"{', '.join(missing)}\n\n"
+            f"Please set these in your environment or .env file before running."
+        )
+
 # ---- Sync --------------------------------------------------------------
 SYNC_BATCH_SIZE = 10
 SYNC_MAX_RETRIES = 3

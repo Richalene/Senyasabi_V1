@@ -10,6 +10,60 @@ from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QWidget
 ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
 
 
+class ConnectionStatusIndicator(QLabel):
+    """Small indicator showing online/offline connection status."""
+    
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(16, 16)
+        self.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self._update_status(True)  # Default to online
+        self._setup_listener()
+    
+    def _setup_listener(self):
+        """Register as a listener for connection status changes."""
+        try:
+            from backend.api_client import add_connection_status_listener, is_online
+            add_connection_status_listener(self._on_status_changed)
+            # Set initial status
+            self._update_status(is_online())
+        except Exception:
+            # If backend import fails, assume online (fallback)
+            self._update_status(True)
+    
+    def _on_status_changed(self, online: bool):
+        """Handle connection status change."""
+        self._update_status(online)
+    
+    def _update_status(self, online: bool):
+        """Update the indicator appearance based on status."""
+        if online:
+            self.setToolTip("Online - Connected to server")
+            self.setStyleSheet("""
+                ConnectionStatusIndicator {
+                    background: #4CAF50;
+                    border: 2px solid #388E3C;
+                    border-radius: 8px;
+                }
+            """)
+        else:
+            self.setToolTip("Offline - Working without connection")
+            self.setStyleSheet("""
+                ConnectionStatusIndicator {
+                    background: #FF5722;
+                    border: 2px solid #E64A19;
+                    border-radius: 8px;
+                }
+            """)
+        self.update()
+
+
+ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
+
+
+ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
+
+
 @lru_cache(maxsize=8)
 def _artwork(name, trim=False):
     source = QPixmap(str(ASSETS / name))
@@ -142,7 +196,7 @@ class StreakDisplay(QWidget):
 class SenyaSabiHeader(QWidget):
     """Optional shared controls anchored to the fitted Figma canvas, never the desktop."""
 
-    def __init__(self, parent=None, *, show_back=False, show_streak=True, show_menu=True):
+    def __init__(self, parent=None, *, show_back=False, show_streak=True, show_menu=True, show_connection_status=False):
         super().__init__(parent)
         self.setProperty("ownsGeometry", True)
         self.setObjectName("senyasabiHeader")
@@ -153,6 +207,7 @@ class SenyaSabiHeader(QWidget):
         self.menu_button = AssetButton(parent=self) if show_menu else None
         if self.menu_button is not None:
             self.menu_button.setObjectName('menuBtn')
+        self.connection_indicator = ConnectionStatusIndicator(self) if show_connection_status else None
         self._positions = []
         cursor = 0
         if self.back_button is not None:
@@ -161,6 +216,9 @@ class SenyaSabiHeader(QWidget):
         if self.streak is not None:
             self._positions.append((self.streak, QRectF(cursor, 8, 406, 122)))
             cursor += 406
+        if self.connection_indicator is not None:
+            # Place connection indicator in the top-right corner of the header
+            self._positions.append((self.connection_indicator, QRectF(cursor - 20, 8, 16, 16)))
         if self.menu_button is not None:
             # Account for the PNGs' transparent export margins when spacing their art.
             cursor -= 6 if self.streak is not None else 0

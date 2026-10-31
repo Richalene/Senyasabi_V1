@@ -229,15 +229,22 @@ RADAR_MAX = 100.0
 
 def get_dashboard_stats(user_id):
     """Raw data from SQLite; anonymous previews use safe defaults."""
+    logger = logging.getLogger(__name__)
     if user_id is None:
         return DefaultDashboardRepository().get_dashboard_stats(None)
     from backend import progress_sync
-    progress_sync.pull_user_progress()  # best effort; falls back to the local cache
+    try:
+        progress_sync.pull_user_progress()  # best effort; falls back to the local cache
+    except Exception as e:
+        logger.warning("Failed to pull user progress from server: %s", e)
     defaults = DefaultDashboardRepository().get_dashboard_stats(user_id)
     try:
         data = _repository.get_dashboard_stats(user_id) or {}
     except (OSError, ConnectionError, TimeoutError) as error:
-        logging.getLogger(__name__).warning("Statistics unavailable: %s", error)
+        logger.warning("Statistics unavailable due to network/IO error: %s", error)
+        return defaults
+    except Exception as error:
+        logger.exception("Unexpected error loading dashboard statistics: %s", error)
         return defaults
     for key, value in data.items():
         if key in defaults and isinstance(defaults[key], dict) and isinstance(value, dict):

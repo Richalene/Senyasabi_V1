@@ -11,6 +11,7 @@ import threading
 import uuid
 from datetime import datetime, timedelta, timezone
 import concurrent.futures
+import requests
 
 from sqlalchemy import func
 
@@ -144,8 +145,14 @@ class SyncedLeaderboardRepository:
         from backend.api_client import get_api_client
         try:
             payload = get_api_client().get_leaderboard(board_code)
+        except requests.exceptions.Timeout:
+            _log.warning("Leaderboard fetch timed out for %s", board_code)
+            return None
+        except requests.exceptions.ConnectionError:
+            _log.warning("Leaderboard fetch connection failed for %s", board_code)
+            return None
         except Exception as error:  # network/serialisation problems -> cache fallback
-            _log.warning("Leaderboard fetch failed: %s", error)
+            _log.warning("Leaderboard fetch failed for %s: %s", board_code, error)
             return None
         return payload if isinstance(payload, dict) and "entries" in payload else None
 

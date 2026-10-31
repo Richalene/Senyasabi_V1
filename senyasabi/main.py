@@ -1,12 +1,34 @@
 import os
 import sys
 import traceback
+import logging
+from pathlib import Path
 
 try:
     import faulthandler
     faulthandler.enable()
 except Exception:
     pass
+
+
+def setup_logging():
+    """Configure application logging for distributed builds."""
+    log_dir = Path.home() / ".senyasabi" / "logs"
+    try:
+        log_dir.mkdir(parents=True, exist_ok=True)
+    except Exception:
+        # Fallback to current directory if home directory is not accessible
+        log_dir = Path.cwd() / "logs"
+        log_dir.mkdir(exist_ok=True)
+    
+    logging.basicConfig(
+        level=logging.INFO,
+        format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+        handlers=[
+            logging.FileHandler(log_dir / "senyasabi.log"),
+            logging.StreamHandler()
+        ]
+    )
 
 def _excepthook(exc_type, exc_value, exc_tb):
     tb = "".join(traceback.format_exception(exc_type, exc_value, exc_tb))
@@ -43,12 +65,14 @@ if sys.platform == "win32":
 
 from PySide6.QtCore import QEvent, QTimer, Qt
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QApplication, QWidget
+from PySide6.QtWidgets import QApplication, QWidget, QMessageBox
 
 from screens.startup import FittedForm
 
 from screens.app_controller import AppController
 from backend import initialize_database
+from backend.config import validate_production_config
+from backend.api_client import start_connection_monitoring
 
 
 class SenyaSabiApplication(QApplication):
@@ -102,12 +126,36 @@ class SenyaSabiApplication(QApplication):
 
 
 def main() -> int:
+    # Setup logging first
+    setup_logging()
+    
+    # Validate configuration for distributed builds
+    try:
+        validate_production_config()
+    except RuntimeError as e:
+        # If Qt is not initialized yet, show a simple console error
+        if QApplication.instance() is None:
+            print(f"Configuration Error: {e}", file=sys.stderr)
+            return 1
+        # Qt is available, show dialog
+        QMessageBox.critical(
+            None,
+            "Configuration Error",
+            f"SenyaSabi is not properly configured.\n\n{str(e)}",
+            QMessageBox.StandardButton.Ok
+        )
+        return 1
+    
     # Initialize SQLite database on startup
     initialize_database()
 
     app = QApplication.instance() or SenyaSabiApplication(sys.argv)
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
+    
+    # Start connection monitoring for offline mode indicator
+    start_connection_monitoring(interval=30)
+    
     controller.show_welcome()
     return app.exec()      
 

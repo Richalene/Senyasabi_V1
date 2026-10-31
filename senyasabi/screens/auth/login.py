@@ -8,28 +8,10 @@ from screens.loading import LoadingOverlay
 from screens.startup import FittedForm
 
 
-# TEMPORARY: disable before distributing a production build.
-DEV_MODE = True
-
-
-def add_dev_button(screen):
-    if not DEV_MODE:
-        return
-    button = QPushButton("DEV \u2192", screen)
-    button.setObjectName("devLoginButton")
-    button.setToolTip("Development session only")
-    button.setGeometry(12, 12, 66, 28)
-    button.setStyleSheet("font-size: 11px; padding: 3px 8px;")
-    button.clicked.connect(lambda: screen.dev_login_requested.emit() if DEV_MODE else None)
-    button.raise_()
-    screen.dev_button = button
-
-
 _UI_FILE = Path(__file__).resolve().parents[2] / "ui" / "designer" / "login.ui"
 
 
 class LoginScreen(QWidget):
-    dev_login_requested = Signal()
     continue_requested = Signal()
     register_requested = Signal()
     back_requested = Signal()
@@ -98,8 +80,6 @@ class LoginScreen(QWidget):
         back_btn = self._ui.findChild(QPushButton, "backButton")
         if back_btn:
             back_btn.clicked.connect(self.back_requested)
-
-        add_dev_button(self)
 
         self.loading = LoadingOverlay(self)
         self._fitted_form = FittedForm(self)

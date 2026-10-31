@@ -11,10 +11,11 @@ This client handles communication with the FastAPI backend:
 import os
 import time
 import requests
-from typing import Optional, Dict, Any, List
+import threading
+from typing import Optional, Dict, Any, List, Callable
 from dataclasses import dataclass
 
-from .config import FASTAPI_HOST, FASTAPI_PORT
+from .config import FASTAPI_HOST, FASTAPI_PORT, SUPABASE_ANON_KEY, PRODUCTION
 
 
 @dataclass
@@ -39,6 +40,10 @@ class APIClient:
             base_url = f"http://{FASTAPI_HOST}:{FASTAPI_PORT}"
             config = APIConfig(base_url=base_url)
         
+        # Validate HTTPS in production
+        if PRODUCTION and not config.base_url.startswith("https://"):
+            raise RuntimeError("HTTPS is required for API in production mode.")
+        
         self.config = config
         self.access_token: Optional[str] = None
         self.is_online = True
@@ -53,14 +58,26 @@ class APIClient:
         self.access_token = None
     
     def _get_headers(self) -> Dict[str, str]:
-        """Get headers for API requests."""
+        """Get headers for API requests.
+        
+        For distributed builds using anon key:
+        - JWT token in Authorization header for authenticated endpoints
+        - Anon key in apikey header for public endpoints
+        """
         headers = {
             "Content-Type": "application/json"
         }
+        
+        # Add anon key for all requests (public endpoints need it)
+        if SUPABASE_ANON_KEY:
+            headers["apikey"] = SUPABASE_ANON_KEY
+        
+        # Add JWT token for authenticated requests
         from . import auth_service  # lazy: auth_service never imports api_client
         token = auth_service.get_access_token() or self.access_token
         if token:
             headers["Authorization"] = f"Bearer {token}"
+        
         return headers
     
     def _request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict]:
@@ -88,9 +105,26 @@ class APIClient:
                     **kwargs
                 )
                 response.raise_for_status()
+                # Mark online on successful request
+                if not self.is_online:
+                    self.is_online = True
+                    _notify_connection_status(True)
                 return response.json()
                 
             except requests.exceptions.RequestException as e:
+                # Distinguish network failures from HTTP errors
+                is_network_error = isinstance(e, (
+                    requests.exceptions.ConnectionError,
+                    requests.exceptions.Timeout,
+                    requests.exceptions.TooManyRedirects
+                ))
+                
+                if is_network_error:
+                    # Network failure indicates offline
+                    if self.is_online:
+                        self.is_online = False
+                        _notify_connection_status(False)
+                
                 if attempt < self.config.max_retries - 1:
                     delay = self.config.retry_delay * (2 ** attempt)
                     print(f"Request failed (attempt {attempt + 1}), retrying in {delay}s: {e}")
@@ -329,3 +363,116 @@ def set_api_client(client: APIClient):
     """Set the global API client instance."""
     global _api_client
     _api_client = client
+
+
+# Connection Status Monitoring System
+_connection_status_listeners: List[Callable[[bool], None]] = []
+_listeners_lock = threading.Lock()
+_current_online_status: bool = True
+_status_check_interval: int = 30  # seconds
+_status_check_timer: Optional[threading.Timer] = None
+
+
+def add_connection_status_listener(callback: Callable[[bool], None]) -> None:
+    """Add a callback to be notified when connection status changes.
+    
+    Args:
+        callback: Function that takes a boolean (True=online, False=offline)
+    """
+    with _listeners_lock:
+        _connection_status_listeners.append(callback)
+
+
+def remove_connection_status_listener(callback: Callable[[bool], None]) -> None:
+    """Remove a connection status listener.
+    
+    Args:
+        callback: The callback function to remove
+    """
+    with _listeners_lock:
+        if callback in _connection_status_listeners:
+            _connection_status_listeners.remove(callback)
+
+
+def _notify_connection_status_change(online: bool) -> None:
+    """Notify all listeners of connection status change."""
+    with _listeners_lock:
+        listeners = list(_connection_status_listeners)
+    for callback in listeners:
+        try:
+            callback(online)
+        except Exception:
+            pass  # Don't let one listener failure break others
+
+
+def _check_connection_status() -> None:
+    """Check current connection status and notify listeners if changed."""
+    global _current_online_status, _status_check_timer
+    
+    try:
+        client = get_api_client()
+        was_online = _current_online_status
+        is_online = client.check_online()
+        
+        if was_online != is_online:
+            _current_online_status = is_online
+            _notify_connection_status(is_online)
+    except Exception:
+        # If check fails, assume offline
+        if _current_online_status:
+            _current_online_status = False
+            _notify_connection_status(False)
+    
+    # Schedule next check
+    _status_check_timer = threading.Timer(_status_check_interval, _check_connection_status)
+    _status_check_timer.daemon = True
+    _status_check_timer.start()
+
+
+def start_connection_monitoring(interval: int = 30) -> None:
+    """Start background connection status monitoring.
+    
+    Args:
+        interval: Check interval in seconds (default: 30)
+    """
+    global _status_check_interval, _status_check_timer
+    
+    _status_check_interval = interval
+    
+    # Stop existing timer if running
+    if _status_check_timer is not None:
+        _status_check_timer.cancel()
+    
+    # Start new monitoring
+    _check_connection_status()
+
+
+def stop_connection_monitoring() -> None:
+    """Stop background connection status monitoring."""
+    global _status_check_timer
+    
+    if _status_check_timer is not None:
+        _status_check_timer.cancel()
+        _status_check_timer = None
+
+
+def is_online() -> bool:
+    """Get current connection status.
+    
+    Returns:
+        True if online, False if offline
+    """
+    return _current_online_status
+
+
+def get_connection_status() -> Dict[str, Any]:
+    """Get detailed connection status information.
+    
+    Returns:
+        Dict with 'online' (bool), 'queue_size' (int)
+    """
+    client = get_api_client()
+    return {
+        "online": _current_online_status,
+        "queue_size": client.get_queue_size(),
+    }
