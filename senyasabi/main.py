@@ -72,7 +72,8 @@ from screens.startup import FittedForm
 from screens.app_controller import AppController
 from backend import initialize_database
 from backend.config import validate_production_config
-from backend.api_client import start_connection_monitoring
+from backend.api_client import start_connection_monitoring, add_connection_status_listener
+from backend.score_service import flush_pending_async
 
 
 class SenyaSabiApplication(QApplication):
@@ -154,6 +155,7 @@ def main() -> int:
     app.aboutToQuit.connect(controller.shutdown)
     
     # Start connection monitoring for offline mode indicator
+    add_connection_status_listener(lambda online: flush_pending_async() if online else None)
     start_connection_monitoring(interval=30)
     
     controller.show_welcome()

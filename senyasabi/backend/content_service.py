@@ -19,7 +19,6 @@ from .recognition_labels import normalize_label
 
 logger = logging.getLogger(__name__)
 
-MODULE_CODES = ("greeting", "survival", "number", "days", "family")
 ROOT = Path(__file__).resolve().parents[1]
 DATASET_PATH = config.DATA_DIR / "expected_dataset.md"
 LABELS_PATH = config.DATA_DIR / "105labels.json"
@@ -30,9 +29,9 @@ DATASET_MODULE_CODES = {
     "The Manual Alphabet": ALPHABET,
     "Numbers": "number",
     "Family Members": "family",
-    "Basic Communication": "communication",
+    "Basic Communication": "greeting",
     "Days of the Week": "days",
-    "Months of the Year": "months",
+    "Calendar": "calendar",
     "Action Words": "actions",
 }
 MODULE_CODES = tuple(c for c in DATASET_MODULE_CODES.values() if c != ALPHABET)  # word modules
@@ -199,6 +198,9 @@ class ContentRepository(Protocol):
 
 
 class BundledContentRepository:
+    def get_modules(self): 
+        return list(_load_modules())
+
     def get_signs(self, module_code):
         if module_code == "alphabet":
             return [SignRecord("alphabet", char.lower(), char, char)
@@ -314,14 +316,19 @@ def _load_module_lessons() -> dict[str, list[dict]]:
             {"lesson_number": 1, "title": "Daily Greetings & Farewells", "words": ["GOOD MORNING", "GOOD AFTERNOON", "GOOD EVENING", "HELLO", "SEE YOU TOMORROW"]},
             {"lesson_number": 2, "title": "Courtesy", "words": ["THANK YOU", "YOURE WELCOME"]},
             {"lesson_number": 3, "title": "Introductions & Small Talk", "words": ["NICE TO MEET YOU", "HOW ARE YOU", "IM FINE"]},
+            {"lesson_number": 4, "title": "Responses & Answers", "words": ["YES", "NO", "CORRECT", "WRONG"]},
+            {"lesson_number": 5, "title": "Understanding & Pacing", "words": ["UNDERSTAND", "DONT UNDERSTAND", "KNOW", "DONT KNOW", "SLOW", "FAST"]},
         ],
         "days": [
             {"lesson_number": 1, "title": "Days of the Week", "words": ["MONDAY", "TUESDAY", "WEDNESDAY", "THURSDAY", "FRIDAY", "SATURDAY", "SUNDAY"]},
             {"lesson_number": 2, "title": "Relative Days", "words": ["TODAY", "TOMORROW", "YESTERDAY"]},
         ],
-        "survival": [
-            {"lesson_number": 1, "title": "Responses & Answers", "words": ["YES", "NO", "CORRECT", "WRONG"]},
-            {"lesson_number": 2, "title": "Understanding & Pacing", "words": ["UNDERSTAND", "DONT UNDERSTAND", "KNOW", "DONT KNOW", "SLOW", "FAST"]},
+        "calendar": [
+            {"lesson_number": 1, "title": "First Six Months", "words": ["JANUARY", "FEBRUARY", "MARCH", "APRIL", "MAY", "JUNE"]},
+            {"lesson_number": 2, "title": "Last Six Months", "words": ["JULY", "AUGUST", "SEPTEMBER", "OCTOBER", "NOVEMBER", "DECEMBER"]},
+        ],
+        "actions": [
+            {"lesson_number": 1, "title": "Action Words", "words": []},
         ],
     }
 

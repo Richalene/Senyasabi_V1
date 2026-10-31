@@ -1,5 +1,5 @@
-from pathlib import Path
 # This Python file uses the following encoding: utf-8
+from pathlib import Path
 import sys
 
 import math
@@ -177,7 +177,7 @@ class StatisticsDashboardWindow(QWidget):
             try:
                 from backend import content_service
                 for code, _ in CORE_MODULES:
-                    lessons = content_service.list_lessons_for_module(code)
+                    lessons = content_service.get_lessons_for_module(code)
                     if lessons:
                         cnt = sum(1 for les in lessons if getattr(les, "lesson_id", None) in completed_lessons)
                         fallback_scores[code] = round((cnt / len(lessons)) * 100.0, 1)

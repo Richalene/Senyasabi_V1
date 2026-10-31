@@ -232,14 +232,12 @@ def get_dashboard_stats(user_id):
     logger = logging.getLogger(__name__)
     if user_id is None:
         return DefaultDashboardRepository().get_dashboard_stats(None)
-    from backend import progress_sync
-    try:
-        progress_sync.pull_user_progress()  # best effort; falls back to the local cache
-    except Exception as e:
-        logger.warning("Failed to pull user progress from server: %s", e)
+    from backend.api_client import get_api_client
     defaults = DefaultDashboardRepository().get_dashboard_stats(user_id)
     try:
-        data = _repository.get_dashboard_stats(user_id) or {}
+        # server-first, SQLite fallback (offline-aware)
+        data, _from_server = get_api_client().get_dashboard(user_id, _repository.get_dashboard_stats)
+        data = data or {}
     except (OSError, ConnectionError, TimeoutError) as error:
         logger.warning("Statistics unavailable due to network/IO error: %s", error)
         return defaults

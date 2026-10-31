@@ -88,8 +88,10 @@ class AppController:
 
         def signed_in(user):
             auth_service.establish_session(user)
+            from backend.score_service import flush_pending_async
+            flush_pending_async()          # anything queued while offline last session
             self.show_main_menu()
-
+            
         # In production, use Supabase anon key authentication directly
         # In development, use FastAPI backend
         if PRODUCTION:

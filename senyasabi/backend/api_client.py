@@ -8,15 +8,19 @@ This client handles communication with the FastAPI backend:
 - Online/offline detection
 - Request queuing when offline
 """
-import os
+import logging
 import time
 import requests
 import threading
-from typing import Optional, Dict, Any, List, Callable
+from typing import Optional, Dict, Any, List, Callable, Tuple
 from dataclasses import dataclass
 
-from .config import FASTAPI_HOST, FASTAPI_PORT, SUPABASE_ANON_KEY, PRODUCTION
+from .config import API_BASE_URL, SUPABASE_ANON_KEY, PRODUCTION
 
+log = logging.getLogger(__name__)
+
+OFFLINE_TIMEOUT = 4            # one quick probe while offline
+OFFLINE_PROBE_INTERVAL = 15    # seconds between probes while offline
 
 @dataclass
 class APIConfig:
@@ -37,18 +41,23 @@ class APIClient:
     def __init__(self, config: Optional[APIConfig] = None):
         """Initialize API client."""
         if config is None:
-            base_url = f"http://{FASTAPI_HOST}:{FASTAPI_PORT}"
-            config = APIConfig(base_url=base_url)
-        
-        # Validate HTTPS in production
+            config = APIConfig(base_url=API_BASE_URL.rstrip("/"))
         if PRODUCTION and not config.base_url.startswith("https://"):
             raise RuntimeError("HTTPS is required for API in production mode.")
-        
+
         self.config = config
         self.access_token: Optional[str] = None
-        self.is_online = True
-        self.offline_queue: List[Dict] = []
-    
+        self.offline_queue: List[Dict] = []   # compat only; the durable queue is SQLite sync_queue
+        self._last_offline_probe = float("-inf")
+
+    @property
+    def is_online(self) -> bool:
+        return _current_online_status
+
+    @is_online.setter
+    def is_online(self, value: bool) -> None:
+        _set_online(bool(value))
+
     def set_access_token(self, token: str):
         """Set the Supabase access token for authentication."""
         self.access_token = token
@@ -81,67 +90,50 @@ class APIClient:
         return headers
     
     def _request(self, method: str, endpoint: str, **kwargs) -> Optional[Dict]:
+        """Parsed JSON, or None when offline / rejected / failing.
+
+        Offline: at most one short probe every OFFLINE_PROBE_INTERVAL seconds, so
+        callers get their SQLite fallback immediately instead of waiting on timeouts.
         """
-        Make an HTTP request with retry logic.
-        
-        Args:
-            method: HTTP method (GET, POST, etc.)
-            endpoint: API endpoint path
-            **kwargs: Additional arguments for requests
-            
-        Returns:
-            Response JSON or None on failure
-        """
+        if not self.is_online:
+            now = time.monotonic()
+            if now - self._last_offline_probe < OFFLINE_PROBE_INTERVAL:
+                return None
+            self._last_offline_probe = now
+        attempts = self.config.max_retries if self.is_online else 1
+        timeout = self.config.timeout if self.is_online else OFFLINE_TIMEOUT
         url = f"{self.config.base_url}{endpoint}"
-        headers = self._get_headers()
-        
-        for attempt in range(self.config.max_retries):
+
+        for attempt in range(attempts):
+            headers = self._get_headers()          # fresh token each attempt
             try:
-                response = requests.request(
-                    method,
-                    url,
-                    headers=headers,
-                    timeout=self.config.timeout,
-                    **kwargs
-                )
-                response.raise_for_status()
-                # Mark online on successful request
-                if not self.is_online:
-                    self.is_online = True
-                    _notify_connection_status(True)
+                response = requests.request(method, url, headers=headers,
+                                            timeout=timeout, **kwargs)
+            except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
+                    requests.exceptions.TooManyRedirects) as error:
+                log.warning("API unreachable (%s %s): %s", method, endpoint, error)
+                _set_online(False)
+                return None
+            except requests.exceptions.RequestException as error:
+                log.warning("API request failed (%s %s): %s", method, endpoint, error)
+                return None
+
+            _set_online(True)                       # the server answered
+            if response.status_code >= 500:
+                if attempt < attempts - 1:
+                    time.sleep(self.config.retry_delay * (2 ** attempt))
+                    continue
+                log.warning("API %s %s -> %s", method, endpoint, response.status_code)
+                return None
+            if response.status_code >= 400:         # retrying a 4xx never helps
+                log.warning("API %s %s -> %s", method, endpoint, response.status_code)
+                return None
+            try:
                 return response.json()
-                
-            except requests.exceptions.RequestException as e:
-                # Distinguish network failures from HTTP errors
-                is_network_error = isinstance(e, (
-                    requests.exceptions.ConnectionError,
-                    requests.exceptions.Timeout,
-                    requests.exceptions.TooManyRedirects
-                ))
-                
-                if is_network_error:
-                    # Network failure indicates offline
-                    if self.is_online:
-                        self.is_online = False
-                        _notify_connection_status(False)
-                
-                if attempt < self.config.max_retries - 1:
-                    delay = self.config.retry_delay * (2 ** attempt)
-                    print(f"Request failed (attempt {attempt + 1}), retrying in {delay}s: {e}")
-                    time.sleep(delay)
-                else:
-                    print(f"Request failed after {self.config.max_retries} attempts: {e}")
-                    # Queue request if offline
-                    if not self.is_online:
-                        self.offline_queue.append({
-                            "method": method,
-                            "endpoint": endpoint,
-                            "kwargs": kwargs
-                        })
-                    return None
-        
+            except ValueError:
+                return None
         return None
-    
+        
     def check_online(self) -> bool:
         """
         Check if the API is accessible.
@@ -150,15 +142,35 @@ class APIClient:
             True if online, False otherwise
         """
         try:
-            response = requests.get(
-                f"{self.config.base_url}/health",
-                timeout=5
-            )
-            self.is_online = response.status_code == 200
-            return self.is_online
+            ok = requests.get(f"{self.config.base_url}/health", timeout=5).status_code == 200
         except requests.exceptions.RequestException:
-            self.is_online = False
-            return False
+            ok = False
+        _set_online(ok)
+        return ok
+
+    # offline fallback 
+    def request_with_fallback(self, method: str, endpoint: str, local_reader: Callable[[], Any],
+                              **kwargs) -> Tuple[Any, bool]:
+        """Server first; SQLite (via local_reader) when offline or the call fails.
+        Returns (data, from_server)."""
+        data = self._request(method, endpoint, **kwargs)
+        if data is not None:
+            return data, True
+        return local_reader(), False
+
+    def get_progress_snapshot(self) -> Optional[Dict]:
+        return self._request("GET", "/api/v1/progress/me/snapshot")
+
+    def get_dashboard(self, user_id, local_reader: Callable[[Any], Dict]) -> Tuple[Dict, bool]:
+        """Online: merge the server snapshot + content delta into SQLite, then read SQLite.
+        Offline: skip straight to SQLite. Returns (dashboard_data, synced_from_server)."""
+        from . import progress_sync   # lazy: avoids an import cycle
+        synced = False
+        try:
+            synced = bool(progress_sync.pull_user_progress())   # False when offline / no session
+        except Exception as error:
+            log.warning("Progress pull failed, using local cache: %s", error)
+        return local_reader(user_id), synced
     
     # Content sync methods
     def sync_content(self, since_version: int = 0) -> Optional[Dict]:
@@ -183,7 +195,7 @@ class APIClient:
         return self._request("GET", "/api/v1/content/version")
     
     # Progress sync methods
-    def upload_sync(self, user_id: int, sync_items: List[Dict]) -> Optional[Dict]:
+    def upload_sync(self, user_id: str, sync_items: List[Dict]) -> Optional[Dict]:
         """
         Upload progress and attempts to server.
         
@@ -371,7 +383,17 @@ _listeners_lock = threading.Lock()
 _current_online_status: bool = True
 _status_check_interval: int = 30  # seconds
 _status_check_timer: Optional[threading.Timer] = None
+_monitoring: bool = False
 
+
+def _set_online(online: bool) -> None:
+    """Single place that flips state; notifies listeners only on a change."""
+    global _current_online_status
+    changed = online != _current_online_status
+    _current_online_status = online
+    if changed:
+        log.info("Connection status: %s", "online" if online else "offline")
+        _notify_connection_status_change(online)
 
 def add_connection_status_listener(callback: Callable[[bool], None]) -> None:
     """Add a callback to be notified when connection status changes.
@@ -406,28 +428,15 @@ def _notify_connection_status_change(online: bool) -> None:
 
 
 def _check_connection_status() -> None:
-    """Check current connection status and notify listeners if changed."""
-    global _current_online_status, _status_check_timer
-    
+    global _status_check_timer
     try:
-        client = get_api_client()
-        was_online = _current_online_status
-        is_online = client.check_online()
-        
-        if was_online != is_online:
-            _current_online_status = is_online
-            _notify_connection_status(is_online)
+        get_api_client().check_online()      # updates state + notifies on change
     except Exception:
-        # If check fails, assume offline
-        if _current_online_status:
-            _current_online_status = False
-            _notify_connection_status(False)
-    
-    # Schedule next check
-    _status_check_timer = threading.Timer(_status_check_interval, _check_connection_status)
-    _status_check_timer.daemon = True
-    _status_check_timer.start()
-
+        _set_online(False)
+    if _monitoring:
+        _status_check_timer = threading.Timer(_status_check_interval, _check_connection_status)
+        _status_check_timer.daemon = True
+        _status_check_timer.start()
 
 def start_connection_monitoring(interval: int = 30) -> None:
     """Start background connection status monitoring.
@@ -435,23 +444,21 @@ def start_connection_monitoring(interval: int = 30) -> None:
     Args:
         interval: Check interval in seconds (default: 30)
     """
-    global _status_check_interval, _status_check_timer
-    
+    global _status_check_interval, _status_check_timer, _monitoring
     _status_check_interval = interval
-    
-    # Stop existing timer if running
     if _status_check_timer is not None:
         _status_check_timer.cancel()
-    
-    # Start new monitoring
-    _check_connection_status()
-
+    _monitoring = True
+    # first probe off the UI thread: startup must not wait on /health
+    threading.Thread(target=_check_connection_status, daemon=True, name="conn-monitor").start()
 
 def stop_connection_monitoring() -> None:
     """Stop background connection status monitoring."""
     global _status_check_timer
+    global _monitoring
     
     if _status_check_timer is not None:
+        _monitoring = False
         _status_check_timer.cancel()
         _status_check_timer = None
 

@@ -1,0 +1,14 @@
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AttributeError: 'AppController' object has no attribute 'dev_login'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AttributeError: 'AppController' object has no attribute 'dev_login'
+
+================================================

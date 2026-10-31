@@ -43,7 +43,7 @@ class SyncResponse(BaseModel):
 
 
 @router.post("/upload")
-async def upload_sync(request: SyncRequest):
+async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_user_id)):
     """
     Upload client progress and attempts for synchronization.
     
@@ -73,28 +73,20 @@ async def upload_sync(request: SyncRequest):
                 processed += 1
                 
                 try:
-                    if item.entity_type == "quiz_attempt":
-                        # Handle quiz attempt upsert
-                        success = upsert_quiz_attempt(db, request.user_id, item)
-                    elif item.entity_type == "minigame_attempt":
-                        # Handle minigame attempt upsert
-                        success = upsert_minigame_attempt(db, request.user_id, item)
-                    elif item.entity_type == "lesson_progress":
-                        # Handle lesson progress with smart merge
-                        success = upsert_lesson_progress(db, request.user_id, item)
-                    else:
-                        failed += 1
-                        continue
-                    
-                    if success:
-                        succeeded += 1
-                    else:
-                        failed += 1
-                    
+                    handler = {"quiz_attempt": upsert_quiz_attempt,
+                               "minigame_attempt": upsert_minigame_attempt,
+                               "lesson_progress": upsert_lesson_progress}.get(item.entity_type)
+                    with db.begin_nested():       # savepoint: one bad item can't abort the batch
+                        success = bool(handler and handler(db, user_id, item))
+                    succeeded += success
+                    failed += not success
                 except Exception as e:
                     failed += 1
                     print(f"Error processing sync item: {e}")
-            
+
+            db.execute(text("SELECT public.refresh_user_statistics(:u)"), {"u": user_id})
+            db.commit()
+
             return SyncResponse(
                 processed=processed,
                 succeeded=succeeded,
@@ -181,6 +173,7 @@ def upsert_quiz_attempt(db, user_id: str, item: SyncItem) -> bool:
     max_score = data.get("max_score", 100)
     camera_accuracy = data.get("camera_accuracy")
     mc_accuracy = data.get("mc_accuracy")
+    duration_seconds = data.get("duration_seconds")
     
     # Recompute percentage
     percentage = (score / max_score * 100) if max_score > 0 else 0
@@ -188,16 +181,17 @@ def upsert_quiz_attempt(db, user_id: str, item: SyncItem) -> bool:
     # Recompute passed from percentage and quiz passing score
     quiz_passing_score = get_quiz_passing_score_for_quiz(db, quiz_id)
     passed = percentage >= quiz_passing_score if quiz_passing_score else False
+    attempt_id = data.get("attempt_id") or item.client_id
     
     result = db.execute(text("""
-        INSERT INTO quiz_attempts (
-            user_id, quiz_id, started_at, completed_at,
-            score, max_score, percentage, passed,
+        INSERT INTO public.quiz_attempts (
+            attempt_id, user_id, quiz_id, started_at, completed_at,
+            score, max_score, percentage, passed, duration_seconds
             camera_accuracy, mc_accuracy
         )
         VALUES (
-            :user_id, :quiz_id, :started_at, :completed_at,
-            :score, :max_score, :percentage, :passed,
+            :id, :user_id, :quiz_id, :started_at, :completed_at,
+            :score, :max_score, :percentage, :passed, ;duration_seconds
             :camera_accuracy, :mc_accuracy
         )
         ON CONFLICT (user_id, quiz_id, started_at) DO UPDATE SET
@@ -206,10 +200,12 @@ def upsert_quiz_attempt(db, user_id: str, item: SyncItem) -> bool:
             max_score = EXCLUDED.max_score,
             percentage = EXCLUDED.percentage,
             passed = EXCLUDED.passed,
+            duration_seconds = EXCLUDED.duration_seconds,
             camera_accuracy = EXCLUDED.camera_accuracy,
             mc_accuracy = EXCLUDED.mc_accuracy
         RETURNING attempt_id
     """), {
+        "id": attempt_id,
         "user_id": user_id,
         "quiz_id": quiz_id,
         "started_at": started_at,
@@ -218,6 +214,7 @@ def upsert_quiz_attempt(db, user_id: str, item: SyncItem) -> bool:
         "max_score": max_score,
         "percentage": percentage,
         "passed": passed,
+        "duration_seconds": duration_seconds,
         "camera_accuracy": camera_accuracy,
         "mc_accuracy": mc_accuracy
     })
@@ -234,32 +231,24 @@ def upsert_minigame_attempt(db, user_id: str, item: SyncItem) -> bool:
     score = data.get("score", 0)
     duration_seconds = data.get("duration_seconds")
     accuracy = data.get("accuracy")
-    
+    attempt_id = data.get("game_attempt_id") or item.client_id
+
     result = db.execute(text("""
-        INSERT INTO minigame_attempts (
-            user_id, minigame_id, started_at, completed_at,
-            score, duration_seconds, accuracy
-        )
-        VALUES (
-            :user_id, :minigame_id, :started_at, :completed_at,
-            :score, :duration_seconds, :accuracy
-        )
-        ON CONFLICT (user_id, minigame_id, started_at) DO UPDATE SET
-            completed_at = EXCLUDED.completed_at,
-            score = EXCLUDED.score,
-            duration_seconds = EXCLUDED.duration_seconds,
-            accuracy = EXCLUDED.accuracy
+        INSERT INTO public.minigame_attempts AS ma (
+            game_attempt_id, user_id, minigame_id, started_at, completed_at,
+            score, duration_seconds, accuracy)
+        VALUES (:id, :user_id, :minigame_id, :started_at, :completed_at,
+                :score, :duration_seconds, :accuracy)
+        ON CONFLICT (game_attempt_id) DO UPDATE SET
+            completed_at = EXCLUDED.completed_at, score = EXCLUDED.score,
+            duration_seconds = EXCLUDED.duration_seconds, accuracy = EXCLUDED.accuracy,
+            synced_at = now()
+        WHERE ma.user_id = EXCLUDED.user_id
         RETURNING game_attempt_id
-    """), {
-        "user_id": user_id,
-        "minigame_id": minigame_id,
-        "started_at": started_at,
-        "completed_at": completed_at,
-        "score": score,
-        "duration_seconds": duration_seconds,
-        "accuracy": accuracy
-    })
-    
+    """), {"id": attempt_id, "user_id": user_id, "minigame_id": minigame_id,
+           "started_at": started_at, "completed_at": completed_at, "score": score,
+           "duration_seconds": duration_seconds, "accuracy": accuracy})
+        
     return result.rowcount > 0
 
 

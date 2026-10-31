@@ -5,7 +5,7 @@
     {"quiz_code": "family_quiz",        "module_code": "family",        "title": "Family Members Quiz",       "passing_score": 70, "shuffle": true, "question_types": ["identification"]},
     {"quiz_code": "communication_quiz", "module_code": "communication", "title": "Basic Communication Quiz",  "passing_score": 70, "shuffle": true, "question_types": ["identification"]},
     {"quiz_code": "days_quiz",          "module_code": "days",          "title": "Days of the Week Quiz",     "passing_score": 70, "shuffle": true, "question_types": ["identification"]},
-    {"quiz_code": "months_quiz",        "module_code": "months",        "title": "Months of the Year Quiz",   "passing_score": 70, "shuffle": true, "question_types": ["identification"]},
+    {"quiz_code": "months_quiz",        "module_code": "months",        "title": "Calendar Quiz",   "passing_score": 70, "shuffle": true, "question_types": ["identification"]},
     {"quiz_code": "actions_quiz",       "module_code": "actions",       "title": "Action Words Quiz",         "passing_score": 70, "shuffle": true, "question_types": ["identification"]}
   ]
 }

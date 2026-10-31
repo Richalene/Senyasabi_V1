@@ -245,7 +245,7 @@ class SyncService:
         results = {"processed": 0, "succeeded": 0, "failed": 0, "errors": []}
 
         with session_scope() as db:
-            pending_items = dequeue_pending_sync(db, limit=batch_size)
+            pending_items = dequeue_pending_sync(db, limit=batch_size, user_id=user_id)
 
             for item in pending_items:
                 results["processed"] += 1
@@ -269,62 +269,16 @@ class SyncService:
         return results
 
     def _send_to_server(self, item: SyncQueue) -> bool:
-        """
-        Send sync item to the FastAPI backend.
-        Must not open its own SQLite session to avoid lock contention.
-        """
-        payload = json.loads(item.payload)
-        from .config import FASTAPI_HOST, FASTAPI_PORT, PRODUCTION
-        from . import auth_service
-        
-        token = auth_service.get_access_token()
-        headers = {"Content-Type": "application/json"}
-        if token:
-            headers["Authorization"] = f"Bearer {token}"
-        
-        # Validate HTTPS in production
-        base_url = f"http://{FASTAPI_HOST}:{FASTAPI_PORT}"
-        if PRODUCTION and not base_url.startswith("https://"):
-            logger.error("HTTP URL used in production mode for sync upload")
-            return False
-            
-        url = f"{base_url}/api/v1/sync/upload"
-        req_body = {
-            "user_id": str(item.user_id),
-            "sync_items": [
-                {
-                    "entity_type": item.entity_type,
-                    "client_id": str(item.entity_id),
-                    "data": payload,
-                    "operation": item.operation or "upsert",
-                }
-            ],
-        }
-        try:
-            import requests
-            resp = requests.post(url, json=req_body, headers=headers, timeout=10)
-            if resp.status_code == 200:
-                data = resp.json()
-                return data.get("succeeded", 0) > 0
-            elif resp.status_code == 401:
-                logger.warning("Sync upload unauthorized: token may be expired")
-            elif resp.status_code == 403:
-                logger.warning("Sync upload forbidden: insufficient permissions")
-            elif resp.status_code >= 500:
-                logger.error("Sync upload server error: %s", resp.status_code)
-            else:
-                logger.warning("Sync upload returned status %s: %s", resp.status_code, resp.text)
-            return False
-        except requests.exceptions.Timeout:
-            logger.warning("Sync upload timeout for %s:%s", item.entity_type, item.entity_id)
-            return False
-        except requests.exceptions.ConnectionError:
-            logger.warning("Sync upload connection failed for %s:%s", item.entity_type, item.entity_id)
-            return False
-        except Exception as exc:
-            logger.exception("Sync upload unexpected error for %s:%s: %s", item.entity_type, item.entity_id, exc)
-            return False
-
+        """Upload via the shared API client (base URL, HTTPS check, token refresh, offline state)."""
+        from .api_client import get_api_client
+        result = get_api_client().upload_sync(str(item.user_id), [{
+            "entity_type": item.entity_type,
+            "client_id": str(item.entity_id),
+            "data": json.loads(item.payload),
+            "operation": item.operation or "upsert",
+        }])
+        return bool(result) and result.get("succeeded", 0) > 0
+    
     def get_sync_status(self, user_id: uuid.UUID) -> dict:
         """Get sync queue statistics for a user."""
         with session_scope() as db:

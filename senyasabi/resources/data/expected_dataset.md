@@ -33,6 +33,10 @@ Good morning, Good afternoon, Good evening, Hello, See you tomorrow
 Thank you, You're welcome
 ### Introductions & Small Talk
 Nice to meet you, How are you?, I'm fine
+### Responses & Answers
+Yes, No, Correct, Wrong
+### Understanding & Pacing
+Understand, Don't understand, Know, Don't know, Slow, Fast
 
 ## Module 5: Days of the Week
 ### Days of the Week
@@ -40,8 +44,10 @@ Sunday, Monday, Tuesday, Wednesday, Thursday, Friday, Saturday
 ### Relative Days
 Today, Tomorrow, Yesterday
 
-## Module 6: Survival Signs
-### Responses & Answers
-Yes, No, Correct, Wrong
-### Understanding & Pacing
-Understand, Don't understand, Know, Don't know, Slow, Fast
+## Module 6: Calendar
+### First Six Months
+January, February, March, April, May, June, 
+### Last Six Months
+July, August, September, October, November, December
+
+## Module 7: Action Words

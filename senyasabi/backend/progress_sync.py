@@ -10,14 +10,12 @@ import uuid
 from datetime import date, datetime
 import threading
 import time
-import requests
 
-from backend import auth_service, config
+from backend import auth_service
 from backend.database import models as m
 from backend.database.session import session_scope
 
 _log = logging.getLogger(__name__)
-TIMEOUT = 8  # seconds; single attempt so an offline app stays responsive
 CONTENT_SYNC_INTERVAL = 600  # seconds between content checks
 _content_lock = threading.Lock()
 _last_content_sync = 0.0
@@ -52,15 +50,11 @@ def _convert(model, row):
     return out
 
 
-def fetch_snapshot(token):
-    try:
-        resp = requests.get(f"{config.API_BASE_URL}/api/v1/progress/me/snapshot",
-                            headers={"Authorization": f"Bearer {token}"}, timeout=TIMEOUT)
-        resp.raise_for_status()
-        return resp.json()
-    except (requests.exceptions.RequestException, ValueError) as error:
-        _log.warning("Progress snapshot unavailable: %s", error)
-        return None
+def fetch_snapshot(token=None):
+    """Server snapshot via the shared client (offline tracking + fast offline probe).
+    None means offline/unavailable: callers keep using SQLite."""
+    from backend.api_client import get_api_client
+    return get_api_client().get_progress_snapshot()
 
 
 def apply_snapshot(snapshot):

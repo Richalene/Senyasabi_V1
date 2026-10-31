@@ -1704,18 +1704,11 @@ def enqueue_sync(
     db.flush()
     return item
 
-def dequeue_pending_sync(
-    db: Session,
-    limit: int = 10,
-) -> list[SyncQueue]:
-    statement = (
-        select(SyncQueue)
-        .where(SyncQueue.synced_at == None)
-        .order_by(SyncQueue.created_at)
-        .limit(limit)
-    )
-    return list(db.scalars(statement))
-
+def dequeue_pending_sync(db: Session, limit: int = 10, user_id: uuid.UUID | None = None) -> list[SyncQueue]:
+    statement = select(SyncQueue).where(SyncQueue.synced_at == None)
+    if user_id is not None:
+        statement = statement.where(SyncQueue.user_id == user_id)
+    return list(db.scalars(statement.order_by(SyncQueue.created_at).limit(limit)))
 
 def mark_synced(
     db: Session,

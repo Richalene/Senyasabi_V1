@@ -494,39 +494,14 @@ class SignSprint(QWidget):
         self.stack.setCurrentWidget(self.score_view)
 
     def record_score(self, score, total):
-        """Save minigame attempt and update user statistics in SQLite."""
+        """Save locally (offline-safe), then sync in the background."""
         try:
-            import uuid
-            from datetime import datetime, timezone
-            from backend import auth_service
-            from backend.database.session import session_scope
-            from backend.database.repository import upsert_minigame_attempt, rebuild_user_statistics
-            from backend.leaderboard_service import notify_scores_changed
-
-            user = auth_service.get_current_user()
-            if not user:
-                return
-            uid = uuid.UUID(user["user_id"]) if isinstance(user["user_id"], str) else user["user_id"]
-
-            with session_scope() as db:
-                # minigame_id 4 is Sign Sprint
-                upsert_minigame_attempt(
-                    db,
-                    user_id=uid,
-                    game_attempt_id=uuid.uuid4(),
-                    minigame_id=4,
-                    started_at=datetime.now(timezone.utc),
-                    completed_at=datetime.now(timezone.utc),
-                    score=score,
-                    duration_seconds=45,
-                    accuracy=score / max(1, total)
-                )
-                rebuild_user_statistics(db, uid)
-            notify_scores_changed()
+            from backend.score_service import record_minigame_result
+            record_minigame_result("sprint", score, total, self.session.limit)
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning("Failed to record minigame score: %s", e)
-
+            
     def stop(self):
         self.game_view.countdown_timer.stop()
         self.game_view.sequence_timer.stop()
