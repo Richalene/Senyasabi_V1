@@ -70,6 +70,65 @@ TABLE_COLUMNS = {
 # Content-versioned tables in the provided PostgreSQL schema.
 VERSIONED_TABLES = frozenset(TABLE_COLUMNS)
 
+def _remove_orphaned_snapshot_rows(tables: dict) -> None:
+    """Remove associations whose required parent is absent from the snapshot."""
+
+    module_ids = {r["module_id"] for r in tables["modules"]}
+    lesson_ids = {r["lesson_id"] for r in tables["lessons"]}
+    sign_ids = {r["sign_id"] for r in tables["signs"]}
+    media_ids = {r["media_id"] for r in tables["media_files"]}
+    quiz_ids = {r["quiz_id"] for r in tables["quizzes"]}
+    minigame_ids = {r["minigame_id"] for r in tables["minigames"]}
+
+    # First, remove children whose parent modules are not in the snapshot.
+    tables["lessons"] = [
+        r for r in tables["lessons"]
+        if r["parent_module"] in module_ids
+    ]
+
+    tables["quizzes"] = [
+        r for r in tables["quizzes"]
+        if r["module_id"] in module_ids
+    ]
+
+    tables["minigames"] = [
+        r for r in tables["minigames"]
+        if r["module_id"] in module_ids
+    ]
+
+    # Recalculate lesson IDs after filtering.
+    lesson_ids = {r["lesson_id"] for r in tables["lessons"]}
+
+    # Filter every association table against all its required parents.
+    tables["lesson_signs"] = [
+        r for r in tables["lesson_signs"]
+        if r["lesson_id"] in lesson_ids
+        and r["sign_id"] in sign_ids
+    ]
+
+    tables["sign_media"] = [
+        r for r in tables["sign_media"]
+        if r["sign_id"] in sign_ids
+        and r["media_id"] in media_ids
+    ]
+
+    tables["lesson_media"] = [
+        r for r in tables["lesson_media"]
+        if r["lesson_id"] in lesson_ids
+        and r["media_id"] in media_ids
+    ]
+
+    tables["quiz_signs"] = [
+        r for r in tables["quiz_signs"]
+        if r["quiz_id"] in quiz_ids
+        and r["sign_id"] in sign_ids
+    ]
+
+    tables["minigame_signs"] = [
+        r for r in tables["minigame_signs"]
+        if r["minigame_id"] in minigame_ids
+        and r["sign_id"] in sign_ids
+    ]
 
 def _fetch_snapshot() -> dict:
     """Read one consistent published snapshot from PostgreSQL."""
@@ -136,6 +195,8 @@ def _fetch_snapshot() -> dict:
                     )
 
             tables[table] = records
+
+        _remove_orphaned_snapshot_rows(tables)
 
         badges = db.execute(text("""
             SELECT badge_id, badge_code, badge_name, description
@@ -249,6 +310,7 @@ def _apply_snapshot(snapshot: dict) -> dict:
 
             # Flush after each table so its parent records exist before
             # dependent records are written.
+            local_version_id = local_version.content_version_id
             db.flush()
             counts[f"{table}_upserted"] = len(records)
 
