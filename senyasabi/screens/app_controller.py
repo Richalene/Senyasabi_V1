@@ -321,6 +321,15 @@ class AppController:
         if not signs:
             self._show_coming_soon()
             return
+        if self.quiz is not None and self.quiz.isVisible() and self.quiz.module_code == self.selected_module:
+            return
+        if self.quiz is not None:
+            self.quiz.close()
+            self.quiz.deleteLater()
+        from screens.quizzes.module_quiz import ModuleQuiz
+        self.quiz = ModuleQuiz(self.selected_module)
+        self.quiz.back_requested.connect(self.show_module_choices)
+        self._show_screen(self.quiz)
 
     def shutdown(self):
         self.login.loading.cancel()
