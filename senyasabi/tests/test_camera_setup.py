@@ -287,7 +287,7 @@ class CameraSetupTests(unittest.TestCase):
         from screens.app_controller import AppController
         c = AppController()
         c.dev_login()
-        c.open_module('food')
+        c.open_module('days')
         c.open_module_quiz()
         quiz = c.quiz
         c.open_module_quiz()

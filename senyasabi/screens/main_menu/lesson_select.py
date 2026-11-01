@@ -135,7 +135,7 @@ class LessonSelectWidget(QWidget):
                 is_visible = idx < count
                 btn.setVisible(is_visible)
                 if is_visible and idx < len(lessons):
-                    btn.setToolTip(lessons[idx]["title"])
+                    btn.setToolTip(lessons[idx].title)
 
     def set_streak(self, text):
         self.header.set_streak_text(text)

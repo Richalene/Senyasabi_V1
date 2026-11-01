@@ -28,8 +28,8 @@ def appropriate_words(kind, words):
 class MinigameContentScopeTests(unittest.TestCase):
     def test_global_words_use_all_ten_content_modules_and_exclude_alphabet(self):
         expected = [word for code in MODULE_CODES for word in get_words_for_module(code)]
-        self.assertEqual(len(MODULE_CODES), 5)
-        self.assertEqual(len(expected), 50)
+        self.assertEqual(len(MODULE_CODES), 6)
+        self.assertEqual(len(expected), 62)
         self.assertEqual(get_all_minigame_words(), expected)
         self.assertFalse(set(expected) & set("ABCDEFGHIJKLMNOPQRSTUVWXYZ"))
 
@@ -148,7 +148,7 @@ class MinigameNavigationScopeTests(unittest.TestCase):
         hub.back_button.click()
         self.only(c.main_menu)
 
-    def test_food_back_to_main_then_minigames_ignores_food_and_preserves_learning_state(self):
+    def test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state(self):
         c = self.controller
         self.open_module_from_menu("basic_communication")
         self.module_menu_button("backBtn").click()
@@ -176,7 +176,7 @@ class MinigameNavigationScopeTests(unittest.TestCase):
         c.minigames.back_button.click()
         self.only(c.main_menu)
 
-    def test_food_sprint_back_uses_the_captured_module_hub(self):
+    def test_days_sprint_back_uses_the_captured_module_hub(self):
         c = self.controller
         self.open_module_from_menu("basic_communication")
         c.module_lessons.game_buttons["sprint"].click()

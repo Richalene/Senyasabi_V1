@@ -83,11 +83,11 @@ class UatFlowTests(unittest.TestCase):
         self.login()
         c.main_menu.ui.btnStartLearning.click()
         self.only(c.module_map)
-        food = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "basic_communication")
-        c.module_map.hover_node(food, True)
+        days = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "basic_communication")
+        c.module_map.hover_node(days, True)
         self.assertTrue(c.module_map.popup.isVisible())
-        self.assertTrue(food.graphicsEffect().isEnabled())
-        food.click()
+        self.assertTrue(days.graphicsEffect().isEnabled())
+        days.click()
         self.only(c.module_lessons)
         self.assertEqual(c.selected_module, "basic_communication")
         self.assertFalse(c.module_map.popup.isVisible())
@@ -132,7 +132,7 @@ class UatFlowTests(unittest.TestCase):
     def test_repeated_word_lessons_do_not_leave_hidden_windows(self):
         c = self.controller
         self.login()
-        c.open_module("food")
+        c.open_module("days")
         for _ in range(3):
             c.open_module_lesson(1)
             lesson = c.active_lesson
@@ -180,12 +180,12 @@ class UatFlowTests(unittest.TestCase):
     def test_sprint_and_detective_module_scoping_and_lifecycle(self):
         c = self.controller
         self.login()
-        c.open_module("color")
+        c.open_module("calendar")
         for kind in ("sprint", "detective"):
             c.module_lessons.game_buttons[kind].click()
             self.only(c.minigames)
             game = c.minigames.game
-            self.assertEqual(game.module_code, "color")
+            self.assertEqual(game.module_code, "calendar")
             self.assertTrue(game.countdown.isActive())
             if kind == "sprint":
                 game.pause()
@@ -255,7 +255,7 @@ class CameraAndLoadingTests(unittest.TestCase):
 
     def test_quest_tuning_top_prediction_cooldown_and_cleanup(self):
         engine = Mock(open_camera=Mock(return_value=True))
-        game = FingerSpellQuest(engine_factory=lambda **kwargs: engine, module_code="food")
+        game = FingerSpellQuest(engine_factory=lambda **kwargs: engine, module_code="days")
         game.show()
         wait_until(lambda: not game.loading.busy)
         game.frame_timer.stop()
@@ -280,7 +280,7 @@ class CameraAndLoadingTests(unittest.TestCase):
 
     def test_quest_unavailable_camera_and_retry(self):
         engine = Mock(open_camera=Mock(return_value=False))
-        game = FingerSpellQuest(engine_factory=lambda **kwargs: engine, module_code="food")
+        game = FingerSpellQuest(engine_factory=lambda **kwargs: engine, module_code="days")
         game.show()
         wait_until(lambda: not game.loading.busy)
         self.assertIn("Unable to start", game.camera.text())

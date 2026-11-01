@@ -1,8 +1,85 @@
+Running 21 test suites...
+
+Running test_audio_service.py... PASS
+Running test_auth.py... PASS
+Running test_auth_loading.py... PASS
+Running test_auth_token_handoff.py... PASS
+Running test_camera_preview.py... FAIL
+--- STDOUT ---
+
 --- STDERR ---
-Camera capture released (owner=SignRecognitionEngine, error=<Mock name='mock().error' id='5046845808'>, caller=recognition_engine.py:close_camera:212 <- recognition_engine.py:close:238 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191)
+.qt.qpa.fonts: Populating font family aliases took 79 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Inference worker diagnostic mode SENYASABI_DIAG_NO_INFERENCE=disabled
+Word lesson cleanup: reason=test caller=test_all_five_camera_screens_present_frames_through_shared_component:233
+[DIAG] SignVideoPlayer.release: enter (has_player=False, has_audio=False, has_video=False)
+[DIAG] SignVideoPlayer.release: exit
+E[DIAG] SignVideoPlayer.release: enter (has_player=False, has_audio=False, has_video=False)
+[DIAG] SignVideoPlayer.release: exit
+EUnknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+........
+======================================================================
+ERROR: test_all_five_camera_screens_present_frames_through_shared_component (senyasabi.tests.test_camera_preview.CameraPreviewTests.test_all_five_camera_screens_present_frames_through_shared_component)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_camera_preview.py", line 236, in test_all_five_camera_screens_present_frames_through_shared_component
+    quest = FingerSpellQuest(module_code='greeting')
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 358, in __init__
+    self.session = GameSession("quest", rounds=5, module_code=module_code, scope=scope)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 78, in __init__
+    else get_words_for_module(self.module_code))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 61, in get_words_for_module
+    return module_words(module_code)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 264, in get_words_for_module
+    return [sign.label for sign in get_signs_for_module(module_code)]
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 253, in get_signs_for_module
+    return list(get_module(module_code).signs)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 245, in get_module
+    raise ValueError(f"Unknown module: {module_code}")
+ValueError: Unknown module: greeting
+
+======================================================================
+ERROR: test_all_five_camera_screens_present_frames_through_shared_component (senyasabi.tests.test_camera_preview.CameraPreviewTests.test_all_five_camera_screens_present_frames_through_shared_component)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_camera_preview.py", line 29, in tearDown
+    window.close()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 490, in closeEvent
+    self.stop()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 482, in stop
+    self.game_view.stop_activity()
+    ^^^^^^^^^^^^^^
+AttributeError: Error calling Python override of QWidget::closeEvent(): 'FingerSpellQuest' object has no attribute 'game_view'
+
+----------------------------------------------------------------------
+Ran 10 tests in 1.029s
+
+FAILED (errors=2)
+
+Running test_camera_setup.py... FAIL
+--- STDOUT ---
+
+--- STDERR ---
+Camera capture released (owner=SignRecognitionEngine, error=<Mock name='mock().error' id='5012193696'>, caller=recognition_engine.py:close_camera:212 <- recognition_engine.py:close:238<- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191)
 [DIAG] CategoryRecognitionEngine.close: enter (has_capture=True, has_preprocessor=True)
 [DIAG] CategoryRecognitionEngine.close: before capture.release()
-Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock().error' id='5046846288'>, caller=model_service.py:close:294 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191 <- case.py:_callTestMethod:589)
+Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock().error' id='5012194176'>, caller=model_service.py:close:294 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191 <- case.py:_callTestMethod:589)
 [DIAG] CategoryRecognitionEngine.close: after capture.release()
 [DIAG] CategoryRecognitionEngine.close: before recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: after recognizer.reset()
@@ -13,10 +90,10 @@ Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock
 [DIAG] CategoryRecognitionEngine.close: before recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: after recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: exit
-Camera capture released (owner=SignRecognitionEngine, error=<Mock name='mock().error' id='5046615744'>, caller=recognition_engine.py:close_camera:212 <- recognition_engine.py:close:238 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191)
+Camera capture released (owner=SignRecognitionEngine, error=<Mock name='mock().error' id='5011979536'>, caller=recognition_engine.py:close_camera:212 <- recognition_engine.py:close:238<- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191)
 [DIAG] CategoryRecognitionEngine.close: enter (has_capture=True, has_preprocessor=True)
 [DIAG] CategoryRecognitionEngine.close: before capture.release()
-Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock().error' id='5046846768'>, caller=model_service.py:close:294 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191 <- case.py:_callTestMethod:589)
+Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock().error' id='5012193696'>, caller=model_service.py:close:294 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191 <- case.py:_callTestMethod:589)
 [DIAG] CategoryRecognitionEngine.close: after capture.release()
 [DIAG] CategoryRecognitionEngine.close: before recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: after recognizer.reset()
@@ -27,10 +104,10 @@ Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock
 [DIAG] CategoryRecognitionEngine.close: before recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: after recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: exit
-Camera capture released (owner=SignRecognitionEngine, error=<Mock name='mock().error' id='5046847680'>, caller=recognition_engine.py:close_camera:212 <- recognition_engine.py:close:238 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191)
+Camera capture released (owner=SignRecognitionEngine, error=<Mock name='mock().error' id='5012195616'>, caller=recognition_engine.py:close_camera:212 <- recognition_engine.py:close:238<- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191)
 [DIAG] CategoryRecognitionEngine.close: enter (has_capture=True, has_preprocessor=True)
 [DIAG] CategoryRecognitionEngine.close: before capture.release()
-Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock().error' id='5046848160'>, caller=model_service.py:close:294 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191 <- case.py:_callTestMethod:589)
+Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock().error' id='5012196192'>, caller=model_service.py:close:294 <- test_camera_setup.py:test_both_recognition_engines_reopen_the_shared_selected_camera:191 <- case.py:_callTestMethod:589)
 [DIAG] CategoryRecognitionEngine.close: after capture.release()
 [DIAG] CategoryRecognitionEngine.close: before recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: after recognizer.reset()
@@ -41,25 +118,25 @@ Camera capture released (owner=CategoryRecognitionEngine, error=<Mock name='mock
 [DIAG] CategoryRecognitionEngine.close: before recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: after recognizer.reset()
 [DIAG] CategoryRecognitionEngine.close: exit
-.qt.qpa.fonts: Populating font family aliases took 77 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+.qt.qpa.fonts: Populating font family aliases took 92 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
 EUnknown property transform
 This plugin does not support propagateSizeHints()
-Camera capture released (owner=CameraSetupDialog, error=<Mock name='mock.error' id='5476735824'>, caller=camera_setup.py:stop_preview:226 <- camera_setup.py:closeEvent:234 <- test_camera_setup.py:test_close_during_preview_releases_and_does_not_save:127)
+Camera capture released (owner=CameraSetupDialog, error=<Mock name='mock.error' id='5249009808'>, caller=camera_setup.py:stop_preview:226 <- camera_setup.py:closeEvent:234 <- test_camera_setup.py:test_close_during_preview_releases_and_does_not_save:127)
 .This plugin does not support propagateSizeHints()
-Camera capture released (owner=CameraSetupDialog, error=<Mock name='mock.error' id='5477459792'>, caller=camera_setup.py:<lambda>:168 <- loading.py:discard:36 <- loading.py:run:31)
+Camera capture released (owner=CameraSetupDialog, error=<Mock name='mock.error' id='5249689568'>, caller=camera_setup.py:<lambda>:168 <- loading.py:discard:36 <- loading.py:run:31)
 .EUnknown property transform
 .This plugin does not support propagateSizeHints()
 Camera preview unavailable: SECRET_TECHNICAL_TRACEBACK
 .This plugin does not support propagateSizeHints()
 .This plugin does not support propagateSizeHints()
-.Camera capture released (owner=CameraSetupTests, error=<Mock name='mock.error' id='5476412944'>, caller=test_camera_setup.py:test_numeric_fallback_is_explicit_and_centralized:171 <- case.py:_callTestMethod:589 <- case.py:run:634)
+.Camera capture released (owner=CameraSetupTests, error=<Mock name='mock.error' id='5249895504'>, caller=test_camera_setup.py:test_numeric_fallback_is_explicit_and_centralized:171 <- case.py:_callTestMethod:589 <- case.py:run:634)
 ..This plugin does not support propagateSizeHints()
-Camera capture released (owner=CameraSetupDialog, error=<Mock name='mock.error' id='5477461568'>, caller=camera_setup.py:stop_preview:226 <- camera_setup.py:save:210 <- test_camera_setup.py:test_preview_save_release_then_activity_uses_same_device:109)
-Camera capture released (owner=object, error=<Mock name='mock().error' id='5477461328'>, caller=test_camera_setup.py:test_preview_save_release_then_activity_uses_same_device:119 <- case.py:_callTestMethod:589 <- case.py:run:634)
+Camera capture released (owner=CameraSetupDialog, error=<Mock name='mock.error' id='5249694176'>, caller=camera_setup.py:stop_preview:226 <- camera_setup.py:save:210 <- test_camera_setup.py:test_preview_save_release_then_activity_uses_same_device:109)
+Camera capture released (owner=object, error=<Mock name='mock().error' id='5249692112'>, caller=test_camera_setup.py:test_preview_save_release_then_activity_uses_same_device:119 <- case.py:_callTestMethod:589 <- case.py:run:634)
 .[DIAG] _QtCapture.release: enter (thread.isRunning=False)
 [DIAG] _QtCapture.release: before thread.wait(1500)
 [DIAG] _QtCapture.release: after thread.wait(1500) -> returned=True, thread.isRunning=False
-Camera capture released (owner=CameraSetupTests, error='Device busy', caller=camera_service.py:open_capture:285 <- test_camera_setup.py:test_qt_camera_start_failure_releases_lease:266 <-case.py:_callTestMethod:589)
+Camera capture released (owner=CameraSetupTests, error='Device busy', caller=camera_service.py:open_capture:285 <- test_camera_setup.py:test_qt_camera_start_failure_releases_lease:266 <- case.py:_callTestMethod:589)
 .QRhi *(anonymous namespace)::ThreadLocalRhiHolder::ensureRhi(QRhi::Implementation) : No RHI backend. Using CPU conversion.
 [DIAG] _QtCapture.release: enter (thread.isRunning=True)
 [DIAG] _QtCapture.release: before stop_requested.emit()
@@ -67,7 +144,7 @@ Camera capture released (owner=CameraSetupTests, error='Device busy', caller=cam
 [DIAG] _QtCapture.release: before thread.wait(1500)
 [DIAG] _QtCapture.release: after thread.wait(1500) -> returned=True, thread.isRunning=False
 .QRhi *(anonymous namespace)::ThreadLocalRhiHolder::ensureRhi(QRhi::Implementation) : No RHI backend. Using CPU conversion.
-.Camera capture released (owner=CameraSetupTests, error=<Mock name='mock.error' id='5476411888'>, caller=test_camera_setup.py:test_repeated_failed_reads_release_capture_once:160 <- case.py:_callTestMethod:589 <- case.py:run:634)
+.Camera capture released (owner=CameraSetupTests, error=<Mock name='mock.error' id='5248687360'>, caller=test_camera_setup.py:test_repeated_failed_reads_release_capture_once:160 <- case.py:_callTestMethod:589 <- case.py:run:634)
 .EUnknown property transform
 
 ======================================================================
@@ -98,7 +175,7 @@ Traceback (most recent call last):
 AttributeError: 'AppController' object has no attribute 'dev_login'
 
 ----------------------------------------------------------------------
-Ran 17 tests in 2.125s
+Ran 17 tests in 2.328s
 
 FAILED (errors=3)
 
@@ -111,46 +188,16 @@ Running test_minigame_scope.py... FAIL
 --- STDOUT ---
 
 --- STDERR ---
-FFFF.EEqt.qpa.fonts: Populating font family aliases took 81 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+FFFF.EEqt.qpa.fonts: Populating font family aliases took 87 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
 Unknown property transform
 Unknown property transform
 Unknown property transform
 Unknown property transform
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FUnknown property transform
+EUnknown property transform
 Unknown property transform
 Unknown property transform
 Unknown property transform
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FUnknown property transform
+EUnknown property transform
 Unknown property transform
 Unknown property transform
 Unknown property transform
@@ -170,20 +217,17 @@ Unknown property transform
 Unknown property transform
 Unknown property transform
 Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 229, in open_module
+    self.show_module_choices(code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 242, in show_module_choices
+    self.module_lessons = LessonSelectWidget(module_code=self.selected_module)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/lesson_select.py", line 95, in __init__
+    self.set_module(module_code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/lesson_select.py", line 138, in set_module
+    btn.setToolTip(lessons[idx]["title"])
+                   ~~~~~~~~~~~~^^^^^^^^^
+TypeError: 'LessonRecord' object is not subscriptable
 FUnknown property transform
 Unknown property transform
 Unknown property transform
@@ -198,96 +242,69 @@ Unknown property transform
 Unknown property transform
 Unknown property transform
 Unknown property transform
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FTraceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FTraceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FTraceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FTraceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-FTraceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
+ETraceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 229, in open_module
+    self.show_module_choices(code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 242, in show_module_choices
+    self.module_lessons = LessonSelectWidget(module_code=self.selected_module)
+                          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/lesson_select.py", line 95, in __init__
+    self.set_module(module_code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/lesson_select.py", line 138, in set_module
+    btn.setToolTip(lessons[idx]["title"])
+                   ~~~~~~~~~~~~^^^^^^^^^
+TypeError: 'LessonRecord' object is not subscriptable
+FUnknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+FETraceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 229, in open_module
+    self.show_module_choices(code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 249, in show_module_choices
+    self.module_lessons.set_module(self.selected_module)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/lesson_select.py", line 138, in set_module
+    btn.setToolTip(lessons[idx]["title"])
+                   ~~~~~~~~~~~~^^^^^^^^^
+TypeError: 'LessonRecord' object is not subscriptable
+FUnknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
 F
 ======================================================================
 ERROR: test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (senyasabi.tests.test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works)
@@ -296,13 +313,13 @@ Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 50, in test_module_sessions_never_fall_back_to_global_and_alphabet_still_works
     allowed = get_words_for_module(module_code)
               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 264, in get_words_for_module
     return [sign.label for sign in get_signs_for_module(module_code)]
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 253, in get_signs_for_module
     return list(get_module(module_code).signs)
                 ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 245, in get_module
     raise ValueError(f"Unknown module: {module_code}")
 ValueError: Unknown module: survival
 
@@ -319,15 +336,59 @@ Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 61, in get_words_for_module
     return module_words(module_code)
            ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 264, in get_words_for_module
     return [sign.label for sign in get_signs_for_module(module_code)]
                                    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 253, in get_signs_for_module
     return list(get_module(module_code).signs)
                 ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 245, in get_module
     raise ValueError(f"Unknown module: {module_code}")
 ValueError: Unknown module: survival
+
+======================================================================
+ERROR: test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 153, in test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state
+    self.open_module_from_menu("basic_communication")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 111, in open_module_from_menu
+    node = next(button for button in c.module_map.buttons
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+======================================================================
+ERROR: test_days_sprint_back_uses_the_captured_module_hub (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_days_sprint_back_uses_the_captured_module_hub)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 181, in test_days_sprint_back_uses_the_captured_module_hub
+    self.open_module_from_menu("basic_communication")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 111, in open_module_from_menu
+    node = next(button for button in c.module_map.buttons
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+======================================================================
+ERROR: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='basic_communication', kind='sprint')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
+    self.open_module_from_menu(module_code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 111, in open_module_from_menu
+    node = next(button for button in c.module_map.buttons
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
+
+======================================================================
+ERROR: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='basic_communication', kind='sprint')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
+    self.open_module_from_menu(module_code)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 111, in open_module_from_menu
+    node = next(button for button in c.module_map.buttons
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+StopIteration
 
 ======================================================================
 FAIL: test_global_sessions_have_complete_appropriate_pool_for_each_game (senyasabi.tests.test_minigame_scope.MinigameContentScopeTests.test_global_sessions_have_complete_appropriate_pool_for_each_game) (kind='sprint')
@@ -380,44 +441,6 @@ Traceback (most recent call last):
 AssertionError: 6 != 5
 
 ======================================================================
-FAIL: test_food_back_to_main_then_minigames_ignores_food_and_preserves_learning_state (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_food_back_to_main_then_minigames_ignores_food_and_preserves_learning_state)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 153, in test_food_back_to_main_then_minigames_ignores_food_and_preserves_learning_state
-    self.open_module_from_menu("basic_communication")
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
-    self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]8c0>] != [None]
-
-First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]18c0>
-None
-
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1b53d40, name="main") at 0x12a7218c0>]
-+ [None]
-
-======================================================================
-FAIL: test_food_sprint_back_uses_the_captured_module_hub (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_food_sprint_back_uses_the_captured_module_hub)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 181, in test_food_sprint_back_uses_the_captured_module_hub
-    self.open_module_from_menu("basic_communication")
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
-    self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]b80>] != [None]
-
-First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]3b80>
-None
-
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1f04fc0, name="main") at 0x12a723b80>]
-+ [None]
-
-======================================================================
 FAIL: test_global_sprint_back_returns_to_global_hub_then_main_menu (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_global_sprint_back_returns_to_global_hub_then_main_menu)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
@@ -440,36 +463,17 @@ FAIL: test_greeting_detective_then_global_detective_does_not_inherit_greeting (s
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 194, in test_greeting_detective_then_global_detective_does_not_inherit_greeting
     self.open_module_from_menu("number")
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 114, in open_module_from_menu
+    self.only(c.module_lessons)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
     self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
+AssertionError: Lists differ: [<screens.main_menu.module_select.ModuleSe[35 chars]a80>] != [None]
 
 First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]eec0>
+<screens.main_menu.module_select.ModuleSelectWidget(0x8099e4000) at 0x128ecea80>
 None
 
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc6840, name="main") at 0x12acaeec0>]
-+ [None]
-
-======================================================================
-FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='basic_communication', kind='sprint')
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
-    self.open_module_from_menu(module_code)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
-    self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
-
-First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]0ec0>
-None
-
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc5880, name="main") at 0x12ad20ec0>]
+- [<screens.main_menu.module_select.ModuleSelectWidget(0x8099e4000) at 0x128ecea80>]
 + [None]
 
 ======================================================================
@@ -478,56 +482,35 @@ FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senya
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
     self.open_module_from_menu(module_code)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 114, in open_module_from_menu
+    self.only(c.module_lessons)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
     self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
+AssertionError: Lists differ: [<screens.main_menu.module_select.ModuleSe[35 chars]f40>] != [None]
 
 First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]0ec0>
+<screens.main_menu.module_select.ModuleSelectWidget(0x8099e6d80) at 0x129738f40>
 None
 
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc5880, name="main") at 0x12ad20ec0>]
+- [<screens.main_menu.module_select.ModuleSelectWidget(0x8099e6d80) at 0x129738f40>]
 + [None]
 
 ======================================================================
 FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='alphabet', kind='quest')
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
-    self.open_module_from_menu(module_code)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
-    self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 224, in test_repeated_global_module_switches_include_all_games_and_alphabet
+    game = self.assert_game_context(kind, "global", None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 129, in assert_game_context
+    self.assertEqual(list(game.session.pool), appropriate_words(kind, words))
+AssertionError: Lists differ: ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SI[632 chars]BER'] != ['1', '2', '3', '4', '5', '6', '7', '8', '9[609 chars]ber']
 
 First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]0ec0>
-None
+'ONE'
+'1'
 
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc5880, name="main") at 0x12ad20ec0>]
-+ [None]
-
-======================================================================
-FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='basic_communication', kind='sprint')
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
-    self.open_module_from_menu(module_code)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
-    self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
-
-First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]0ec0>
-None
-
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc5880, name="main") at 0x12ad20ec0>]
-+ [None]
+Diff is 1725 characters long. Set self.maxDiff to None to see it.
 
 ======================================================================
 FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='number', kind='detective')
@@ -535,90 +518,46 @@ FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senya
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
     self.open_module_from_menu(module_code)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 114, in open_module_from_menu
+    self.only(c.module_lessons)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
     self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
+AssertionError: Lists differ: [<screens.main_menu.module_select.ModuleSelectWidget(0x8099e6[16 chars]f40>] != [<screens.main_menu.lesson_select.LessonSelectWidget(0x808024[16 chars]f40>]
 
 First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]0ec0>
-None
+<screens.main_menu.module_select.ModuleSelectWidget(0x8099e6d80) at 0x129738f40>
+<screens.main_menu.lesson_select.LessonSelectWidget(0x808024540) at 0x12975bf40>
 
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc5880, name="main") at 0x12ad20ec0>]
-+ [None]
+- [<screens.main_menu.module_select.ModuleSelectWidget(0x8099e6d80) at 0x129738f40>]
+?                     ----          ^ ^^^^                 -----             ^^
+
++ [<screens.main_menu.lesson_select.LessonSelectWidget(0x808024540) at 0x12975bf40>]
+?                       ++++        ^^^^ ^                   +++++           ^^
+
 
 ======================================================================
 FAIL: test_repeated_global_module_switches_include_all_games_and_alphabet (senyasabi.tests.test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet) (module_code='alphabet', kind='quest')
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 214, in test_repeated_global_module_switches_include_all_games_and_alphabet
-    self.open_module_from_menu(module_code)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 110, in open_module_from_menu
-    self.only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 105, in only
-    self.assertEqual([window for window in self.app.topLevelWidgets() if window.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]ec0>] != [None]
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 224, in test_repeated_global_module_switches_include_all_games_and_alphabet
+    game = self.assert_game_context(kind, "global", None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_minigame_scope.py", line 129, in assert_game_context
+    self.assertEqual(list(game.session.pool), appropriate_words(kind, words))
+AssertionError: Lists differ: ['ONE', 'TWO', 'THREE', 'FOUR', 'FIVE', 'SI[632 chars]BER'] != ['1', '2', '3', '4', '5', '6', '7', '8', '9[609 chars]ber']
 
 First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]0ec0>
-None
+'ONE'
+'1'
 
-- [<screens.dashboard.dashboard.DashboardWindow(0x8a1fc5880, name="main") at 0x12ad20ec0>]
-+ [None]
-
-----------------------------------------------------------------------
-Ran 11 tests in 2.307s
-
-FAILED (failures=14, errors=2)
-
-Running test_navigation.py... FAIL
---- STDOUT ---
-
---- STDERR ---
-qt.qpa.fonts: Populating font family aliases took 77 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
-Unknown property transform
-Unknown property transform
-Unknown property transform
-Unknown property transform
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 216, in show_module_map
-    from screens.main_menu.module_select import ModuleSelectWidget
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/main_menu/module_select.py", line 56, in <module>
-    count=len(get_words_for_module("basic_communication")),
-              ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: basic_communication
-F
-======================================================================
-FAIL: test_authenticated_routes_reuse_windows_and_logout (senyasabi.tests.test_navigation.NavigationRoutingTests.test_authenticated_routes_reuse_windows_and_logout)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_navigation.py", line 36, in test_authenticated_routes_reuse_windows_and_logout
-    self.assert_only(c.module_map)
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_navigation.py", line 92, in assert_only
-    self.assertEqual([w for w in self.app.topLevelWidgets() if w.isVisible()], [screen])
-AssertionError: Lists differ: [<screens.dashboard.dashboard.DashboardWin[41 chars]300>] != [None]
-
-First differing element 0:
-<screens.dashboard.dashboard.DashboardWin[40 chars]c300>
-None
-
-- [<screens.dashboard.dashboard.DashboardWindow(0xc429b0380, name="main") at 0x11334c300>]
-+ [None]
+Diff is 1725 characters long. Set self.maxDiff to None to see it.
 
 ----------------------------------------------------------------------
-Ran 1 test in 0.587s
+Ran 11 tests in 3.302s
 
-FAILED (failures=1)
+FAILED (failures=10, errors=6)
 
+Running test_navigation.py... PASS
 Running test_navigation_assets.py... PASS
 Running test_progress_sync.py... FAIL
 --- STDOUT ---
@@ -626,7 +565,7 @@ Running test_progress_sync.py... FAIL
 --- STDERR ---
 EProgress sync failed: (sqlite3.IntegrityError) FOREIGN KEY constraint failed
 [SQL: INSERT INTO lesson_progress (user_id, lesson_id, completion_percentage, status, last_accessed, completed_at, time_spent_seconds, client_updated_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
-[parameters: ('00000000000000000000000000000007', 999, 0.0, 'Not Started', None, None, 0, '2026-10-31 19:43:03.635481', '2026-10-31 19:43:03.635483')]
+[parameters: ('00000000000000000000000000000007', 999, 0.0, 'Not Started', None, None, 0, '2026-11-01 01:48:31.119669', '2026-11-01 01:48:31.119670')]
 (Background on this error at: https://sqlalche.me/e/20/gkpj)
 .EProgress sync failed: (sqlite3.IntegrityError) FOREIGN KEY constraint failed
 [SQL: INSERT INTO lesson_progress (user_id, lesson_id, completion_percentage, status, last_accessed, completed_at, time_spent_seconds, client_updated_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)]
@@ -763,7 +702,7 @@ Traceback (most recent call last):
 AssertionError: False is not true
 
 ----------------------------------------------------------------------
-Ran 4 tests in 0.139s
+Ran 4 tests in 0.143s
 
 FAILED (failures=1, errors=2)
 
@@ -771,150 +710,71 @@ Running test_resources.py... FAIL
 --- STDOUT ---
 
 --- STDERR ---
-F.EE.EEEEE.......Category model food unavailable: Recognition model not installed: missing best_landmark_model.keras.
-.
-======================================================================
-ERROR: test_quiz_scores_once_and_requires_answer_before_next (senyasabi.tests.test_resources.ContentTests.test_quiz_scores_once_and_requires_answer_before_next)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 52, in test_quiz_scores_once_and_requires_answer_before_next
-    quiz = QuizSession("food", count=2)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/quiz_service.py", line 32, in __init__
-    self.definition = get_quiz(module_code)
-                      ^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/quiz_service.py", line 22, in get_quiz
-    get_signs_for_module(code)  # Validate; never widen to another module.
-    ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
-
-======================================================================
-ERROR: test_timer_pause_expiry_and_single_scoring (senyasabi.tests.test_resources.ContentTests.test_timer_pause_expiry_and_single_scoring)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 65, in test_timer_pause_expiry_and_single_scoring
-    game = GameSession("sprint", rounds=2, module_code="food", clock=clock)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 78, in __init__
-    else get_words_for_module(self.module_code))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 61, in get_words_for_module
-    return module_words(module_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
-
+F....EEEEE.......<frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.MessageMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+<frozen importlib._bootstrap>:488: DeprecationWarning: Type google._upb._message.ScalarMapContainer uses PyType_Spec with a metaclass that has custom tp_new. This is deprecated and will no longer be allowed in Python 3.14.
+WARNING: All log messages before absl::InitializeLog() is called are written to STDERR
+I0000 00:00:1793497730.509324  662654 gl_context.cc:357] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M1
+INFO: Created TensorFlow Lite XNNPACK delegate for CPU.
+W0000 00:00:1793497730.531893  663066 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1793497730.554341  663066 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+I0000 00:00:1793497730.556125  662654 gl_context.cc:357] GL version: 2.1 (2.1 Metal - 90.5), renderer: Apple M1
+W0000 00:00:1793497730.627530  663074 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+W0000 00:00:1793497730.642190  663075 inference_feedback_manager.cc:114] Feedback manager requires a model with a single signature inference. Disabling support for feedback tensors.
+F
 ======================================================================
 ERROR: test_bundled_and_manifest_paths (senyasabi.tests.test_resources.MediaTests.test_bundled_and_manifest_paths)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 101, in test_bundled_and_manifest_paths
-    self.assertEqual(self.service.resolve_sign_video("food", "bread").local_path, path)
+    self.assertEqual(self.service.resolve_sign_video("days", "bread").local_path, path)
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 70, in resolve_sign_video
-    sign = get_sign(module_code, sign_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 256, in get_sign
-    for sign in get_signs_for_module(module_code):
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 72, in resolve_sign_video
+    raise ValueError(f"Unknown sign: {module_code}/{sign_code}")
+ValueError: Unknown sign: days/bread
 
 ======================================================================
 ERROR: test_cache_precedence_and_remote_metadata_retained (senyasabi.tests.test_resources.MediaTests.test_cache_precedence_and_remote_metadata_retained)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 112, in test_cache_precedence_and_remote_metadata_retained
-    media = self.service.resolve_sign_video("food", "bread")
+    media = self.service.resolve_sign_video("days", "bread")
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 70, in resolve_sign_video
-    sign = get_sign(module_code, sign_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 256, in get_sign
-    for sign in get_signs_for_module(module_code):
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 72, in resolve_sign_video
+    raise ValueError(f"Unknown sign: {module_code}/{sign_code}")
+ValueError: Unknown sign: days/bread
 
 ======================================================================
 ERROR: test_invalid_manifest_value_does_not_crash_or_mask_bundled_video (senyasabi.tests.test_resources.MediaTests.test_invalid_manifest_value_does_not_crash_or_mask_bundled_video)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 136, in test_invalid_manifest_value_does_not_crash_or_mask_bundled_video
-    self.assertTrue(self.service.resolve_sign_video("food", "bread").available)
+    self.assertTrue(self.service.resolve_sign_video("days", "bread").available)
                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 70, in resolve_sign_video
-    sign = get_sign(module_code, sign_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 256, in get_sign
-    for sign in get_signs_for_module(module_code):
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 72, in resolve_sign_video
+    raise ValueError(f"Unknown sign: {module_code}/{sign_code}")
+ValueError: Unknown sign: days/bread
 
 ======================================================================
 ERROR: test_missing_keeps_logical_identity (senyasabi.tests.test_resources.MediaTests.test_missing_keeps_logical_identity)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 91, in test_missing_keeps_logical_identity
-    media = self.service.resolve_sign_video("food", "bread")
+    media = self.service.resolve_sign_video("days", "bread")
             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 70, in resolve_sign_video
-    sign = get_sign(module_code, sign_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 256, in get_sign
-    for sign in get_signs_for_module(module_code):
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 72, in resolve_sign_video
+    raise ValueError(f"Unknown sign: {module_code}/{sign_code}")
+ValueError: Unknown sign: days/bread
 
 ======================================================================
 ERROR: test_unavailable_repository_and_invalid_manifest (senyasabi.tests.test_resources.MediaTests.test_unavailable_repository_and_invalid_manifest)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 124, in test_unavailable_repository_and_invalid_manifest
-    self.assertFalse(self.service.resolve_sign_video("food", "bread").available)
+    self.assertFalse(self.service.resolve_sign_video("days", "bread").available)
                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 70, in resolve_sign_video
-    sign = get_sign(module_code, sign_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 256, in get_sign
-    for sign in get_signs_for_module(module_code):
-                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/media_service.py", line 72, in resolve_sign_video
+    raise ValueError(f"Unknown sign: {module_code}/{sign_code}")
+ValueError: Unknown sign: days/bread
 
 ======================================================================
 FAIL: test_105_signs_and_module_scoped_games_quizzes (senyasabi.tests.test_resources.ContentTests.test_105_signs_and_module_scoped_games_quizzes)
@@ -924,50 +784,29 @@ Traceback (most recent call last):
     self.assertEqual(sum(len(get_signs_for_module(code)) for code in MODULE_CODES), 50)
 AssertionError: 62 != 50
 
-----------------------------------------------------------------------
-Ran 18 tests in 0.029s
-
-FAILED (failures=1, errors=7)
-
-Running test_schema_drift.py... PASS
-Running test_startup.py... FAIL
---- STDOUT ---
-
---- STDERR ---
-qt.qpa.fonts: Populating font family aliases took 77 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
-EUnknown property transform
-Unknown property transform
-.Unknown property transform
-.Unknown property transform
-.
 ======================================================================
-ERROR: test_launch (senyasabi.tests.test_startup.StartupTests.test_launch)
+FAIL: test_missing_does_not_load_tensorflow_or_legacy (senyasabi.tests.test_resources.ModelTests.test_missing_does_not_load_tensorflow_or_legacy)
 ----------------------------------------------------------------------
 Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_startup.py", line 40, in test_launch
-    self.assertEqual(main.main(), 0)
-                     ^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 181, in main
-    setup_logging()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 58, in setup_logging
-    log_dir = Path.home() / ".senyasabi" / "logs"
-              ^^^^
-NameError: name 'Path' is not defined
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_resources.py", line 163, in test_missing_does_not_load_tensorflow_or_legacy
+    with self.assertRaises(ValueError):
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: ValueError not raised
 
 ----------------------------------------------------------------------
-Ran 4 tests in 1.548s
+Ran 18 tests in 18.880s
 
-FAILED (errors=1)
+FAILED (failures=2, errors=5)
 
+Running test_schema_drift.py... PASS
+Running test_startup.py... PASS
 Running test_ui_polish.py... FAIL
 --- STDOUT ---
 
 --- STDERR ---
-.qt.qpa.fonts: Populating font family aliases took 78 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+.qt.qpa.fonts: Populating font family aliases took 79 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
 QWidget::mapTo(): parent must be in parent hierarchy
-.EUnknown property transform
-Unknown property transform
-.
+.EEE
 ======================================================================
 ERROR: test_quiz_long_sequences_reflow_without_losing_answer (senyasabi.tests.test_ui_polish.UiPolishTests.test_quiz_long_sequences_reflow_without_losing_answer)
 ----------------------------------------------------------------------
@@ -984,17 +823,56 @@ Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/quiz_service.py", line 22, in get_quiz
     get_signs_for_module(code)  # Validate; never widen to another module.
     ^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 253, in get_signs_for_module
     return list(get_module(module_code).signs)
                 ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 245, in get_module
     raise ValueError(f"Unknown module: {module_code}")
 ValueError: Unknown module: relationships
 
+======================================================================
+ERROR: test_sprint_playback_and_back_controls_remain_reachable_at_600_height (senyasabi.tests.test_ui_polish.UiPolishTests.test_sprint_playback_and_back_controls_remain_reachable_at_600_height)
 ----------------------------------------------------------------------
-Ran 4 tests in 0.413s
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_ui_polish.py", line 65, in test_sprint_playback_and_back_controls_remain_reachable_at_600_height
+    game = SignSprint(module_code='greeting')
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 380, in __init__
+    self.session = GameSession("sprint", rounds=5, module_code=module_code, scope=scope)
+                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 78, in __init__
+    else get_words_for_module(self.module_code))
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 61, in get_words_for_module
+    return module_words(module_code)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 264, in get_words_for_module
+    return [sign.label for sign in get_signs_for_module(module_code)]
+                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 253, in get_signs_for_module
+    return list(get_module(module_code).signs)
+                ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 245, in get_module
+    raise ValueError(f"Unknown module: {module_code}")
+ValueError: Unknown module: greeting
 
-FAILED (errors=1)
+======================================================================
+ERROR: test_sprint_playback_and_back_controls_remain_reachable_at_600_height (senyasabi.tests.test_ui_polish.UiPolishTests.test_sprint_playback_and_back_controls_remain_reachable_at_600_height)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_ui_polish.py", line 27, in tearDown
+    window.close()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 515, in closeEvent
+    self.stop()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 506, in stop
+    self.game_view.countdown_timer.stop()
+    ^^^^^^^^^^^^^^
+AttributeError: Error calling Python override of QWidget::closeEvent(): 'SignSprint' object has no attribute 'game_view'
+
+----------------------------------------------------------------------
+Ran 4 tests in 0.391s
+
+FAILED (errors=3)
 
 Running test_word_recognition.py... FAIL
 --- STDOUT ---
@@ -1032,15 +910,15 @@ Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_word_recognition.py", line 49, in test_recognition_canonicalization_preserves_display_and_sign_code
     sign = next(sign for sign in get_signs_for_module('survival') if 'UNDERSTAND' in sign.label and 'DON' in sign.label)
                                  ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 253, in get_signs_for_module
     return list(get_module(module_code).signs)
                 ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 245, in get_module
     raise ValueError(f"Unknown module: {module_code}")
 ValueError: Unknown module: survival
 
 ----------------------------------------------------------------------
-Ran 18 tests in 0.175s
+Ran 18 tests in 0.110s
 
 FAILED (errors=1)
 
@@ -1048,106 +926,28 @@ Running test_uat_flow.py... FAIL
 --- STDOUT ---
 
 --- STDERR ---
-....EEEEEAPI unreachable (GET /api/v1/leaderboard?board_code=all_time&limit=100): HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/leaderboard?board_code=all_time&limit=100 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 61] Connection refused"))
-Fqt.qpa.fonts: Populating font family aliases took 77 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
-EEEUnknown property transform
+....Unknown property transform
 Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+qt.qpa.fonts: Populating font family aliases took 78 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+API unreachable (GET /api/v1/leaderboard?board_code=all_time&limit=100): HTTPConnectionPool(host='127.0.0.1', port=8000): Max retries exceeded with url: /api/v1/leaderboard?board_code=all_time&limit=100 (Caused by NewConnectionError("HTTPConnection(host='127.0.0.1', port=8000): Failed to establish a new connection: [Errno 61] Connection refused"))
+.Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+Unknown property transform
+FingerSpell Quest camera unavailable: Camera unavailable. Check permission/device and retry.
+..FEUnknown property transform
 EUnknown property transform
 EUnknown property transform
 EUnknown property transform
 EUnknown property transform
 EUnknown property transform
-
-======================================================================
-ERROR: test_quest_tuning_top_prediction_cooldown_and_cleanup (senyasabi.tests.test_uat_flow.CameraAndLoadingTests.test_quest_tuning_top_prediction_cooldown_and_cleanup)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 258, in test_quest_tuning_top_prediction_cooldown_and_cleanup
-    game = FingerSpellQuest(engine_factory=lambda **kwargs: engine, module_code="food")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 358, in __init__
-    self.session = GameSession("quest", rounds=5, module_code=module_code, scope=scope)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 78, in __init__
-    else get_words_for_module(self.module_code))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 61, in get_words_for_module
-    return module_words(module_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
-
-======================================================================
-ERROR: test_quest_tuning_top_prediction_cooldown_and_cleanup (senyasabi.tests.test_uat_flow.CameraAndLoadingTests.test_quest_tuning_top_prediction_cooldown_and_cleanup)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 251, in tearDown
-    widget.close()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 489, in closeEvent
-    self.stop()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 482, in stop
-    self.game_view.stop_activity()
-    ^^^^^^^^^^^^^^
-AttributeError: Error calling Python override of QWidget::closeEvent(): 'FingerSpellQuest' object has no attribute 'game_view'
-
-======================================================================
-ERROR: test_quest_unavailable_camera_and_retry (senyasabi.tests.test_uat_flow.CameraAndLoadingTests.test_quest_unavailable_camera_and_retry)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 283, in test_quest_unavailable_camera_and_retry
-    game = FingerSpellQuest(engine_factory=lambda **kwargs: engine, module_code="food")
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 358, in __init__
-    self.session = GameSession("quest", rounds=5, module_code=module_code, scope=scope)
-                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 78, in __init__
-    else get_words_for_module(self.module_code))
-         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/minigame_service.py", line 61, in get_words_for_module
-    return module_words(module_code)
-           ^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 250, in get_words_for_module
-    return [sign.label for sign in get_signs_for_module(module_code)]
-                                   ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 239, in get_signs_for_module
-    return list(get_module(module_code).signs)
-                ^^^^^^^^^^^^^^^^^^^^^^^
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 231, in get_module
-    raise ValueError(f"Unknown module: {module_code}")
-ValueError: Unknown module: food
-
-======================================================================
-ERROR: test_quest_unavailable_camera_and_retry (senyasabi.tests.test_uat_flow.CameraAndLoadingTests.test_quest_unavailable_camera_and_retry)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 251, in tearDown
-    widget.close()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 489, in closeEvent
-    self.stop()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 482, in stop
-    self.game_view.stop_activity()
-    ^^^^^^^^^^^^^^
-AttributeError: Error calling Python override of QWidget::closeEvent(): 'FingerSpellQuest' object has no attribute 'game_view'
-
-======================================================================
-ERROR: test_statistics_and_leaderboard_offline_defaults (senyasabi.tests.test_uat_flow.CameraAndLoadingTests.test_statistics_and_leaderboard_offline_defaults)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 251, in tearDown
-    widget.close()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 489, in closeEvent
-    self.stop()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 482, in stop
-    self.game_view.stop_activity()
-    ^^^^^^^^^^^^^^
-AttributeError: Error calling Python override of QWidget::closeEvent(): 'FingerSpellQuest' object has no attribute 'game_view'
+EUnknown property transform
 
 ======================================================================
 ERROR: test_alphabet_camera_close_on_navigation_and_reopen (senyasabi.tests.test_uat_flow.UatFlowTests.test_alphabet_camera_close_on_navigation_and_reopen)
@@ -1159,19 +959,6 @@ Traceback (most recent call last):
     self.controller.login.dev_button.click()
     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 AttributeError: 'LoginScreen' object has no attribute 'dev_button'
-
-======================================================================
-ERROR: test_alphabet_camera_close_on_navigation_and_reopen (senyasabi.tests.test_uat_flow.UatFlowTests.test_alphabet_camera_close_on_navigation_and_reopen)
-----------------------------------------------------------------------
-Traceback (most recent call last):
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 50, in tearDown
-    widget.close()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 489, in closeEvent
-    self.stop()
-  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 482, in stop
-    self.game_view.stop_activity()
-    ^^^^^^^^^^^^^^
-AttributeError: Error calling Python override of QWidget::closeEvent(): 'FingerSpellQuest' object has no attribute 'game_view'
 
 ======================================================================
 ERROR: test_alphabet_unavailable_camera_and_hide_cleanup (senyasabi.tests.test_uat_flow.UatFlowTests.test_alphabet_unavailable_camera_and_hide_cleanup)
@@ -1248,7 +1035,7 @@ FAIL: test_real_application_fullscreen_keys_and_aspect_ratio (senyasabi.tests.te
 Traceback (most recent call last):
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/tests/test_uat_flow.py", line 403, in test_real_application_fullscreen_keys_and_aspect_ratio
     self.assertEqual(result.returncode, 0, result.stdout + result.stderr)
-AssertionError: 1 != 0 : qt.qpa.fonts: Populating font family aliases took 77 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
+AssertionError: 1 != 0 : qt.qpa.fonts: Populating font family aliases took 78 ms. Replace uses of missing font family "Sans Serif" with one that exists to avoid this cost. 
 Unknown property transform
 
 ================ CRITICAL CRASH ================
@@ -1263,11 +1050,11 @@ AttributeError: 'AppController' object has no attribute 'dev_login'
 
 
 ----------------------------------------------------------------------
-Ran 15 tests in 3.912s
+Ran 15 tests in 4.282s
 
-FAILED (failures=1, errors=13)
+FAILED (failures=1, errors=7)
 
 
 ==========================================
-Summary: 12/21 test suites passed.
-Failed test suites: ['test_camera_setup.py', 'test_minigame_scope.py', 'test_navigation.py', 'test_progress_sync.py', 'test_resources.py', 'test_startup.py', 'test_ui_polish.py', 'test_word_recognition.py', 'test_uat_flow.py']
+Summary: 13/21 test suites passed.
+Failed test suites: ['test_camera_preview.py', 'test_camera_setup.py', 'test_minigame_scope.py', 'test_progress_sync.py', 'test_resources.py', 'test_ui_polish.py', 'test_word_recognition.py', 'test_uat_flow.py']

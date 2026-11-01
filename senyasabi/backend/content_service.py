@@ -48,6 +48,12 @@ MODEL_CATEGORY = {   # (module, lesson_number) -> model folder
     ("communication", 3): "greeting",
     ("communication", 4): "survival", ("communication", 5): "survival",
 }
+
+MODEL_TO_MODULE = {"greeting": "communication", "survival": "communication"}
+def content_module(code):
+    code = code.casefold()
+    return MODEL_TO_MODULE.get(code, code)
+
 def model_category(module_code, lesson_number=1):
     return MODEL_CATEGORY.get((module_code, lesson_number), module_code)
 

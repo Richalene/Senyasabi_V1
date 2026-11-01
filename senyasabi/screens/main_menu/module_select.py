@@ -50,10 +50,10 @@ MODULE_NODES = [
         y=POSITIONS[1][1],
     ),
     dict(
-        module_code="basic_communication",
+        module_code="communication",
         title="Basic Communication",
         description="Covers Greetings and Survival",
-        count=len(get_words_for_module("basic_communication")),
+        count=len(get_words_for_module("communication")),
         x=POSITIONS[2][0],
         y=POSITIONS[2][1],
     ),
@@ -66,7 +66,7 @@ MODULE_NODES = [
         y=POSITIONS[3][1],
     ),
     dict(
-        module_code="months",
+        module_code="calendar",
         title="Months of the Year",
         description="Lesson coming soon",
         count=0,

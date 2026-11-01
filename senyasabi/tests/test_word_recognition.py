@@ -188,9 +188,9 @@ class EngineLifecycleTests(unittest.TestCase):
     def engine(self):
         model = Mock(predict=Mock(return_value=np.array([[.2, .8]], np.float32)))
         recognizer = SequenceRecognizer(model, ('BREAD', 'EGG'), config())
-        registry = Mock(get_category_recognizer=Mock(return_value=ModelState('food', True, '', recognizer)))
+        registry = Mock(get_category_recognizer=Mock(return_value=ModelState('days', True, '', recognizer)))
         self.preprocessor = Mock(process=Mock(return_value=(np.zeros(172, np.float32), False, 0)))
-        engine = CategoryRecognitionEngine('food', registry=registry, preprocessor_factory=lambda _: self.preprocessor)
+        engine = CategoryRecognitionEngine('days', registry=registry, preprocessor_factory=lambda _: self.preprocessor)
         self.addCleanup(engine.close)
         return engine
 

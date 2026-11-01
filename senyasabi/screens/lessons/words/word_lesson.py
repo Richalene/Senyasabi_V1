@@ -21,7 +21,7 @@ from screens.media_player import SignVideoPlayer
 from screens.startup import FittedForm
 from screens.lessons.lesson_ui_components import ModernLessonLayout
 from backend.session_state import CameraPracticeSession, Event, SessionState
-from backend.content_service import get_signs_for_module
+from backend.content_service import get_signs_for_module, content_module
 from backend.model_service import CategoryRecognitionEngine, _registry
 from backend.inference_worker import InferenceWorker
 
@@ -32,6 +32,7 @@ _VRM_DIR = _ROOT / "resources" / "VRM_SIGNS"
 
 
 class WordLessonWidget(LessonCameraMixin, QWidget):
+    _resources_closed = True   # instance sets False at end of __init__
     lesson_finished = Signal()
 
     def __init__(
@@ -66,14 +67,15 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
         self.resize(1920, 1080)
         self.setStyleSheet('background-color: #C2D076;')
         self.module_code = actual_module.casefold()
+        self.content_code = content_module(actual_module)
         self._category = actual_module.title()
         self.setWindowTitle(f"SenyaSabi - {self.module_code.title()} Words")
 
         if actual_words is not None:
-            self.signs = get_signs_for_module(self.module_code)
+            self.signs = get_signs_for_module(self.content_code)
             self._targets = [str(w).upper() for w in actual_words]
         else:
-            self.signs = get_signs_for_module(self.module_code)
+            self.signs = get_signs_for_module(self.content_code)
             self._targets = [s.sign_code.upper() for s in self.signs]
         self.layout_comp = ModernLessonLayout(self)
         self.layout_comp.setGeometry(0, 0, 1920, 1080)
@@ -125,6 +127,7 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
         self._refresh_ui()
 
         self._fitted_form = FittedForm(self)
+        self._resources_closed = False
 
     def _camera_ready(self, engine):
         super()._camera_ready(engine)
@@ -163,7 +166,7 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
 
     def _load_ref_media(self, sign_code: str):
         try:
-            self.video.set_sign(self.module_code, sign_code.lower())
+            self.video.set_sign(self.content_code, sign_code.lower())
             is_avail = bool(getattr(self.video.media, "available", False))
             self.video.setVisible(is_avail)
             if is_avail:

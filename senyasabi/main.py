@@ -3,6 +3,8 @@ import sys
 import traceback
 import threading
 import time
+import logging
+from pathlib import Path
 
 _last_qt_tick = time.time()
 

@@ -406,6 +406,7 @@ class SignDetective(QWidget):
 
     def stop(self):
         self.game_view.countdown_timer.stop()
+        getattr(self, "game_view", None)
 
     def hideEvent(self, event):
         self.stop()

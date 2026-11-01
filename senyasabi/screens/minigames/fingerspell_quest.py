@@ -480,6 +480,7 @@ class FingerSpellQuest(QWidget):
 
     def stop(self):
         self.game_view.stop_activity()
+        getattr(self, "game_view", None)
 
     def hideEvent(self, event):
         self.stop()
