@@ -377,3 +377,7 @@ Thread 0x000026ec (most recent call first):
     sys.exit(main())
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 210, in main
     return app.exec()
+
+[17:09:28] inference worker started
+
+[17:09:58] inference worker started
