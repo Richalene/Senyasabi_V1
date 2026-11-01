@@ -11,6 +11,8 @@ Authentication is handled via Supabase Auth JWT tokens.
 """
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.middleware.cors import CORSMiddleware
+from contextlib import asynccontextmanager
+import logging
 
 from .config import FASTAPI_HOST, FASTAPI_PORT, FASTAPI_DEBUG, POSTGRESQL_URL
 from .security import get_current_user_id
@@ -21,6 +23,10 @@ from .api.progress import router as progress_router
 from .api.leaderboard import router as leaderboard_router
 from .api.packages import router as packages_router
 from .api.auth import router as auth_router
+from .database.init_db import initialize_database
+from .initial_sync import ensure_initial_content
+
+logger = logging.getLogger(__name__)
 
 # Import version from parent package
 try:
@@ -28,13 +34,26 @@ try:
 except ImportError:
     __version__ = "1.0.0"
 
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    logger.info("Initializing SenyaSabi SQLite database...")
+    initialize_database()
+
+    logger.info("Synchronizing published PostgreSQL content...")
+    await ensure_initial_content()
+
+    logger.info("Database initialization and content verification succeeded.")
+    yield
+    logger.info("FastAPI application shutting down.")
+
 # Create FastAPI app
 app = FastAPI(
     title="SenyaSabi API",
     description="Backend API for SenyaSabi sign language learning app",
     version=__version__,
     docs_url="/docs",
-    redoc_url="/redoc"
+    redoc_url="/redoc",
+    lifespan=lifespan
 )
 
 # Configure CORS

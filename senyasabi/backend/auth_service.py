@@ -18,8 +18,8 @@ from .config import CLIENT_MODE
 
 # Import appropriate auth client based on mode
 if CLIENT_MODE == "distributed":
+    from .api import auth_client_distributed as auth_client
     from .api.auth_client_distributed import AuthError, NetworkError
-    auth_client = __import__('backend.api.auth_client_distributed', fromlist=[''])
 else:
     from .api import auth_client
     from .api.auth_client import AuthError, NetworkError
