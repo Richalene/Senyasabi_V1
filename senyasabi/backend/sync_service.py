@@ -270,16 +270,75 @@ class SyncService:
         return results
 
     def _send_to_server(self, item: SyncQueue) -> bool:
-        """Upload via the shared API client (base URL, HTTPS check, token refresh, offline state)."""
-        from .api_client import get_api_client
-        result = get_api_client().upload_sync(str(item.user_id), [{
+        """
+        Send sync item to the server (FastAPI or Supabase).
+        Must not open its own SQLite session to avoid lock contention.
+        """
+        from .config import CLIENT_MODE
+        
+        # In distributed mode, use Supabase directly
+        if CLIENT_MODE == "distributed":
+            return self._send_to_supabase(item)
+        
+        # In fastapi mode, use FastAPI backend
+        return self._send_to_fastapi(item)
+    
+    def _send_to_fastapi(self, item: SyncQueue) -> bool:
+        """Send sync item to the FastAPI backend."""
+        payload = json.loads(item.payload)
+        from .config import FASTAPI_HOST, FASTAPI_PORT
+        from . import auth_service
+        
+        token = auth_service.get_access_token()
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+            
+        url = f"http://{FASTAPI_HOST}:{FASTAPI_PORT}/api/v1/sync/upload"
+        req_body = {
+            "user_id": str(item.user_id),
+            "sync_items": [
+                {
+                    "entity_type": item.entity_type,
+                    "client_id": str(item.entity_id),
+                    "data": payload,
+                    "operation": item.operation or "upsert",
+                }
+            ],
+        }
+        try:
+            import requests
+            resp = requests.post(url, json=req_body, headers=headers, timeout=5)
+            if resp.status_code == 200:
+                data = resp.json()
+                return data.get("succeeded", 0) > 0
+            logger.warning("Sync upload returned status %s: %s", resp.status_code, resp.text)
+            return False
+        except Exception as exc:
+            logger.warning("Sync upload network error: %s", exc)
+            return False
+    
+    def _send_to_supabase(self, item: SyncQueue) -> bool:
+        """Send sync item directly to Supabase."""
+        from .sync_supabase import upload_sync
+        
+        payload = json.loads(item.payload)
+        sync_items = [{
             "entity_type": item.entity_type,
             "client_id": str(item.entity_id),
-            "data": json.loads(item.payload),
+            "data": payload,
             "operation": item.operation or "upsert",
-        }])
-        return bool(result) and result.get("succeeded", 0) > 0
-    
+        }]
+        
+        try:
+            result = upload_sync(str(item.user_id), sync_items)
+            if result:
+                return result.get("succeeded", 0) > 0
+            return False
+        except Exception as exc:
+            logger.warning("Supabase sync upload error: %s", exc)
+            return False
+
     def get_sync_status(self, user_id: uuid.UUID) -> dict:
         """Get sync queue statistics for a user."""
         with session_scope() as db:
@@ -314,8 +373,16 @@ class SyncService:
         if since_version is None:
             since_version = self._local_synced_version()
 
-        from .api_client import get_api_client
-        delta = get_api_client().sync_content(since_version)
+        from .config import CLIENT_MODE
+        
+        # Use appropriate sync method based on mode
+        if CLIENT_MODE == "distributed":
+            from .sync_supabase import sync_content
+            delta = sync_content(since_version)
+        else:
+            from .api_client import get_api_client
+            delta = get_api_client().sync_content(since_version)
+        
         if not isinstance(delta, dict) or not isinstance(delta.get("version"), int):
             return {"success": False, "error": "Content server unreachable or returned bad data"}
 

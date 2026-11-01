@@ -1,8 +1,9 @@
 """
 API client for SenyaSabi desktop application.
 
-This client handles communication with the FastAPI backend:
-- HTTP requests with authentication
+This client handles communication with the backend:
+- In fastapi mode: HTTP requests to FastAPI backend
+- In distributed mode: Direct Supabase client queries
 - Token management
 - Retry logic with exponential backoff
 - Online/offline detection
@@ -15,7 +16,7 @@ import threading
 from typing import Optional, Dict, Any, List, Callable, Tuple
 from dataclasses import dataclass
 
-from .config import API_BASE_URL, SUPABASE_ANON_KEY, PRODUCTION
+from .config import FASTAPI_HOST, FASTAPI_PORT, CLIENT_MODE, API_BASE_URL, SUPABASE_ANON_KEY, 
 
 log = logging.getLogger(__name__)
 
@@ -183,6 +184,9 @@ class APIClient:
         Returns:
             Content delta or None
         """
+        if CLIENT_MODE == "distributed":
+            from .sync_supabase import sync_content
+            return sync_content(since_version)
         return self._request("GET", f"/api/v1/content/sync?since_version={since_version}")
     
     def get_content_version(self) -> Optional[Dict]:
@@ -206,6 +210,10 @@ class APIClient:
         Returns:
             Sync response or None
         """
+        if CLIENT_MODE == "distributed":
+            from .sync_supabase import upload_sync
+            return upload_sync(str(user_id), sync_items)
+        
         payload = {
             "user_id": user_id,
             "sync_items": sync_items
