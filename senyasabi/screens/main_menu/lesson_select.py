@@ -122,10 +122,13 @@ class LessonSelectWidget(QWidget):
                 else:
                     btn.hide()
         elif self.module_code == "alphabet":
-            for idx, btn in enumerate(self.lesson_buttons, start=1):
-                btn.setText(f"Lesson {idx}")
-                btn.setToolTip("")
-                btn.show()
+            from backend.content_service import get_synced_lessons
+            lessons = get_synced_lessons("alphabet")
+            for idx, btn in enumerate(self.lesson_buttons):
+                btn.setText(f"Lesson {idx + 1}")
+                visible = idx < len(lessons)
+                btn.setVisible(visible)
+                btn.setToolTip(lessons[idx]["title"] if visible else "")
         else:
             from backend.content_service import get_lessons_for_module
             lessons = get_lessons_for_module(self.module_code)

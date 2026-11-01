@@ -16,6 +16,7 @@ from .content_service import ROOT, get_sign
 from .database import repository as repo
 from .database.models import MediaCache, MediaFile, utcnow
 from .database.session import session_scope
+from .database.models import LessonMedia
 
 log = logging.getLogger(__name__)
 logger = log
@@ -104,6 +105,28 @@ class MediaService:
 
 _service = MediaService()
 
+def get_lesson_media(lesson_id, role=None) -> dict[str, int]:
+    """{'A': media_id, ...} for a lesson's images in the local cache, keyed by filename stem."""
+    from sqlalchemy import select
+    query = (select(MediaFile.file_name, LessonMedia.media_id)
+             .join(MediaFile, MediaFile.media_id == LessonMedia.media_id)
+             .where(LessonMedia.lesson_id == lesson_id, LessonMedia.is_deleted.is_(False),
+                    MediaFile.is_deleted.is_(False), MediaFile.media_type == "Image")
+             .order_by(LessonMedia.display_order))
+    if role:
+        query = query.where(LessonMedia.media_role == role)
+    with session_scope() as db:
+        return {Path(name or "").stem.upper(): media_id for name, media_id in db.execute(query)}
+
+
+def fetch_lesson_images(lesson_id, role=None) -> dict[str, Path]:
+    """{'A': local Path}. Blocking (may download): call from a worker thread."""
+    paths = {}
+    for key, media_id in get_lesson_media(lesson_id, role).items():
+        path = get_media_path(media_id)
+        if path is not None:
+            paths[key] = path
+    return paths
 
 def resolve_sign_video(module_code, sign_code):
     return _service.resolve_sign_video(module_code, sign_code)
@@ -176,4 +199,4 @@ def _download(media_id: int) -> Path | None:
         db.flush()
         db.merge(MediaCache(media_id=media_id, local_path=name, content_version_id=cv_id,
                             checksum=digest, cached_at=utcnow()))
-    return dest
+    return dest

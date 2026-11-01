@@ -25,8 +25,7 @@ LESSON_LETTERS: dict[int, list[str]] = {
     1: list("ABCDEF"),
     2: list("GHIJKL"),
     3: list("MNOPQR"),
-    4: list("STUVWX"),
-    5: list("YZ"),
+    4: list("STUVWXYZ"),
 }
 
 

@@ -307,7 +307,40 @@ def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
         return None
 
 
-
+def get_synced_lessons(module_code):
+    """Lessons from the synced SQLite cache (Supabase content), falling back to the
+    bundled dataset when the cache is empty.
+    -> [{"lesson_id", "number" (1-based), "title", "words": [labels]}]"""
+    code = module_code.casefold()
+    try:
+        from sqlalchemy import func, select
+        from .database.session import SessionLocal
+        from .database import models as m
+        with SessionLocal() as db:
+            lessons = db.scalars(
+                select(m.Lesson)
+                .join(m.Module, m.Module.module_id == m.Lesson.parent_module)
+                .where(func.lower(m.Module.module_code) == code,
+                       m.Module.is_deleted.is_(False), m.Lesson.is_deleted.is_(False),
+                       m.Lesson.is_active.is_(True))
+                .order_by(m.Lesson.lesson_order)).all()
+            result = []
+            for lesson in lessons:
+                labels = db.scalars(
+                    select(m.Sign.label)
+                    .join(m.LessonSign, m.LessonSign.sign_id == m.Sign.sign_id)
+                    .where(m.LessonSign.lesson_id == lesson.lesson_id,
+                           m.LessonSign.is_deleted.is_(False), m.Sign.is_deleted.is_(False))
+                    .order_by(m.LessonSign.display_order)).all()
+                if labels:
+                    result.append(dict(lesson_id=lesson.lesson_id, number=len(result) + 1,
+                                       title=lesson.title, words=list(labels)))
+            if result:
+                return result
+    except Exception as error:
+        logger.warning("Synced lessons unavailable for %s: %s", code, error)
+    return [dict(lesson_id=None, number=l.order, title=l.title,
+                 words=[s.label for s in l.signs]) for l in get_lessons_for_module(code)]
 
 MODULE_LESSONS_PATH = ROOT / "resources" / "data" / "module_lessons.json"
 

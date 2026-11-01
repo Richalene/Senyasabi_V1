@@ -27,19 +27,24 @@ from screens.startup import FittedForm
 from screens.lessons.lesson_ui_components import ModernLessonLayout
 from backend.session_state import CameraPracticeSession, Event, SessionState
 
+import logging
+import threading
+from shiboken6 import isValid
+from backend.content_service import get_synced_lessons
+
 LESSON_LETTERS: dict[int, List[str]] = {
     1: list("ABCDEF"),
     2: list("GHIJKL"),
     3: list("MNOPQR"),
-    4: list("STUVWX"),
-    5: list("YZ"),
+    4: list("STUVWXYZ"),
 }
 
 _VRM_DIR = _ROOT / "resources" / "VRM_SIGNS"
-
+log = logging.getLogger(__name__)
 
 class AlphabetLessonWidget(LessonCameraMixin, QWidget):
     lesson_finished = Signal()
+    _images_ready = Signal(object)
 
     def __init__(
         self,
@@ -52,10 +57,14 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self.setStyleSheet('background-color: #C2D076;')
         self.setWindowTitle(f"SenyaSabi — Alphabet Lesson {lesson_number}")
 
+        lessons = get_synced_lessons("alphabet")
+        entry = next((l for l in lessons if l["number"] == lesson_number), None)
         if letters is None:
-            letters = LESSON_LETTERS.get(lesson_number, list("ABCDEF"))
+            letters = [w.upper() for w in entry["words"]] if entry else list("ABCDEF")
         self._letters = letters
         self._lesson_number = lesson_number
+        self._lesson_id = entry["lesson_id"] if entry else None
+        self._remote_images = {}
 
         self.layout_comp = ModernLessonLayout(self)
         self.layout_comp.setGeometry(0, 0, 1920, 1080)
@@ -99,6 +108,9 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
         self._refresh_ui()
         self._init_camera(alphabet_engine)
+
+        self._images_ready.connect(self._on_images_ready)
+        self._prefetch_images()
 
         self._fitted_form = FittedForm(self)
 
@@ -145,11 +157,42 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             if not self._is_paused:
                 self.video.play()
             return
-        img_path = _VRM_DIR / f"{letter.upper()}.png"
-        if img_path.exists():
-            self.layout_comp.avatar_card.set_sign_pixmap(QPixmap(str(img_path)))
-        else:
-            self.layout_comp.avatar_card.set_sign_pixmap(QPixmap())
+        self._show_still(letter)
+
+    def _show_still(self, letter: str):
+        """Supabase lesson_media image first, bundled VRM png as the offline fallback."""
+        path = self._remote_images.get(letter.upper())
+        if path is None or not path.is_file():
+            path = _VRM_DIR / f"{letter.upper()}.png"
+        self.layout_comp.avatar_card.set_sign_pixmap(
+            QPixmap(str(path)) if path.is_file() else QPixmap())
+
+    def _prefetch_images(self):
+        lesson_id = self._lesson_id
+        if lesson_id is None:
+            return
+
+        def work():
+            try:
+                from backend.media_service import fetch_lesson_images
+                paths = fetch_lesson_images(lesson_id)
+            except Exception as error:
+                log.warning("Lesson images unavailable: %s", error)
+                return
+            if paths and isValid(self):
+                try:
+                    self._images_ready.emit(paths)   # queued to the UI thread
+                except RuntimeError:
+                    pass
+
+        threading.Thread(target=work, name="alphabet-images", daemon=True).start()
+
+    def _on_images_ready(self, paths):
+        self._remote_images = {k.upper(): Path(v) for k, v in paths.items()}
+        if self._resources_closed or self._session.is_done():
+            return
+        if not (self.video.media and self.video.media.available):
+            self._show_still(self._session.current_target)
 
     def _refresh_ui(self):
         session = self._session
@@ -208,7 +251,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             if user:
                 lesson_id = content_service.get_lesson_id("alphabet", self._lesson_number)
                 if lesson_id is not None:
-                    sync_service.get_sync_service().queue_lesson_progress(
+                    sync_service.queue_lesson_progress(
                         user_id=user["user_id"],
                         lesson_id=lesson_id,
                         completion_percentage=float(pct),

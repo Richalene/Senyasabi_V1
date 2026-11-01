@@ -53,6 +53,7 @@ _CONTENT_TABLES = (
     ("media_files", m.MediaFile),
     ("lesson_signs", m.LessonSign),
     ("sign_media", m.SignMedia),
+    ("lesson_media", m.LessonMedia),
     ("quizzes", m.Quiz),
     ("quiz_signs", m.QuizSign),
     ("minigames", m.Minigame),

@@ -106,7 +106,6 @@ if hasattr(sys, "unraisablehook"):
 # On macOS, Qt's default 'darwin' (AVFoundation) backend provides native Apple Silicon acceleration for .MOV and .MP4.
 if sys.platform == "win32":
     os.environ.setdefault("QT_MEDIA_BACKEND", "ffmpeg")
-
 from PySide6.QtCore import QEvent, QTimer, Qt
 from PySide6.QtGui import QColor, QPalette
 from PySide6.QtWidgets import QApplication, QWidget, QMessageBox
