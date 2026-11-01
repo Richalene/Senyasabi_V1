@@ -238,7 +238,9 @@ def get_modules() -> list[ModuleRecord]:
 
 
 def get_module(module_code) -> ModuleRecord:
-    code = module_code.casefold()
+    code = content_module(module_code)   # greeting/survival -> communication
+    if code == "basic_communication":
+        code = "communication"
     for module in get_modules():
         if module.module_code == code:
             return module
@@ -397,9 +399,11 @@ MODULE_LESSONS: dict[str, list[dict]] = _load_module_lessons()
 
 def get_lesson_model_code(module_code: str, lesson_order: int = 1) -> str:
     code = module_code.casefold()
+    if code in MODEL_TO_MODULE:   # already a model folder (greeting/survival)
+        return code
     for lesson in get_lessons_for_module(code):
-        if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-            return str(lesson["module_code"]).casefold()
+        if lesson.order == lesson_order and lesson.module_code:
+            return model_category(str(lesson.module_code).casefold(), lesson.order)
     if code in ("basic_communication", "communication"):
         return "greeting" if lesson_order <= 3 else "survival"
     return code

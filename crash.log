@@ -168,3 +168,239 @@ Traceback (most recent call last):
 AttributeError: 'LessonRecord' object has no attribute 'get'
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 138, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 138, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
