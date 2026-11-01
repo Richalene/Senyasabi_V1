@@ -180,10 +180,11 @@ def _apply_tokens(user_id: uuid.UUID, tokens: dict) -> None:
 # ── registration ──────────────────────────────────────────────────────────────
 
 def authenticate_with_supabase(identifier: str, password: str, *, establish_session: bool = True) -> dict:
-    """Authenticate directly with Supabase using anon key for distributed builds.
+    """Authenticate directly with Supabase using anon key (fallback mode).
     
     This calls Supabase auth endpoints directly, bypassing the FastAPI backend.
-    Used in production distributed builds where the client has the anon key.
+    Used as a fallback in distributed mode when FastAPI is unavailable.
+    In normal distributed mode, authentication goes through FastAPI.
     
     Args:
         identifier: Email address (Supabase auth requires email)
@@ -219,7 +220,7 @@ def authenticate_with_supabase(identifier: str, password: str, *, establish_sess
     
     # Validate Supabase configuration
     if not SUPABASE_URL or not SUPABASE_ANON_KEY:
-        raise RuntimeError("Supabase URL and ANON_KEY must be configured for distributed authentication.")
+        raise RuntimeError("Supabase URL and ANON_KEY must be configured for direct authentication.")
     
     # Validate HTTPS in production
     if PRODUCTION and not SUPABASE_URL.startswith("https://"):

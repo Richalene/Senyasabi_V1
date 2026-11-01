@@ -1,7 +1,72 @@
-# SenyaSabi Backend: Adding Data
+# SenyaSabi Backend
+
+This guide covers the FastAPI backend server and data management for SenyaSabi.
+
+## Quick Start: Running the FastAPI Server
+
+### Prerequisites
+
+1. Python environment with project requirements installed
+2. A `.env` file in `senyasabi/` with required environment variables
+
+### Environment Configuration
+
+```bash
+# Required for all modes
+SUPABASE_URL=https://<project>.supabase.co
+SUPABASE_ANON_KEY=your-anon-key
+
+# Required for FastAPI backend (fastapi/distributed modes)
+DATABASE_URL=postgresql+psycopg://USER:PASS@HOST:5432/postgres  # Supabase session pooler
+SUPABASE_SERVICE_ROLE_KEY=your-service-role-key
+SUPABASE_JWT_SECRET=your-jwt-secret  # legacy HS256 projects only
+
+# Optional: S3/Storage configuration (for admin scripts)
+S3_ENDPOINT=https://<ref>.supabase.co/storage/v1/s3
+S3_REGION=<region>
+S3_BUCKET=senyasabi-media
+S3_ACCESS_KEY=...
+S3_SECRET_KEY=...
+
+# FastAPI server configuration
+FASTAPI_HOST=127.0.0.1
+FASTAPI_PORT=8000
+API_BASE_URL=http://127.0.0.1:8000
+
+# Client mode (affects how the desktop client connects)
+SYSTEM_MODE=fastapi  # Options: fastapi (dev), distributed (default), direct (fallback)
+```
+
+### Starting the Server
+
+**Development mode (with service role key):**
+```bash
+export SYSTEM_MODE=fastapi
+python -m senyasabi.backend.main
+```
+
+**Production mode (with anon key only):**
+```bash
+export SYSTEM_MODE=distributed
+python -m senyasabi.backend.main
+```
+
+The server will start on `http://127.0.0.1:8000` by default. Access the API documentation at:
+- Swagger UI: `http://127.0.0.1:8000/docs`
+- ReDoc: `http://127.0.0.1:8000/redoc`
+
+### Server Modes
+
+- **fastapi mode** (development): Uses service role key for full database access
+- **distributed mode** (default): Uses anon key for client access, service role key for server operations
+- **direct mode**: Fallback mode where clients connect directly to Supabase
+
+---
+
+## Adding Data to the Database
 
 This guide explains how to get content (media, modules, lessons, signs, quizzes,
-minigames, badges) into the database.
+|minigames, badges) into the database.
 
 ## How the data is organized
 

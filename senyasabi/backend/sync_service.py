@@ -363,43 +363,103 @@ class SyncService:
         except (TypeError, ValueError):
             return 0
 
+
     def sync_content_from_server(self, since_version: int | None = None) -> dict:
         """
-        Pull the published content delta and merge it into SQLite.
+        Pull published content delta and merge it into SQLite.
 
-        Blocking (network + DB): call from a worker thread, e.g. LoadingOverlay.run.
-        Local user data, progress and the sync queue are never touched.
+        FastAPI and distributed modes use the FastAPI backend.
+        Direct mode uses Supabase directly.
         """
+
         if since_version is None:
             since_version = self._local_synced_version()
 
         from .config import CLIENT_MODE
-        
-        # Use appropriate sync method based on mode
-        if CLIENT_MODE == "distributed":
-            from .sync_supabase import sync_content
-            delta = sync_content(since_version)
-        else:
-            from .api_client import get_api_client
-            delta = get_api_client().sync_content(since_version)
-        
-        if not isinstance(delta, dict) or not isinstance(delta.get("version"), int):
-            return {"success": False, "error": "Content server unreachable or returned bad data"}
 
         try:
-            applied = self.apply_content_delta(delta)
-        except Exception as exc:
-            logger.exception("Content delta could not be applied")
-            return {"success": False, "error": str(exc)}
+            # Select the correct backend
+            if CLIENT_MODE == "direct":
+                from .sync_supabase import sync_content
+                delta = sync_content(since_version)
 
-        settings = self._settings()
-        settings.setValue(_SYNCED_VERSION_KEY, delta["version"])
-        settings.sync()
-        return {"success": True, "version": delta["version"],
-                "since_version": since_version, "applied": applied}
+            elif CLIENT_MODE in ("fastapi", "distributed"):
+                from .api_client import get_api_client
+                delta = get_api_client().sync_content(since_version)
+
+            else:
+                logger.error("Unsupported CLIENT_MODE: %s", CLIENT_MODE)
+                return {
+                    "success": False,
+                    "error": f"Unsupported CLIENT_MODE: {CLIENT_MODE}"
+                }
+
+            # Validate response
+            if not isinstance(delta, dict):
+                return {
+                    "success": False,
+                    "error": "Content backend returned no valid response"
+                }
+
+            version = delta.get("version")
+
+            if not isinstance(version, int) or isinstance(version, bool):
+                logger.error("Invalid content delta response: %s", delta)
+                return {
+                    "success": False,
+                    "error": "Content server returned invalid version data"
+                }
+
+            # Apply content delta to SQLite
+            logger.info(
+                "Received content delta: version=%s, modules=%s, lessons=%s, signs=%s",
+                delta.get("version"),
+                len(delta.get("modules", {}).get("upsert", [])),
+                len(delta.get("lessons", {}).get("upsert", [])),
+                len(delta.get("signs", {}).get("upsert", []))
+            )
+            
+            try:
+                applied = self.apply_content_delta(delta)
+                logger.info("Content successfully applied to SQLite: %s", applied)
+            except Exception:
+                logger.exception("Content delta could not be applied")
+                return {
+                    "success": False,
+                    "error": "Failed to apply content delta to SQLite"
+                }
+            
+
+            # Save successfully synced version
+            settings = self._settings()
+            settings.setValue(_SYNCED_VERSION_KEY, version)
+            settings.sync()
+
+            return {
+                "success": True,
+                "version": version,
+                "since_version": since_version,
+                "applied": applied
+            }
+
+        except Exception:
+            logger.exception(
+                "Content synchronization failed (mode=%s)",
+                CLIENT_MODE
+            )
+            return {
+                "success": False,
+                "error": "Content synchronization failed"
+            }
 
     def apply_content_delta(self, delta: dict) -> dict:
         """Merge one /api/v1/content/sync response in a single transaction."""
+        logger.info(
+            "Applying content delta: version=%s, since_version=%s",
+            delta.get("version"),
+            delta.get("since_version")
+        )
+
         counts: dict[str, int] = {}
         version_ids: dict[int, int] = {}   # server version_number -> local content_version_id
 
@@ -416,6 +476,11 @@ class SyncService:
             return version_ids[number]
 
         with session_scope() as db:
+            version = delta.get("version")
+
+            if not isinstance(version, int) or isinstance(version, bool) or version < 0:
+                raise ValueError(f"Invalid content version: {version}")
+
             local_version_id(db, delta["version"])
 
             # 1. Soft deletes first (never violate FKs; frees lesson_order slots).
@@ -455,6 +520,47 @@ class SyncService:
                 db.flush()
                 counts[f"{name}_upserted"] = len(rows)
 
+                if name == "signs":
+                    sign_586 = db.get(m.Sign, 586)
+
+                    print("\n===== SIGN SYNC DEBUG =====")
+                    print("Sign 586 found:", sign_586 is not None)
+
+                    if sign_586 is not None:
+                        print("Sign ID:", sign_586.sign_id)
+                        print("Sign code:", sign_586.sign_code)
+                        print("Content version ID:", sign_586.content_version_id)
+
+                    print("Sign count in transaction:",
+                        db.query(m.Sign).filter(
+                            m.Sign.sign_id == 586
+                        ).count())
+
+                    print("===========================\n")
+                    if name == "signs":
+                        sign_586 = db.get(m.Sign, 586)
+
+                        print("\n===== SIGN SYNC DEBUG =====")
+                        print("Sign 586 found:", sign_586 is not None)
+
+                        if sign_586 is not None:
+                            print("Sign ID:", sign_586.sign_id)
+                            print("Sign code:", sign_586.sign_code)
+                            print("Content version ID:", sign_586.content_version_id)
+
+                        print("Sign count in transaction:",
+                            db.query(m.Sign).filter(
+                                m.Sign.sign_id == 586
+                            ).count())
+
+                    print("===========================\n")
+
+                logger.info(
+                    "Content sync: %s - %s records upserted",
+                    name,
+                    len(rows)
+                )
+
             # 3. Badges: the server sends the full list every time.
             badges = delta.get("badges") or []
             for b in badges:
@@ -467,6 +573,8 @@ class SyncService:
                     if badge.badge_id not in keep:
                         badge.is_deleted = True
             counts["badges_upserted"] = len(badges)
+
+            logger.info("Content delta successfully applied: %s", counts)
         return counts
     
     def handle_server_response(self, sync_id: uuid.UUID, server_response: dict) -> bool:

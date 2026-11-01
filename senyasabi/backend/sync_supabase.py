@@ -1,7 +1,12 @@
-"""Supabase sync operations for distributed mode.
+"""Supabase sync operations for fallback mode.
 
 This module provides sync operations using the Supabase client directly,
-bypassing the FastAPI proxy when in distributed mode.
+used as a fallback when FastAPI is unavailable in distributed mode.
+
+Mode behavior:
+- distributed (default): Use FastAPI with anon key, fall back to direct Supabase
+- direct: Use direct Supabase with anon key
+- fastapi: Use FastAPI with service role key (development)
 """
 import json
 import logging
@@ -13,39 +18,47 @@ from .config import CLIENT_MODE
 logger = logging.getLogger(__name__)
 
 
+
 def sync_content(since_version: int = 0) -> Optional[Dict]:
     """
-    Fetch content delta from Supabase.
-    
-    Args:
-        since_version: Only fetch changes since this version
-        
-    Returns:
-        Content delta dict or None on failure
+    Fetch content delta from Supabase (fallback mode only).
     """
+    # In FastAPI mode, use FastAPI backend
     if CLIENT_MODE == "fastapi":
-        return None  # Use FastAPI in fastapi mode
-    
+        return None
+
     try:
         supabase = get_supabase_client()
-        
-        # Get current version
-        version_response = supabase.table('content_versions') \
-            .select('content_version_id, version_number, released_at, changelog') \
-            .eq('is_published', True) \
-            .eq('is_deleted', False) \
-            .order('version_number', desc=True) \
-            .limit(1) \
-            .execute()
-        
-        if not version_response.data:
+
+        if supabase is None:
+            logger.warning("Supabase client not available, skipping content sync")
             return None
-        
+
+        # Get current version
+        version_response = (
+            supabase.table("content_versions")
+            .select("*")
+            .eq("is_published", True)
+            .eq("is_deleted", False)
+            .order("version_number", desc=True)
+            .limit(1)
+            .execute()
+        )
+
+        if not version_response.data:
+            logger.warning("No published content versions found")
+            return None
+
         current = version_response.data[0]
-        current_version = current['version_number']
+        current_version = int(current["version_number"])
+
+        logger.info(
+            "Latest published content version: ID=%s, version=%s",
+            current.get("content_version_id"),
+            current_version
+        )
         
         if since_version >= current_version:
-            # No changes
             return {
                 "version": current_version,
                 "since_version": since_version,
@@ -62,29 +75,51 @@ def sync_content(since_version: int = 0) -> Optional[Dict]:
                 "minigame_signs": {"upsert": [], "delete": []},
                 "badges": []
             }
-        
+
         # Fetch changed data for each table
         delta = {
             "version": current_version,
             "since_version": since_version,
-            "modules": _fetch_table_delta(supabase, 'modules', since_version, current_version),
-            "lessons": _fetch_table_delta(supabase, 'lessons', since_version, current_version),
-            "signs": _fetch_table_delta(supabase, 'signs', since_version, current_version),
-            "media_files": _fetch_table_delta(supabase, 'media_files', since_version, current_version, 
-                                          exclude_columns=['object_key']),
-            "lesson_signs": _fetch_table_delta(supabase, 'lesson_signs', since_version, current_version),
-            "sign_media": _fetch_table_delta(supabase, 'sign_media', since_version, current_version),
-            "lesson_media": _fetch_table_delta(supabase, 'lesson_media', since_version, current_version),
-            "quizzes": _fetch_table_delta(supabase, 'quizzes', since_version, current_version),
-            "quiz_signs": _fetch_table_delta(supabase, 'quiz_signs', since_version, current_version),
-            "minigames": _fetch_table_delta(supabase, 'minigames', since_version, current_version),
-            "minigame_signs": _fetch_table_delta(supabase, 'minigame_signs', since_version, current_version),
+            "modules": _fetch_table_delta(
+                supabase, 'modules', since_version, current_version
+            ),
+            "lessons": _fetch_table_delta(
+                supabase, 'lessons', since_version, current_version
+            ),
+            "signs": _fetch_table_delta(
+                supabase, 'signs', since_version, current_version
+            ),
+            "media_files": _fetch_table_delta(
+                supabase, 'media_files', since_version, current_version,
+                exclude_columns=['object_key']
+            ),
+            "lesson_signs": _fetch_table_delta(
+                supabase, 'lesson_signs', since_version, current_version
+            ),
+            "sign_media": _fetch_table_delta(
+                supabase, 'sign_media', since_version, current_version
+            ),
+            "lesson_media": _fetch_table_delta(
+                supabase, 'lesson_media', since_version, current_version
+            ),
+            "quizzes": _fetch_table_delta(
+                supabase, 'quizzes', since_version, current_version
+            ),
+            "quiz_signs": _fetch_table_delta(
+                supabase, 'quiz_signs', since_version, current_version
+            ),
+            "minigames": _fetch_table_delta(
+                supabase, 'minigames', since_version, current_version
+            ),
+            "minigame_signs": _fetch_table_delta(
+                supabase, 'minigame_signs', since_version, current_version
+            ),
             "badges": _fetch_badges(supabase)
         }
-        
+
         return delta
-        
-    except Exception as e:
+
+    except Exception:
         logger.exception("Failed to sync content from Supabase")
         return None
 
@@ -169,63 +204,61 @@ def _fetch_badges(supabase) -> Dict:
         return {"upsert": [], "delete": []}
 
 
+
 def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
     """
-    Upload sync items to Supabase.
-    
-    Args:
-        user_id: User ID
-        sync_items: List of sync items
-        
-    Returns:
-        Sync response dict or None on failure
+    Upload sync items to Supabase (fallback mode only).
     """
     if CLIENT_MODE == "fastapi":
-        return None  # Use FastAPI in fastapi mode
-    
+        return None
+
     try:
         supabase = get_supabase_client()
-        
+
+        if supabase is None:
+            logger.warning("Supabase client not available, skipping sync upload")
+            return None
+
         processed = 0
         succeeded = 0
         failed = 0
-        
+
         for item in sync_items:
             processed += 1
+
             try:
                 entity_type = item.get("entity_type")
                 data = item.get("data", {})
-                
+
                 if entity_type == "lesson_progress":
-                    if _upsert_lesson_progress(supabase, user_id, data):
-                        succeeded += 1
-                    else:
-                        failed += 1
+                    success = _upsert_lesson_progress(supabase, user_id, data)
+
                 elif entity_type == "quiz_attempt":
-                    if _upsert_quiz_attempt(supabase, user_id, data):
-                        succeeded += 1
-                    else:
-                        failed += 1
+                    success = _upsert_quiz_attempt(supabase, user_id, data)
+
                 elif entity_type == "minigame_attempt":
-                    if _upsert_minigame_attempt(supabase, user_id, data):
-                        succeeded += 1
-                    else:
-                        failed += 1
+                    success = _upsert_minigame_attempt(supabase, user_id, data)
+
+                else:
+                    success = False
+
+                if success:
+                    succeeded += 1
                 else:
                     failed += 1
-                    
-            except Exception as e:
-                logger.warning(f"Error processing sync item: {e}")
+
+            except Exception:
+                logger.exception("Error processing sync item")
                 failed += 1
-        
+
         return {
             "processed": processed,
             "succeeded": succeeded,
             "failed": failed,
             "mappings": {}
         }
-        
-    except Exception as e:
+
+    except Exception:
         logger.exception("Failed to upload sync to Supabase")
         return None
 
@@ -325,3 +358,97 @@ def _upsert_minigame_attempt(supabase, user_id: str, data: Dict) -> bool:
     except Exception as e:
         logger.warning(f"Failed to upsert minigame attempt: {e}")
         return False
+
+
+
+def fetch_progress_snapshot() -> Optional[Dict]:
+    """
+    Fetch user progress snapshot from Supabase (fallback mode only).
+    """
+    if CLIENT_MODE == "fastapi":
+        return None
+
+    try:
+        supabase = get_supabase_client()
+
+        if supabase is None:
+            logger.warning(
+                "Supabase client not available, skipping progress snapshot"
+            )
+            return None
+
+        # Get current user ID from auth service
+        from . import auth_service
+
+        user = auth_service.get_current_user()
+
+        if not user:
+            return None
+
+        user_id = user.get("user_id")
+
+        if not user_id:
+            return None
+
+        # Fetch lesson progress
+        lesson_progress_response = (
+            supabase.table('lesson_progress')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        # Fetch quiz attempts
+        quiz_attempts_response = (
+            supabase.table('quiz_attempts')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        # Fetch minigame attempts
+        minigame_attempts_response = (
+            supabase.table('minigame_attempts')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        # Fetch user badges
+        user_badges_response = (
+            supabase.table('user_badges')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        # Fetch streaks
+        streaks_response = (
+            supabase.table('streaks')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        # Fetch user statistics
+        user_stats_response = (
+            supabase.table('user_statistics')
+            .select('*')
+            .eq('user_id', user_id)
+            .execute()
+        )
+
+        return {
+            "lesson_progress": lesson_progress_response.data or [],
+            "quiz_attempts": quiz_attempts_response.data or [],
+            "minigame_attempts": minigame_attempts_response.data or [],
+            "user_badges": user_badges_response.data or [],
+            "streaks": streaks_response.data or [],
+            "user_statistics": user_stats_response.data or []
+        }
+
+    except Exception:
+        logger.exception(
+            "Failed to fetch progress snapshot from Supabase"
+        )
+        return None

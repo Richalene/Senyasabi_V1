@@ -18,7 +18,7 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 except ImportError:
-    def load_dotenv(*_args, **_kwargs):
+    def load_dotenv(*_args, **_kwargs) -> bool:
         return False
 
 BACKEND_DIR = Path(__file__).resolve().parent      # .../senyasabi/backend
@@ -41,9 +41,10 @@ MEDIA_CACHE_DIR = Path(os.getenv("SENYASABI_MEDIA_CACHE") or BASE_DIR / "cache" 
 
 # ---- Client Mode -------------------------------------------------------
 # CLIENT_MODE determines how the app connects to Supabase:
-# - "fastapi" (default): Client uses FastAPI proxy, FastAPI uses service_role
-# - "distributed": Client connects directly to Supabase with anon key
-CLIENT_MODE = os.getenv("SYSTEM_MODE", "fastapi").lower()
+# - "distributed" (default): Client uses FastAPI proxy with anon key, falls back to direct Supabase
+# - "fastapi": Client uses FastAPI proxy (development mode)
+# - "direct": Client connects directly to Supabase with anon key (fallback mode)
+CLIENT_MODE = os.getenv("SYSTEM_MODE", "distributed").lower()
 
 # ---- Postgres (Supabase) -----------------------------------------------
 def _normalize_pg_url(url: str | None) -> str | None:
@@ -57,14 +58,16 @@ def _normalize_pg_url(url: str | None) -> str | None:
     return url
 
 
-# In distributed mode, we don't need direct PostgreSQL access
-POSTGRESQL_URL = _normalize_pg_url(os.getenv("DATABASE_URL")) if CLIENT_MODE == "fastapi" else None
+# PostgreSQL is needed for FastAPI backend (server-side)
+# In distributed mode, the FastAPI backend still needs PostgreSQL access
+POSTGRESQL_URL = _normalize_pg_url(os.getenv("DATABASE_URL"))
 
 # ---- Supabase API -------------------------------------------------------
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
-SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY") if CLIENT_MODE == "fastapi" else None
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET") if CLIENT_MODE == "fastapi" else None
+# Service role key is only for server-side admin operations, not for client API
+SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 
 # ---- Supabase Storage, S3 protocol (admin scripts only) ----------------
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")

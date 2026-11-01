@@ -16,7 +16,7 @@ import threading
 from typing import Optional, Dict, Any, List, Callable, Tuple
 from dataclasses import dataclass
 
-from .config import FASTAPI_HOST, FASTAPI_PORT, CLIENT_MODE, API_BASE_URL, SUPABASE_ANON_KEY, 
+from .config import FASTAPI_HOST, FASTAPI_PORT, CLIENT_MODE, API_BASE_URL, SUPABASE_ANON_KEY, PRODUCTION
 
 log = logging.getLogger(__name__)
 
@@ -160,7 +160,25 @@ class APIClient:
         return local_reader(), False
 
     def get_progress_snapshot(self) -> Optional[Dict]:
-        return self._request("GET", "/api/v1/progress/me/snapshot")
+        """Fetch user progress snapshot from server.
+        
+        In distributed mode: Try FastAPI first, fall back to direct Supabase
+        In direct mode: Use direct Supabase
+        In fastapi mode: Use FastAPI
+        """
+        if CLIENT_MODE == "direct":
+            from .sync_supabase import fetch_progress_snapshot
+            return fetch_progress_snapshot()
+        elif CLIENT_MODE == "distributed":
+            # Try FastAPI first, fall back to direct Supabase
+            result = self._request("GET", "/api/v1/progress/me/snapshot")
+            if result is not None:
+                return result
+            # FastAPI unavailable, try direct Supabase
+            from .sync_supabase import fetch_progress_snapshot
+            return fetch_progress_snapshot()
+        else:  # fastapi mode
+            return self._request("GET", "/api/v1/progress/me/snapshot")
 
     def get_dashboard(self, user_id, local_reader: Callable[[Any], Dict]) -> Tuple[Dict, bool]:
         """Online: merge the server snapshot + content delta into SQLite, then read SQLite.
@@ -178,16 +196,29 @@ class APIClient:
         """
         Fetch content delta from server.
         
+        In distributed mode: Try FastAPI first, fall back to direct Supabase
+        In direct mode: Use direct Supabase
+        In fastapi mode: Use FastAPI
+        
         Args:
             since_version: Only fetch changes since this version
             
         Returns:
             Content delta or None
         """
-        if CLIENT_MODE == "distributed":
+        if CLIENT_MODE == "direct":
             from .sync_supabase import sync_content
             return sync_content(since_version)
-        return self._request("GET", f"/api/v1/content/sync?since_version={since_version}")
+        elif CLIENT_MODE == "distributed":
+            # Try FastAPI first, fall back to direct Supabase
+            result = self._request("GET", f"/api/v1/content/sync?since_version={since_version}")
+            if result is not None:
+                return result
+            # FastAPI unavailable, try direct Supabase
+            from .sync_supabase import sync_content
+            return sync_content(since_version)
+        else:  # fastapi mode
+            return self._request("GET", f"/api/v1/content/sync?since_version={since_version}")
     
     def get_content_version(self) -> Optional[Dict]:
         """
@@ -203,6 +234,10 @@ class APIClient:
         """
         Upload progress and attempts to server.
         
+        In distributed mode: Try FastAPI first, fall back to direct Supabase
+        In direct mode: Use direct Supabase
+        In fastapi mode: Use FastAPI
+        
         Args:
             user_id: User ID
             sync_items: List of sync items
@@ -210,15 +245,27 @@ class APIClient:
         Returns:
             Sync response or None
         """
-        if CLIENT_MODE == "distributed":
+        if CLIENT_MODE == "direct":
             from .sync_supabase import upload_sync
             return upload_sync(str(user_id), sync_items)
-        
-        payload = {
-            "user_id": user_id,
-            "sync_items": sync_items
-        }
-        return self._request("POST", "/api/v1/sync/upload", json=payload)
+        elif CLIENT_MODE == "distributed":
+            # Try FastAPI first, fall back to direct Supabase
+            payload = {
+                "user_id": user_id,
+                "sync_items": sync_items
+            }
+            result = self._request("POST", "/api/v1/sync/upload", json=payload)
+            if result is not None:
+                return result
+            # FastAPI unavailable, try direct Supabase
+            from .sync_supabase import upload_sync
+            return upload_sync(str(user_id), sync_items)
+        else:  # fastapi mode
+            payload = {
+                "user_id": user_id,
+                "sync_items": sync_items
+            }
+            return self._request("POST", "/api/v1/sync/upload", json=payload)
     
     def get_sync_queue(self, user_id: int) -> Optional[Dict]:
         """

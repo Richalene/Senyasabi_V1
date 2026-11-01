@@ -171,236 +171,78 @@ AttributeError: 'LessonRecord' object has no attribute 'get'
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
-KeyboardInterrupt
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 109, in <module>
+    from PySide6.QtCore import QEvent, QTimer, Qt
+ModuleNotFoundError: No module named 'PySide6'
 
 ================================================
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
-KeyboardInterrupt
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 14, in <module>
+    from argon2 import PasswordHasher, Type
+ModuleNotFoundError: No module named 'argon2'
 
 ================================================
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 109, in <module>
+    from PySide6.QtCore import QEvent, QTimer, Qt
+ModuleNotFoundError: No module named 'PySide6'
 
 ================================================
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 14, in <module>
+    from argon2 import PasswordHasher, Type
+ModuleNotFoundError: No module named 'argon2'
 
 ================================================
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 24, in <module>
+    from .api import auth_client
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/api/auth_client.py", line 2, in <module>
+    import requests
+ModuleNotFoundError: No module named 'requests'
 
 ================================================
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 273, in open_module_lesson
-    model_code = get_lesson_model_code(self.selected_module, number)
-                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\content_service.py", line 401, in get_lesson_model_code
-    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
-       ^^^^^^^^^^
-AttributeError: 'LessonRecord' object has no attribute 'get'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 138, in notify
-    def notify(self, receiver, event):
-    
-KeyboardInterrupt
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 138, in notify
-    def notify(self, receiver, event):
-    
-KeyboardInterrupt
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 35, in <module>
+    from .database import repository as repo
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/__init__.py", line 1, in <module>
+    from .engine import engine
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/engine.py", line 1, in <module>
+    from sqlalchemy import create_engine, event
+ModuleNotFoundError: No module named 'sqlalchemy'
 
 ================================================

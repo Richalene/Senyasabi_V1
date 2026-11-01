@@ -200,6 +200,15 @@ def main() -> int:
     
     # Initialize SQLite database on startup
     initialize_database()
+    
+    # Sync content from server on startup (best effort)
+    try:
+        from backend.progress_sync import sync_content_if_due
+        sync_content_if_due(force=True)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("Content sync on startup failed: %s", e)
 
     app = QApplication.instance() or SenyaSabiApplication(sys.argv)
     controller = AppController()

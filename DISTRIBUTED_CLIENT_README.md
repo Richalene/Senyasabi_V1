@@ -2,11 +2,12 @@
 
 ## Overview
 
-The SenyaSabi desktop client now supports two modes:
-- **FastAPI Mode** (default): Client → FastAPI backend → Supabase
-- **Distributed Mode**: Client → Supabase (direct anon access)
+The SenyaSabi desktop client now supports three modes:
+- **Distributed Mode** (default): Client → FastAPI (with anon key) → Supabase, falls back to direct Supabase if FastAPI unavailable
+- **Direct Mode**: Client → Supabase (direct anon access, fallback mode)
+- **FastAPI Mode** (development): Client → FastAPI (with service role key) → Supabase
 
-This allows distribution without sensitive API keys while maintaining security through Supabase's Row Level Security (RLS).
+The distributed mode uses FastAPI as the primary backend for better control and security, with direct Supabase access as a fallback. This allows distribution without exposing the service role key while maintaining the ability to function even if the FastAPI backend is temporarily unavailable.
 
 ## What Was Implemented
 
@@ -27,18 +28,21 @@ psql -f senyasabi/backend/database/migrations/001_add_rls_policies.sql
 **File:** `senyasabi/backend/supabase_client.py`
 
 Created a Supabase client factory that:
-- Provides direct Supabase access in distributed mode
-- Returns None in fastapi mode (for backward compatibility)
+- Provides direct Supabase access in direct mode (fallback)
+- Returns None in distributed mode (uses FastAPI by default)
+- Returns None in fastapi mode (uses FastAPI with service role)
 - Handles lazy initialization and error checking
+- Gracefully handles API compatibility issues
 
 ### 3. Dual-Mode Configuration
 **File:** `senyasabi/backend/config.py`
 
-Added `CLIENT_MODE` environment variable:
-- `SENYESABI_MODE=fastapi` (default): Uses FastAPI proxy
-- `SENYESABI_MODE=distributed`: Uses direct Supabase access
+Added `CLIENT_MODE` environment variable (controlled by `SYSTEM_MODE`):
+- `SYSTEM_MODE=distributed` (default): Uses FastAPI with anon key, falls back to direct Supabase
+- `SYSTEM_MODE=direct`: Uses direct Supabase with anon key (fallback mode)
+- `SYSTEM_MODE=fastapi`: Uses FastAPI with service role key (development mode)
 
-Secret keys (DATABASE_URL, SUPABASE_SERVICE_ROLE_KEY) are automatically disabled in distributed mode.
+Service role key is optional in distributed mode (FastAPI backend uses it if available, but client doesn't need it).
 
 ### 4. Distributed Auth Client
 **File:** `senyasabi/backend/api/auth_client_distributed.py`
@@ -52,25 +56,31 @@ Created direct Supabase Auth integration:
 ### 5. Auth Service Integration
 **File:** `senyasabi/backend/auth_service.py`
 
-Updated to use appropriate auth client based on mode:
-- FastAPI mode: Uses `auth_client` (FastAPI proxy)
-- Distributed mode: Uses `auth_client_distributed` (direct Supabase)
+Updated authentication flow based on mode:
+- Distributed mode (default): Tries FastAPI with anon key first, falls back to direct Supabase auth
+- Direct mode: Uses direct Supabase auth with anon key
+- Fastapi mode (development): Uses FastAPI with service role key
 - Offline auth logic unchanged (still uses SQLite + argon2)
 
 ### 6. Sync Service Update
 **File:** `senyasabi/backend/sync_service.py` + `senyasabi/backend/sync_supabase.py`
 
-Created Supabase sync operations:
-- `sync_supabase.py`: Direct Supabase queries for content sync and progress upload
+Created Supabase sync operations for fallback mode:
+- `sync_supabase.py`: Direct Supabase queries for content sync and progress upload (fallback only)
 - `sync_service.py`: Mode-aware routing to appropriate sync method
+- In distributed mode: Tries FastAPI first, falls back to direct Supabase
+- In direct mode: Uses direct Supabase
+- In fastapi mode: Uses FastAPI
 
 ### 7. API Client Update
 **File:** `senyasabi/backend/api_client.py`
 
-Updated to use Supabase in distributed mode:
-- `sync_content()`: Uses Supabase queries in distributed mode
-- `upload_sync()`: Uses Supabase upserts in distributed mode
-- All other methods unchanged (not used in distributed mode)
+Updated to use fallback logic in distributed mode:
+- `sync_content()`: Tries FastAPI first, falls back to direct Supabase in distributed mode
+- `upload_sync()`: Tries FastAPI first, falls back to direct Supabase in distributed mode
+- `get_progress_snapshot()`: Tries FastAPI first, falls back to direct Supabase in distributed mode
+- In direct mode: Uses direct Supabase
+- In fastapi mode: Uses FastAPI
 
 ### 8. Media Service Update
 **File:** `senyasabi/backend/media_service.py`
@@ -104,8 +114,11 @@ Fixed syntax error (trailing comma in list).
 ## How to Use
 
 ### Development (FastAPI Mode)
-No changes needed - continue using the FastAPI backend as before:
+Use FastAPI backend with service role key:
 ```bash
+# Set mode
+export SYSTEM_MODE=fastapi
+
 # Start FastAPI backend
 python -m senyasabi.backend.main
 
@@ -113,7 +126,8 @@ python -m senyasabi.backend.main
 python senyasabi/main.py
 ```
 
-### Distribution (Distributed Mode)
+### Distribution (Distributed Mode - Default)
+Uses FastAPI with anon key, falls back to direct Supabase if FastAPI unavailable:
 
 #### Step 1: Apply RLS Policies
 Run the migration script in your Supabase SQL editor:
@@ -124,8 +138,38 @@ Run the migration script in your Supabase SQL editor:
 
 #### Step 2: Configure Environment
 ```bash
-# Copy the template
-cp .env.dist .env
+# Set mode (optional, distributed is default)
+export SYSTEM_MODE=distributed
+
+# Required: Supabase URL and anon key
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_ANON_KEY="your-anon-key"
+
+# Optional: FastAPI backend URL (if running FastAPI server)
+export API_BASE_URL="https://your-api.example.com"
+
+# Run desktop client
+python senyasabi/main.py
+```
+
+#### Step 3: Build for Distribution
+```bash
+python build_distributed.py
+```
+
+### Direct Mode (Fallback)
+Uses direct Supabase access without FastAPI:
+```bash
+# Set mode
+export SYSTEM_MODE=direct
+
+# Required: Supabase URL and anon key
+export SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_ANON_KEY="your-anon-key"
+
+# Run desktop client
+python senyasabi/main.py
+```
 
 # Edit .env with your Supabase credentials
 # Required:
