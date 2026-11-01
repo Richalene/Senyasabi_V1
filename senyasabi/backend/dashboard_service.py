@@ -178,7 +178,7 @@ class SQLiteDashboardRepository(DefaultDashboardRepository):
             )
 
             # Map user's lesson progress to approved active modules
-            approved_codes = {"alphabet", "greeting", "survival", "number", "days", "family"}
+            approved_codes = {"alphabet", "number", "family", "communication", "days", "calendar", "actions"}
             lesson_ids = [lp.lesson_id for lp in lesson_progress_list]
             if lesson_ids:
                 user_module_objs = db.scalars(

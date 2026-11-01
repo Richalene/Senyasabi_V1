@@ -7,6 +7,8 @@ from screens.startup import WelcomeScreen, LandingScreen
 from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
 from backend import auth_service
 from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY
+from backend.content_service import get_signs_for_module
+from screens.dialogs import ComingSoonDialog
 
 
 class AppController:
@@ -70,6 +72,10 @@ class AppController:
 
     def show_landing(self):
         self._show_screen(self.landing)
+
+    def _show_coming_soon(self):
+        dialog = ComingSoonDialog(self)
+        dialog.exec()
 
     def _clear_passwords(self):
         self.login.password_input.clear()
@@ -263,7 +269,7 @@ class AppController:
             return
         else:
             from backend.content_service import get_lesson_model_code, get_words_for_lesson, get_words_for_module
-            words = get_words_for_lesson(self.selected_module, number) or get_words_for_module(self.selected_module)
+            words = get_words_for_lesson(self.selected_module, number)
             model_code = get_lesson_model_code(self.selected_module, number)
             from screens.lessons.words.word_lesson import WordLessonWidget
             screen = WordLessonWidget(words, model_code)
@@ -310,15 +316,11 @@ class AppController:
             if self.module_lessons is not None:
                 self.module_lessons._on_expression_clicked()
             return
-        if self.quiz is not None and self.quiz.isVisible() and self.quiz.module_code == self.selected_module:
+        # Check if the module has signs
+        signs = get_signs_for_module(self.selected_module)
+        if not signs:
+            self._show_coming_soon()
             return
-        if self.quiz is not None:
-            self.quiz.close()
-            self.quiz.deleteLater()
-        from screens.quizzes.module_quiz import ModuleQuiz
-        self.quiz = ModuleQuiz(self.selected_module)
-        self.quiz.back_requested.connect(self.show_module_choices)
-        self._show_screen(self.quiz)
 
     def shutdown(self):
         self.login.loading.cancel()
@@ -368,10 +370,19 @@ class AppController:
             if self.module_lessons is not None:
                 self.module_lessons._on_expression_clicked()
             return
+        # Check if the module has signs
+        signs = get_signs_for_module(self.selected_module)
+        if not signs:
+            self._show_coming_soon()
+            return
         if self.minigames is not None and self.minigames.isVisible() and self.minigames.game is not None:
             return
         screen = self._minigame_screen()
-        screen.open_game(kind, scope="module", module_code=self.selected_module)
+        screen.open_game(
+            kind,
+            scope="module",
+            module_code=self.selected_module
+        )
         self._show_screen(screen)
 
     def back_from_minigames(self):

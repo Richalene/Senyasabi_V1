@@ -29,7 +29,7 @@ DATASET_MODULE_CODES = {
     "The Manual Alphabet": ALPHABET,
     "Numbers": "number",
     "Family Members": "family",
-    "Basic Communication": "greeting",
+    "Basic Communication": "communication",
     "Days of the Week": "days",
     "Calendar": "calendar",
     "Action Words": "actions",
@@ -42,6 +42,14 @@ _NUMBER_ALIASES = dict(zip("1 2 3 4 5 6 7 8 9 10".split(),
 _ONES = ("ZERO ONE TWO THREE FOUR FIVE SIX SEVEN EIGHT NINE TEN ELEVEN TWELVE THIRTEEN "
          "FOURTEEN FIFTEEN SIXTEEN SEVENTEEN EIGHTEEN NINETEEN").split()
 _TENS = ("", "", "TWENTY", "THIRTY", "FORTY", "FIFTY", "SIXTY", "SEVENTY", "EIGHTY", "NINETY")
+
+MODEL_CATEGORY = {   # (module, lesson_number) -> model folder
+    ("communication", 1): "greeting", ("communication", 2): "greeting",
+    ("communication", 3): "greeting",
+    ("communication", 4): "survival", ("communication", 5): "survival",
+}
+def model_category(module_code, lesson_number=1):
+    return MODEL_CATEGORY.get((module_code, lesson_number), module_code)
 
 
 def readable_code(label):
@@ -348,22 +356,6 @@ def _load_module_lessons() -> dict[str, list[dict]]:
 
 MODULE_LESSONS: dict[str, list[dict]] = _load_module_lessons()
 
-
-def get_lessons_for_module(module_code: str) -> list[dict]:
-    code = module_code.casefold()
-    if code in ("basic_communication", "communication"):
-        lessons = MODULE_LESSONS.get(code)
-        if lessons:
-            return lessons
-        combined = []
-        for idx, item in enumerate(MODULE_LESSONS.get("greeting", []), start=1):
-            combined.append({**item, "lesson_number": idx, "module_code": "greeting"})
-        for item in MODULE_LESSONS.get("survival", []):
-            combined.append({**item, "lesson_number": len(combined) + 1, "module_code": "survival"})
-        return combined
-    return MODULE_LESSONS.get(code, [])
-
-
 def get_lesson_model_code(module_code: str, lesson_order: int = 1) -> str:
     code = module_code.casefold()
     for lesson in get_lessons_for_module(code):
@@ -374,9 +366,5 @@ def get_lesson_model_code(module_code: str, lesson_order: int = 1) -> str:
     return code
 
 
-def get_words_for_lesson(module_code: str, lesson_order: int = 1) -> list[str]:
-    lessons = get_lessons_for_module(module_code)
-    for lesson in lessons:
-        if lesson["lesson_number"] == lesson_order:
-            return list(lesson["words"])
-    return []
+def get_words_for_lesson(module_code, lesson_order=1) -> list[str]:
+    return [s.label for s in get_signs_for_lesson(module_code, lesson_order)]

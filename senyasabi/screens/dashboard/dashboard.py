@@ -156,9 +156,9 @@ class StatisticsDashboardWindow(QWidget):
             ("alphabet", "FSL Alphabet"),
             ("number", "Numbers"),
             ("family", "Family Members"),
-            ("basic_communication", "Basic Communication"),
+            ("communication", "Basic Communication"),
             ("days", "Days of the Week"),
-            ("months", "Months of the Year"),
+            ("calendar", "Months of the Year"),
             ("actions", "Action Words"),
         ]
         num_axes = len(CORE_MODULES)
