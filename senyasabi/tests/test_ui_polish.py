@@ -25,7 +25,9 @@ from screens.main_menu.lesson_select import LessonSelectWidget
 from screens.main_menu.module_select import (
     FIREFLY_ROTATION_RANGE, FIREFLY_SIZE_RANGE, MODULE_NODES, ModuleSelectWidget,
 )
+from screens.hover_bounce import install_hover_bounce
 from screens.app_controller import AppController
+from screens.hover_bounce import HoverScaleEffect
 
 
 class UiPolishTests(unittest.TestCase):
@@ -112,6 +114,23 @@ class UiPolishTests(unittest.TestCase):
         self.assertEqual(button.geometry(), button_geometry)
         self.assertEqual(label.geometry(), label_geometry)
         self.assertEqual(label.styleSheet(), label_style)
+
+    def test_shared_button_bounce_scales_visual_without_moving_hitbox(self):
+        button = QPushButton("Next")
+        button.setGeometry(20, 30, 180, 56)
+        effect = install_hover_bounce(button)
+        original_geometry = button.geometry()
+        effect.set_hovered(True)
+        QTest.qWait(170)
+        self.app.processEvents()
+        self.assertEqual(button.geometry(), original_geometry)
+        self.assertGreater(effect.scale, 1.0)
+        button.click()
+        effect.set_hovered(False)
+        QTest.qWait(220)
+        self.app.processEvents()
+        self.assertAlmostEqual(effect.scale, 1.0, places=2)
+        self.assertEqual(button.geometry(), original_geometry)
 
     def test_home_stats_do_not_reload_on_same_user_screen_revisits(self):
         from backend import auth_service
@@ -204,6 +223,8 @@ class UiPolishTests(unittest.TestCase):
         script = """
 from main import SenyaSabiApplication
 from screens.app_controller import AppController
+from screens.hover_bounce import HoverScaleEffect
+from screens.minigames.minigame_select import MinigameSelect
 app = SenyaSabiApplication([])
 app.setQuitOnLastWindowClosed(False)
 presented = []
@@ -217,15 +238,24 @@ controller.show_welcome()
 app.processEvents()
 assert controller.welcome.isFullScreen()
 assert presented == [controller.welcome]
+assert isinstance(controller.welcome.ui.btnContinue.graphicsEffect(), HoverScaleEffect)
 controller.show_landing()
 app.processEvents()
 assert controller.landing.isFullScreen()
 assert presented == [controller.welcome, controller.landing]
+assert isinstance(controller.landing.ui.btnGetStarted.graphicsEffect(), HoverScaleEffect)
 controller.show_welcome()
 app.processEvents()
 assert controller.welcome.isFullScreen()
 assert presented == [controller.welcome, controller.landing]
+minigames = MinigameSelect()
+minigames.show()
+app.processEvents()
+assert isinstance(minigames.menu.ui.btnSprint.graphicsEffect(), HoverScaleEffect)
+assert isinstance(minigames.menu.ui.btnQuest.graphicsEffect(), HoverScaleEffect)
+assert isinstance(minigames.menu.ui.btnDetective.graphicsEffect(), HoverScaleEffect)
 controller.shutdown()
+minigames.close()
 app.processEvents()
 """
         env = dict(os.environ)

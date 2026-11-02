@@ -404,3 +404,94 @@ Traceback (most recent call last):
 KeyboardInterrupt
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  [Previous line repeated 3 more times]
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 222, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 217, in main
+    controller.show_welcome()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 85, in show_welcome
+    self._show_screen(self.welcome)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 58, in _show_screen
+    present(screen)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 181, in _present
+    window.showFullScreen()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================

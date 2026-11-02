@@ -248,6 +248,7 @@ class ModuleSelectWidget(QWidget):
         for number, node in enumerate(MODULE_NODES,1):
             button = FireflyButton(self._ui)
             button.setProperty("class", "moduleFirefly")
+            button.setProperty("noHoverBounce", True)
             button.setProperty("module_code", node["module_code"])
             button.setProperty("coming_soon", bool(node.get("coming_soon", False)))
             desc = "Lesson coming soon" if node.get("coming_soon") else node["description"]

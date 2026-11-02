@@ -55,6 +55,7 @@ class _BounceHover(QObject):
     def __init__(self, button, window):
         super().__init__(button)
         self.button = button
+        button.setProperty("hoverBounceHandled", True)
         self.window = window
         self.animation = None
         self.baseline = None
