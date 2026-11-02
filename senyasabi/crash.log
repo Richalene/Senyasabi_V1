@@ -61,3 +61,29 @@ Traceback (most recent call last):
 AttributeError: 'AppController' object has no attribute 'dev_login'
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AttributeError: 'AppController' object has no attribute 'dev_login'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 75, in show_welcome
+    self._show_screen(self.welcome)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 53, in _show_screen
+    app = QApplication.instance()
+          ^^^^^^^^^^^^
+NameError: name 'QApplication' is not defined
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AttributeError: 'AppController' object has no attribute 'dev_login'
+
+================================================

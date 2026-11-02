@@ -6,6 +6,7 @@ from PySide6.QtUiTools import QUiLoader
 from PySide6.QtWidgets import QLineEdit, QPushButton, QWidget, QLabel
 from screens.loading import LoadingOverlay
 from screens.startup import FittedForm
+from screens.auth.password_visibility import add_password_visibility_toggle
 
 
 _UI_FILE = Path(__file__).resolve().parents[2] / "ui" / "designer" / "login.ui"
@@ -59,6 +60,7 @@ class LoginScreen(QWidget):
 
         self.email_input: QLineEdit = self._ui.findChild(QLineEdit, "emailInput")
         self.password_input: QLineEdit = self._ui.findChild(QLineEdit, "passwordInput")
+        add_password_visibility_toggle(self.password_input)
 
         # Error label positioned directly above buttons
         self.error_label = QLabel(self._ui)

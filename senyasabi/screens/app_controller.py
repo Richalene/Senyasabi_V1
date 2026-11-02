@@ -1,5 +1,6 @@
 import logging
-from PySide6.QtWidgets import QLineEdit
+from PySide6.QtCore import QTimer
+from PySide6.QtWidgets import QApplication, QLineEdit
 
 from screens.auth.login import LoginScreen
 from screens.auth.register import RegisterScreen
@@ -47,9 +48,16 @@ class AppController:
         self.landing.ui.btnGetStarted.clicked.connect(self.show_register)
         self.landing.ui.btnLogin.clicked.connect(self.show_login)
 
-    def _show_screen(self, screen):
-        # Reuse each screen and show the destination before hiding the source.
-        screen.show()
+    def _show_screen(self, screen, *, transition_direction=None):
+        # Set the native presentation before showing a hidden top-level window.
+        app = QApplication.instance()
+        present = getattr(app, "_present", None)
+        matches_presentation = getattr(app, "_matches_presentation", None)
+        if (present is not None and matches_presentation is not None
+                and not matches_presentation(screen)):
+            present(screen)
+        else:
+            screen.show()
         windows = [self.welcome, self.landing, self.login, self.register,
                    self.main_menu, self.dashboard, self.dashboard._leaderboard, self.minigames, self.module_map, self.module_lessons,
                    self.quiz, self.active_lesson]
@@ -66,6 +74,12 @@ class AppController:
                         window.hide()
                 except Exception:
                     pass
+        if screen is self.module_map and transition_direction:
+            QTimer.singleShot(
+                0,
+                lambda: screen.play_intro(transition_direction)
+                if screen.isVisible() else None,
+            )
 
     def show_welcome(self):
         self._show_screen(self.welcome)
@@ -78,10 +92,14 @@ class AppController:
         dialog.exec()
 
     def _clear_passwords(self):
-        self.login.password_input.clear()
-        self.register.password_input.clear()
-        if hasattr(self.register, 'confirm_password_input'):
-            self.register.confirm_password_input.clear()
+        for field in (self.login.password_input, self.register.password_input,
+                      getattr(self.register, 'confirm_password_input', None)):
+            if field is None:
+                continue
+            toggle = getattr(field, "visibility_toggle", None)
+            if toggle is not None:
+                toggle.setChecked(False)
+            field.clear()
 
     def login_user(self):
         screen = self.login
@@ -173,6 +191,7 @@ class AppController:
         if self.camera_settings is not None:
             self.camera_settings.reject()
         auth_service.logout_user()
+        self.main_menu.invalidate_home_stats()
         self.selected_module = None
         self.login.email_input.clear()
         self.show_login()
@@ -193,11 +212,11 @@ class AppController:
             return
         self._show_screen(self.dashboard)
 
-    def show_main_menu(self):
+    def show_main_menu(self, checked=False, *, transition_direction=None):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
-        self._show_screen(self.main_menu)
+        self._show_screen(self.main_menu, transition_direction=transition_direction)
 
     def show_minigames(self):
         if auth_service.get_current_user() is None:
@@ -214,48 +233,54 @@ class AppController:
             self.minigames.back_requested.connect(self.back_from_minigames)
         return self.minigames
 
-    def show_module_map(self):
+    def show_module_map(self, checked=False, *, transition_direction="forward"):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         if self.module_map is None:
             from screens.main_menu.module_select import ModuleSelectWidget
             self.module_map = ModuleSelectWidget()
-            self.module_map.go_back.connect(self.show_main_menu)
+            self.module_map.go_back.connect(
+                lambda: self.show_main_menu(transition_direction="backward")
+            )
             self.module_map.module_chosen.connect(self.open_module)
-        self._show_screen(self.module_map)
+        self._show_screen(self.module_map, transition_direction=transition_direction)
 
     def open_module(self, code):
         self.show_module_choices(code)
 
-    def show_module_choices(self, code=None):
+    def show_module_choices(self, code=None, *, transition_direction="forward"):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         code = code or self.selected_module
         if code is None:
-            self.show_module_map()
+            self.show_module_map(transition_direction="backward")
             return
         self.selected_module = code.lower()
         if self.module_lessons is None:
             from screens.main_menu.lesson_select import LessonSelectWidget
             self.module_lessons = LessonSelectWidget(module_code=self.selected_module)
-            self.module_lessons.go_back.connect(self.show_module_map)
-            self.module_lessons.menu_requested.connect(self.show_main_menu)
+            self.module_lessons.go_back.connect(
+                lambda: self.show_module_map(transition_direction="backward")
+            )
+            self.module_lessons.menu_requested.connect(
+                lambda: self.show_main_menu(transition_direction="backward")
+            )
             self.module_lessons.lesson_chosen.connect(self.open_module_lesson)
             self.module_lessons.game_chosen.connect(self.open_module_game)
             self.module_lessons.quiz_requested.connect(self.open_module_quiz)
         else:
             self.module_lessons.set_module(self.selected_module)
         self.module_lessons.set_streak(self.main_menu.ui.streakValue.text())
-        self._show_screen(self.module_lessons)
+        self._show_screen(self.module_lessons, transition_direction=transition_direction)
 
     def open_module_lesson(self, number):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         if self.selected_module is None:
-            self.show_module_map()
+            self.show_module_map(transition_direction="backward")
             return
         if self.active_lesson is not None and self.active_lesson.isVisible():
             return
@@ -275,7 +300,15 @@ class AppController:
             screen = WordLessonWidget(words, model_code)
         self.active_lesson = screen
         screen.lesson_finished.connect(self._lesson_back)
-        self._show_screen(screen)
+        if self.selected_module == "alphabet":
+            screen.layout_comp.results_widget.next_lesson_requested.connect(
+                lambda next_number=number + 1: self._open_next_lesson(next_number)
+            )
+        self._show_screen(screen, transition_direction="forward")
+
+    def _open_next_lesson(self, number):
+        self._dispose_lesson()
+        self.open_module_lesson(number)
 
     def _dispose_lesson(self):
         screen, self.active_lesson = self.active_lesson, None
@@ -302,7 +335,7 @@ class AppController:
             self.main_menu.refresh_home_stats()
         except Exception:
             pass
-        self.show_module_choices()
+        self.show_module_choices(transition_direction="backward")
         logging.warning("[DIAG] AppController._lesson_back: exit")
 
     def open_module_quiz(self):
@@ -386,10 +419,11 @@ class AppController:
         self._show_screen(screen)
 
     def back_from_minigames(self):
+        self.main_menu.invalidate_home_stats()
         if self.minigames.scope == "global":
-            self.show_main_menu()
+            self.show_main_menu(transition_direction="backward")
         else:
-            self.show_module_choices(self.minigames.module_code)
+            self.show_module_choices(self.minigames.module_code, transition_direction="backward")
 
     def test_connection(self) -> dict:
         """

@@ -161,9 +161,12 @@ class SenyaSabiApplication(QApplication):
                 palette.setColor(QPalette.ColorRole.Window, QColor("#c5d27b"))
                 receiver.setPalette(palette)
                 receiver.setAutoFillBackground(True)
-                if receiver.isFullScreen() != self.fullscreen:
-                    QTimer.singleShot(0, lambda window=receiver: self._present(window)
-                                      if window.isVisible() else None)
+            if not self._matches_presentation(receiver):
+                QTimer.singleShot(
+                    0,
+                    lambda window=receiver: self._present(window)
+                    if window.isVisible() and not self._matches_presentation(window) else None,
+                )
         if screen and event.type() == QEvent.Type.Resize:
             fitted = getattr(receiver, "_fitted_form", None)
             if fitted is not None:
@@ -175,6 +178,9 @@ class SenyaSabiApplication(QApplication):
             window.showFullScreen()
         else:
             window.showMaximized()
+
+    def _matches_presentation(self, window):
+        return window.isFullScreen() if self.fullscreen else window.isMaximized()
 
 
 def main() -> int:

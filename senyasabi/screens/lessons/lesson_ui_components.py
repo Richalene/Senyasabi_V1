@@ -5,7 +5,7 @@ from PySide6.QtGui import QPainter, QPixmap, QColor, QPainterPath, QPen, QFont
 from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout,
                               QHBoxLayout, QSizePolicy)
 from screens.camera_preview import RoundedCameraPreview
-from screens.minigames.minigame_ui_components import CircularActionButton
+from screens.minigames.minigame_ui_components import CircularActionButton, PillBadge, PillButton
 
 ROOT = Path(__file__).resolve().parents[2]
 
@@ -69,6 +69,7 @@ class LessonResultsWidget(QWidget):
     warm amber/cream/brown palette, circular accuracy ring, and Back to Lessons button).
     """
     back_requested = Signal()
+    next_lesson_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -133,7 +134,9 @@ class LessonResultsWidget(QWidget):
             "}"
         )
 
-        self.badge_acc = QLabel("100% Accuracy", self)
+        self.badge_acc = PillBadge(
+            "100% Accuracy", self, background="#BFD379", foreground="#2D4014"
+        )
         self.badge_acc.setGeometry(730, 676, 240, 68)
         self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.badge_acc.setStyleSheet(
@@ -141,9 +144,6 @@ class LessonResultsWidget(QWidget):
             "  font-family: 'Segoe UI', sans-serif;"
             "  font-size: 24px;"
             "  font-weight: 700;"
-            "  color: #2D4014;"
-            "  background-color: #BFD379;"
-            "  border-radius: 34px;"
             "}"
         )
 
@@ -188,6 +188,18 @@ class LessonResultsWidget(QWidget):
         )
         self.btn_back.clicked.connect(self.back_requested.emit)
 
+        self.btn_next_lesson = PillButton(
+            "Next Lesson", self, background="#FFFDF0", foreground="#704833",
+            hover="#FFF8E7", pressed="#F5ECCE", border="#D5C9A9", border_width=3.5,
+        )
+        self.btn_next_lesson.setGeometry(580, 890, 380, 85)
+        self.btn_next_lesson.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_next_lesson.setStyleSheet(
+            "QPushButton { font-family: 'Segoe UI', sans-serif; font-size: 30px; font-weight: 700; }"
+        )
+        self.btn_next_lesson.clicked.connect(self.next_lesson_requested.emit)
+        self.btn_next_lesson.hide()
+
     def show_results(
         self,
         lesson_name: str,
@@ -195,6 +207,7 @@ class LessonResultsWidget(QWidget):
         completed_count: int | None = None,
         total_count: int | None = None,
         message: str | None = None,
+        has_next_lesson: bool = False,
     ):
         try:
             import math
@@ -207,6 +220,7 @@ class LessonResultsWidget(QWidget):
 
         clean_name = str(lesson_name or "Lesson").strip()
         self.lbl_lesson_name.setText(clean_name)
+        self.btn_next_lesson.setVisible(has_next_lesson)
 
         if completed_count is not None and total_count is not None and total_count > 0:
             self.lbl_score_val.setText(f"{completed_count}/{total_count}")
@@ -218,19 +232,13 @@ class LessonResultsWidget(QWidget):
 
         if pct >= 85:
             default_msg = "You are a natural! Amazing sign recognition accuracy in this lesson!"
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #2D4014; background-color: #BFD379; border-radius: 33px; }"
-            )
+            self.badge_acc.set_colors("#BFD379", "#2D4014")
         elif pct >= 60:
             default_msg = "Great effort! Keep practicing these signs to build even stronger fluency!"
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFDE59; border-radius: 33px; }"
-            )
+            self.badge_acc.set_colors("#FFDE59", "#5C3B28")
         else:
             default_msg = "Good start completing this lesson! Practice the signs again anytime to boost your accuracy!"
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFE082; border: 2px solid #FFAE00; border-radius: 33px; }"
-            )
+            self.badge_acc.set_colors("#FFE082", "#5C3B28", border="#FFAE00", border_width=2)
 
         self.lbl_message.setText(message or default_msg)
         self.show()
@@ -495,11 +503,13 @@ class ModernLessonLayout(QWidget):
         left_col.setSpacing(2)
 
         self.lbl_target_sub = QLabel("SIGN THIS WORD", self.target_header)
-        self.lbl_target_sub.setStyleSheet("color: #7A6045; font-size: 13px; font-weight: 700; letter-spacing: 2px;")
+        self.lbl_target_sub.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_target_sub.setStyleSheet("color: #7A6045; font-size: 14px; font-weight: 700; letter-spacing: 2px;")
         left_col.addWidget(self.lbl_target_sub)
 
         self.lbl_target_word = QLabel("WORD", self.target_header)
-        self.lbl_target_word.setStyleSheet("color: #2F4858; font-size: 34px; font-weight: 800;")
+        self.lbl_target_word.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_target_word.setStyleSheet("color: #2F4858; font-size: 52px; font-weight: 800;")
         left_col.addWidget(self.lbl_target_word)
         th_layout.addLayout(left_col, 1)
 

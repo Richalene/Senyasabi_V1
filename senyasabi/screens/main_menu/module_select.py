@@ -1,12 +1,15 @@
 """Firefly module map; content comes from existing module definitions."""
 from pathlib import Path
+import random
 import re
 
-from PySide6.QtCore import Qt, Signal, QRect, QSize, QPointF
+from PySide6.QtCore import (QEasingCurve, Qt, QParallelAnimationGroup,
+                            QPauseAnimation, QPointF, QPropertyAnimation,
+                            QRect, QRectF, QSize, QSequentialAnimationGroup, Signal)
 from PySide6.QtGui import QColor, QIcon, QPainter, QPen, QPixmap
 from PySide6.QtUiTools import QUiLoader
-from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QFrame,
-                              QVBoxLayout, QGraphicsDropShadowEffect)
+from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QFrame, QVBoxLayout,
+                              QGraphicsDropShadowEffect)
 from backend.content_service import get_words_for_module
 from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.main_menu.word_menu import _load_categories
@@ -24,7 +27,13 @@ POSITIONS = (
     (.590, .590),  # 6: Months of the Year (placeholder)
     (.705, .710),  # 7: Action Words (placeholder)
 )
-MODULE_NODES = [
+FIREFLY_SIZE_RANGE = (120, 280)
+FIREFLY_HIT_TARGET = 90
+FIREFLY_ROTATION_RANGE = (12.0, 35.0)
+FIREFLY_X_JITTER = 0.035
+FIREFLY_Y_JITTER = 0.07
+FIREFLY_MIN_X_SPACING = 0.08
+MODULE_NODES: list[dict[str, str | int | float | bool]] = [
     dict(
         module_code="alphabet",
         title="FSL Alphabet",
@@ -90,18 +99,44 @@ class FireflyButton(QPushButton):
     hovered = Signal(object, bool)
 
     def enterEvent(self, event):
-        self.graphicsEffect().setEnabled(True)
         self.hovered.emit(self, True)
         super().enterEvent(event)
 
     def leaveEvent(self, event):
-        self.graphicsEffect().setEnabled(False)
         self.hovered.emit(self, False)
         super().leaveEvent(event)
 
 
+class FireflySprite(QLabel):
+    def __init__(self, pixmap, angle, parent=None):
+        super().__init__(parent)
+        self._pixmap = pixmap
+        self.angle = angle
+        self.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
+        self.setStyleSheet("background: transparent; border: none;")
+
+    def paintEvent(self, event):
+        if self._pixmap.isNull():
+            return
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.SmoothPixmapTransform)
+        center_x = self.width() / 2
+        center_y = self.height() / 2
+        painter.translate(center_x, center_y)
+        painter.rotate(self.angle)
+        target = QRectF(-center_x, -center_y, self.width(), self.height())
+        painter.drawPixmap(target, self._pixmap, QRectF(self._pixmap.rect()))
+
+
 class DashedTrailOverlay(QWidget):
     """Draws the glowing dashed flight path connecting the fireflies along the tree branch."""
+    def __init__(self, parent=None, node_layout: list[tuple[float, float, int]] | None = None):
+        super().__init__(parent)
+        self.node_layout: list[tuple[float, float, int]] = node_layout or [
+            (float(node["x"]), float(node["y"]), FIREFLY_SIZE_RANGE[0])
+            for node in MODULE_NODES
+        ]
+
     def paintEvent(self, event):
         super().paintEvent(event)
         painter = QPainter(self)
@@ -118,7 +153,7 @@ class DashedTrailOverlay(QWidget):
         from PySide6.QtGui import QPainterPath
         path = QPainterPath()
         # Connect nodes from bottom-left through each module to the golden walnut cache
-        pts = [QPointF(node["x"] * w, node["y"] * h) for node in MODULE_NODES]
+        pts = [QPointF(x * w, y * h) for x, y, _ in self.node_layout]
         # Append golden walnut destination
         pts.append(QPointF(0.789 * w, 0.633 * h))
 
@@ -149,15 +184,42 @@ class ModuleSelectWidget(QWidget):
         # This screen owns proportional fitting, including its dynamic overlays.
         self._fitted_form = self
         self.resize(1306,735)
-        self.background = self._ui.findChild(QLabel, "bgLabel")
-        if self.background is None:
-            self.background = QLabel(self._ui)
+        rng = random.Random()
+        self.node_layout: list[tuple[float, float, int]] = []
+        previous_x = 0.0
+        for node in MODULE_NODES:
+            visual_size = rng.randint(*FIREFLY_SIZE_RANGE)
+            x = float(node["x"]) + rng.uniform(-FIREFLY_X_JITTER, FIREFLY_X_JITTER)
+            y = float(node["y"]) + rng.uniform(-FIREFLY_Y_JITTER, FIREFLY_Y_JITTER)
+            x = max(x, previous_x + FIREFLY_MIN_X_SPACING)
+            x = min(x, 0.72)
+            previous_x = x
+            x_margin = visual_size / (2 * 1920)
+            y_margin = visual_size / (2 * 1080)
+            self.node_layout.append((
+                min(max(x, x_margin), 1 - x_margin),
+                min(max(y, y_margin), 1 - y_margin),
+                visual_size,
+            ))
+        rotated_indices = set(rng.sample(
+            range(len(MODULE_NODES)), k=max(1, len(MODULE_NODES) // 2)
+        ))
+        self.firefly_angles = [
+            rng.uniform(*FIREFLY_ROTATION_RANGE) * rng.choice((-1, 1))
+            if index in rotated_indices else 0.0
+            for index in range(len(MODULE_NODES))
+        ]
+        self._intro_animation = None
+        background = self._ui.findChild(QLabel, "bgLabel")
+        if background is None:
+            background = QLabel(self._ui)
+        self.background = background
         self.background.setPixmap(QPixmap(str(ROOT / "resources/img/mod_tree.png")))
         self.background.setScaledContents(True)
         self.background.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.background.lower()
 
-        self.trail_overlay = DashedTrailOverlay(self._ui)
+        self.trail_overlay = DashedTrailOverlay(self._ui, self.node_layout)
         self.trail_overlay.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         self.trail_overlay.show()
 
@@ -180,8 +242,9 @@ class ModuleSelectWidget(QWidget):
                        if child is not self.background]
         self._base_style = self._ui.styleSheet()
         install_page_menu(self, canvas_size=QSize(1920, 1080))
-        icon = QIcon(str(ROOT / "resources/img/ui/firefly.png"))
+        firefly_pixmap = QPixmap(str(ROOT / "resources/img/ui/firefly.png"))
         self.buttons = []
+        self.firefly_visuals = []
         for number, node in enumerate(MODULE_NODES,1):
             button = FireflyButton(self._ui)
             button.setProperty("class", "moduleFirefly")
@@ -189,17 +252,18 @@ class ModuleSelectWidget(QWidget):
             button.setProperty("coming_soon", bool(node.get("coming_soon", False)))
             desc = "Lesson coming soon" if node.get("coming_soon") else node["description"]
             button.setAccessibleName(f'Module {number}: {node["title"]}')
-            button.setToolTip(f'{number}. {node["title"]} — {desc}')
+            button.setToolTip("")
             button.setCursor(Qt.CursorShape.PointingHandCursor)
-            button.setIcon(icon)
-            if icon.isNull():
+            if firefly_pixmap.isNull():
                 button.setText('●')
                 button.setStyleSheet('color: #e7bd42; font-size: 32px; border: none; background: transparent;')
-            glow = QGraphicsDropShadowEffect(button)
+            visual = FireflySprite(firefly_pixmap, self.firefly_angles[number - 1], self._ui)
+            glow = QGraphicsDropShadowEffect(visual)
             glow.setColor(QColor(255,206,66,190))
             glow.setOffset(0,0)
             glow.setEnabled(False)
-            button.setGraphicsEffect(glow)
+            visual.setGraphicsEffect(glow)
+            self.firefly_visuals.append(visual)
             button.hovered.connect(self.hover_node)
             button.clicked.connect(lambda checked=False, code=node["module_code"]: self.choose(code))
             self.buttons.append(button)
@@ -222,12 +286,12 @@ class ModuleSelectWidget(QWidget):
         self.popup.setProperty("class", "modulePopup")
         self.popup.setAttribute(Qt.WidgetAttribute.WA_TransparentForMouseEvents)
         layout = QVBoxLayout(self.popup)
-        layout.setContentsMargins(16,12,16,12)
+        layout.setContentsMargins(16, 12, 16, 12)
         self.popup_title = QLabel()
-        self.popup_title.setProperty("class","modulePopupTitle")
+        self.popup_title.setProperty("class", "modulePopupTitle")
         self.popup_detail = QLabel()
-        self.popup_detail.setProperty("class","modulePopupDescription")
-        for child in (self.popup_title,self.popup_detail):
+        self.popup_detail.setProperty("class", "modulePopupDescription")
+        for child in (self.popup_title, self.popup_detail):
             child.setTextFormat(Qt.TextFormat.PlainText)
             child.setWordWrap(True)
             layout.addWidget(child)
@@ -246,35 +310,37 @@ class ModuleSelectWidget(QWidget):
             return
         self.clear_hover()
         self.active_node = button
-        button.graphicsEffect().setEnabled(True)
+        self.firefly_visuals[self.buttons.index(button)].graphicsEffect().setEnabled(True)
         number = self.buttons.index(button)
         node = MODULE_NODES[number]
-        self.popup_title.setText(f'Module {number+1}: {node["title"]}')
-        if node.get("coming_soon"):
-            self.popup_detail.setText("Lesson coming soon")
-        else:
-            self.popup_detail.setText(f'{node["description"]}\n{node["count"]} Signs')
+        self.popup_title.setText(f'Module {number + 1}: {node["title"]}')
+        self.popup_detail.setText(
+            "Lesson coming soon" if node.get("coming_soon")
+            else f'{node["description"]}\n{node["count"]} Signs'
+        )
         self.position_popup()
         self.popup.show()
-        if hasattr(self, "level_badge"):
-            self.level_badge.raise_()
+        self.level_badge.raise_()
         self.popup.raise_()
 
     def position_popup(self):
         if self.active_node is None:
             return
-        self.popup.setFixedWidth(min(290,self._ui.width()))
+        self.popup.setFixedWidth(min(290, self._ui.width()))
         self.popup.adjustSize()
         button = self.active_node
-        x = button.x()+button.width()+12
-        if x+self.popup.width()>self._ui.width():
-            x = button.x()-self.popup.width()-12
-        self.popup.move(max(0,min(x,self._ui.width()-self.popup.width())),
-                        max(0,min(button.y(),self._ui.height()-self.popup.height())))
+        x = button.x() + button.width() + 12
+        if x + self.popup.width() > self._ui.width():
+            x = button.x() - self.popup.width() - 12
+        self.popup.move(
+            max(0, min(x, self._ui.width() - self.popup.width())),
+            max(0, min(button.y(), self._ui.height() - self.popup.height())),
+        )
 
     def clear_hover(self):
         if self.active_node is not None:
-            self.active_node.graphicsEffect().setEnabled(False)
+            index = self.buttons.index(self.active_node)
+            self.firefly_visuals[index].graphicsEffect().setEnabled(False)
         self.active_node = None
         self.popup.hide()
 
@@ -297,21 +363,89 @@ class ModuleSelectWidget(QWidget):
                 child.raise_()
         if hasattr(self, "walnut_pile") and self.walnut_pile is not None:
             self.walnut_pile.raise_()
-        size = max(35, round(125 * scale))
-        for button,node in zip(self.buttons,MODULE_NODES):
-            button.setGeometry(round(node["x"]*width-size/2),round(node["y"]*height-size/2),size,size)
-            button.setIconSize(QSize(size,size))
-            button.graphicsEffect().setBlurRadius(max(12,32*scale))
+        for button, visual, (x, y, base_size) in zip(
+                self.buttons, self.firefly_visuals, self.node_layout):
+            visual_size = max(35, round(base_size * scale))
+            center_x = round(x * width)
+            center_y = round(y * height)
+            visual.setGeometry(
+                center_x - visual_size // 2, center_y - visual_size // 2,
+                visual_size, visual_size,
+            )
+            visual.raise_()
+            hit_size = max(35, round(FIREFLY_HIT_TARGET * scale))
+            button.setGeometry(
+                center_x - hit_size // 2, center_y - hit_size // 2,
+                hit_size, hit_size,
+            )
+            visual.graphicsEffect().setBlurRadius(max(12, 36 * scale))
             button.raise_()
         if hasattr(self, "level_badge"):
             self.level_badge.raise_()
         self.popup.raise_()
         self.position_popup()
 
+    def play_intro(self, direction="forward"):
+        self.stop_intro()
+        self.fit()
+        group = QParallelAnimationGroup(self)
+        direction_sign = -1 if direction == "forward" else 1
+        for index, (visual, button) in enumerate(zip(self.firefly_visuals, self.buttons)):
+            target = visual.geometry()
+            start_size = max(22, round(target.width() * 0.48))
+            previous = self.node_layout[max(0, index - 1)]
+            x, y, _ = self.node_layout[index]
+            if index == 0:
+                dx, dy = direction_sign * 24, 0
+            else:
+                dx = (previous[0] - x) * target.width() * 0.22 * direction_sign
+                dy = (previous[1] - y) * target.height() * 0.22 * direction_sign
+            start = QRect(
+                round(target.center().x() - start_size / 2 + dx),
+                round(target.center().y() - start_size / 2 + dy),
+                start_size,
+                start_size,
+            )
+            button.setGeometry(start)
+
+            button.setEnabled(False)
+            sequence = QSequentialAnimationGroup()
+            sequence.addAnimation(QPauseAnimation(index * 45))
+            movement = QPropertyAnimation(visual, b"geometry")
+            movement.setDuration(300)
+            movement.setStartValue(start)
+            movement.setEndValue(target)
+            movement.setEasingCurve(QEasingCurve.Type.OutCubic)
+            sequence.addAnimation(movement)
+            group.addAnimation(sequence)
+
+        self._intro_animation = group
+
+        def finish_intro():
+            if self._intro_animation is group:
+                self._intro_animation = None
+            for button in self.buttons:
+                button.setEnabled(True)
+            group.deleteLater()
+
+        group.finished.connect(finish_intro)
+        group.start()
+
+    def stop_intro(self):
+        animation, self._intro_animation = self._intro_animation, None
+        if animation is not None:
+            animation.stop()
+            animation.deleteLater()
+        for button in self.buttons:
+            button.setEnabled(True)
+
     def resizeEvent(self,event):
+        if self._intro_animation is not None:
+            self.stop_intro()
         super().resizeEvent(event)
         self.fit()
 
     def hideEvent(self,event):
+        self.stop_intro()
         self.clear_hover()
         super().hideEvent(event)

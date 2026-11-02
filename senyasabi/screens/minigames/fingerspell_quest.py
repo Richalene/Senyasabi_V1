@@ -119,7 +119,7 @@ class FingerSpellQuestGameView(QWidget):
         self.btn_retry_cam = QPushButton("Camera Options", self.card)
         self.btn_retry_cam.setGeometry(1020, 835, 200, 45)
         self.btn_retry_cam.setStyleSheet(
-            "QPushButton { background: #526536; color: white; border-radius: 15px; font-weight: bold; } "
+            "QPushButton { background: #526536; color: white; border-radius: 999px; font-weight: bold; } "
             "QPushButton:hover { background: #687D43; }"
         )
         self.btn_retry_cam.clicked.connect(lambda: self.open_camera(force=True))

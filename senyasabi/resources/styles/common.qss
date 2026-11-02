@@ -3,7 +3,7 @@ QDialog#cameraSetupDialog QScrollArea, QDialog#cameraSetupDialog QStackedWidget,
 QDialog#cameraSetupDialog QScrollArea > QWidget, QDialog#cameraSetupDialog QStackedWidget > QWidget { background: transparent; border: none; }
 QLabel { color: #704833; background: transparent; }
 QLabel[class="pageTitle"] { font-size: 26px; font-weight: 700; }
-QLabel[class="bodyText"] { font-size: 15px; padding: 8px; }
+QLabel[class="bodyText"] { font-size: 18px; padding: 8px; }
 QLabel#cameraPreview { background: #fff9e9; border: 2px solid #8fa552; border-radius: 20px; padding: 8px; }
 QPushButton { background: #fff9e9; color: #704833; border: 1px solid #a39b68; border-radius: 16px; min-height: 28px; padding: 7px 14px; font-weight: 600; }
 QPushButton:hover { background: #fff0b8; border-color: #80984d; }

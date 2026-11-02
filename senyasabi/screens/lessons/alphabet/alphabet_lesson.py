@@ -243,6 +243,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
                 accuracy_pct=pct,
                 completed_count=self._session.score,
                 total_count=self._session.total,
+                has_next_lesson=self._lesson_number < max(LESSON_LETTERS),
             )
 
         try:
