@@ -60,7 +60,8 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         lessons = get_synced_lessons("alphabet")
         entry = next((l for l in lessons if l["number"] == lesson_number), None)
         if letters is None:
-            letters = [w.upper() for w in entry["words"]] if entry else list("ABCDEF")
+            words = entry.get("words") if entry else None
+            letters = [w.upper() for w in words] if isinstance(words, (list, tuple)) else list("ABCDEF")
         self._letters = letters
         self._lesson_number = lesson_number
         self._lesson_id = entry["lesson_id"] if entry else None
@@ -147,12 +148,16 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
     def _camera_ready(self, engine):
         super()._camera_ready(engine)
         if not self._is_paused and not self._session.is_done():
-            self._load_ref_image(self._session.current_target)
+            target = self._session.current_target
+            if target is not None:
+                self._load_ref_image(target)
 
     def _load_ref_image(self, letter: str):
         self.video.set_sign("alphabet", letter.lower())
-        self.video.setVisible(self.video.media.available)
-        if self.video.media.available:
+        media = self.video.media
+        media_available = media is not None and media.available
+        self.video.setVisible(media_available)
+        if media_available:
             self.layout_comp.avatar_card.set_sign_pixmap(QPixmap())
             if not self._is_paused:
                 self.video.play()
@@ -192,7 +197,9 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         if self._resources_closed or self._session.is_done():
             return
         if not (self.video.media and self.video.media.available):
-            self._show_still(self._session.current_target)
+            letter = self._session.current_target
+            if letter is not None:
+                self._show_still(letter)
 
     def _refresh_ui(self):
         session = self._session
@@ -203,14 +210,17 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             self._show_completion()
             return
 
-        letter = session.current_target
+        letter = session.current_target or ""
+        
         self.layout_comp.set_target(
-            f"Letter {letter.upper()}",
-            category=f"ALPHABET LESSON {self._lesson_number} - SIGN THIS LETTER",
+            f"Letter {letter.upper() if letter else '?'}",
+            category=f"ALPHABET LESSON {self._lesson_number}SIGN THIS LETTER",
             progress=f"Letter {idx + 1} of {total}"
         )
         self.layout_comp.set_prediction("Waiting for hand...", status="waiting")
-        self._load_ref_image(letter)
+        
+        if letter:
+            self._load_ref_image(letter)
 
         self.layout_comp.feedback_overlay.hide()
         if hasattr(self.layout_comp, "results_widget") and self.layout_comp.results_widget is not None:

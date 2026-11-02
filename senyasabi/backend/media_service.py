@@ -7,6 +7,7 @@ import os
 from pathlib import Path
 import tempfile
 from typing import Protocol
+import threading
 
 import requests
 
@@ -22,7 +23,10 @@ log = logging.getLogger(__name__)
 logger = log
 VIDEO_ROOT = ROOT / "resources/videos"
 CHUNK = 1024 * 1024
-
+_STILLS = {}                      # 'A' -> Path, filled from lesson_media of the alphabet lessons
+_stills_lock = threading.Lock()
+_warming = False
+_BUNDLED = ROOT / "resources/VRM_SIGNS"
 
 @dataclass(frozen=True)
 class MediaRecord:
@@ -198,7 +202,14 @@ def _download(media_id: int) -> Path | None:
         expected = info.get("checksum_sha256")
         if expected and sha.hexdigest() != expected:
             raise ValueError("checksum mismatch")
+        
         os.replace(tmp_name, dest)               # atomic: never a half-written file
+        logger.info(
+            "Successfully downloaded and verified media_id=%s, file_name=%s, destination=%s",
+            media_id,
+            info.get("file_name"),
+            dest,
+        )
     except Exception:
         logger.exception("Media download failed for %s", media_id)
         Path(tmp_name).unlink(missing_ok=True)
@@ -263,7 +274,6 @@ def _get_media_info_supabase(media_id: int) -> dict | None:
                 return None
             
             object_key = media.object_key
-            logger.info("object_key: %s", object_key)
             file_name = media.file_name
             media_type = media.media_type
             width = media.width
@@ -296,3 +306,56 @@ def _get_media_info_supabase(media_id: int) -> dict | None:
     except Exception as e:
         logger.warning("Failed to get media info from Supabase: %s", e)
         return None
+
+def load_alphabet_stills(download=False) -> int:
+    """Fill the in-memory letter map from lesson_media. download=False only reads files that are
+    already cached (fast, UI-safe); download=True fetches missing ones (blocking: worker thread)."""
+    from .content_service import get_synced_lessons
+    found = {}
+    for lesson in get_synced_lessons("alphabet"):
+        if lesson["lesson_id"] is None:
+            continue
+        for key, media_id in get_lesson_media(lesson["lesson_id"]).items():
+            path = get_media_path(media_id) if download else _cached_path(media_id)
+            if path is not None:
+                found[key] = path
+    with _stills_lock:
+        _STILLS.update(found)
+    return len(found)
+
+
+def alphabet_still(letter):
+    """Path for a letter's image: Supabase-cached copy, else the bundled PNG, else None.
+    Memory lookup only, safe to call from paint code."""
+    key = str(letter).upper()
+    with _stills_lock:
+        path = _STILLS.get(key)
+    if path is not None and path.is_file():
+        return path
+    bundled = _BUNDLED / f"{key}.png"
+    return bundled if bundled.is_file() else None
+
+
+def warm_alphabet_stills():
+    """Load cached images now, then download the rest in the background. Never raises."""
+    global _warming
+    try:
+        load_alphabet_stills(download=False)
+    except Exception as error:
+        log.warning("Alphabet image cache unavailable: %s", error)
+    with _stills_lock:
+        if _warming:
+            return
+        _warming = True
+
+    def work():
+        global _warming
+        try:
+            load_alphabet_stills(download=True)
+        except Exception as error:
+            log.warning("Alphabet image download failed: %s", error)
+        finally:
+            with _stills_lock:
+                _warming = False
+
+    threading.Thread(target=work, name="alphabet-stills", daemon=True).start()
