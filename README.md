@@ -56,7 +56,7 @@ The learning curriculum is structured into an introductory Alphabet foundation f
 ### Environment Setup
 1. Clone the repository:
    ```bash
-   git clone https://github.com/Mary/Senyasabi_V1.git
+   git clone https://github.com/Richalene/Senyasabi_V1.git
    cd Senyasabi_V1
    ```
 
