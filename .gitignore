@@ -96,3 +96,5 @@ _test_cache
 # Local model extraction and scratch directories
 ext_models/
 scratch/
+
+cache/

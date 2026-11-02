@@ -1,7 +1,8 @@
 """Shared consent gate and camera states for lesson screens."""
 import logging
+from typing import Optional, Callable, Any
 from PySide6.QtCore import Qt, QThread
-from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushButton
+from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushButton, QLabel
 from backend.camera_service import get_camera_service, friendly_camera_error
 from screens.camera_setup import CameraSetupDialog
 from screens.loading import LoadingOverlay
@@ -44,42 +45,84 @@ class CameraActions(QWidget):
 
 
 class LessonCameraMixin:
+    """Mixin class for lesson screens. 
+    Expects host classes to define or expose UI elements like _camera_lbl, _session, _timer, etc.
+    """
+    # Type hints to keep static type checkers happy and eliminate 'unknown attribute' errors
+    _camera_lbl: QLabel
+    _session: Any
+    _timer: Any
+    _feedback_timer: Any
+    _feedback_action: Any
+    _resources_closed: bool
+    _engine: Any
+    _engine_factory: Callable[[], Any]
+    _availability: Optional[Callable[[], Any]]
+    _camera_dialog: Optional[QDialog]
+    _camera_misses: int
+    loading: LoadingOverlay
+    camera_actions: CameraActions
+    layout_comp: Any
+    camDot: QWidget
+
     def _init_camera(self, factory, availability=None):
         self._engine_factory = factory
         self._availability = availability
         self._camera_dialog = None
         self._camera_misses = 0
+        self._resources_closed = False
+        self._engine = None
         self.loading = LoadingOverlay(self)
-        self.camera_actions = CameraActions(self._camera_lbl, self.start_camera, self.choose_camera)
+        
+        camera_lbl = getattr(self, "_camera_lbl", None)
+        if camera_lbl:
+            self.camera_actions = CameraActions(camera_lbl, self.start_camera, self.choose_camera)
 
     def showEvent(self, event):
-        super().showEvent(event)
-        if not self._resources_closed and self._engine is None and not self.loading.busy:
+        # Type-checkers know QWidget has showEvent
+        super().showEvent(event) # type: ignore
+        
+        resources_closed = getattr(self, "_resources_closed", True)
+        engine = getattr(self, "_engine", None)
+        if not resources_closed and engine is None and not self.loading.busy:
             self.start_camera()
 
     def start_camera(self, checked=False, *, force=False):
         if self.loading.busy or (self._camera_dialog is not None and self._camera_dialog.isVisible()):
             return
-        if self._session.is_done():
+        
+        session = getattr(self, "_session", None)
+        if session and session.is_done():
             return
-        self._timer.stop()
-        self._feedback_timer.stop()
+            
+        if hasattr(self, "_timer") and self._timer:
+            self._timer.stop()
+        if hasattr(self, "_feedback_timer") and self._feedback_timer:
+            self._feedback_timer.stop()
+            
         self._feedback_action = None
         self._resources_closed = False
-        self._session.reset_waiting()
-        pass
+        
+        if session and hasattr(session, "reset_waiting"):
+            session.reset_waiting()
+
         stop_worker = getattr(self, '_stop_inference', None)
         worker_gone = stop_worker() if stop_worker else True
-        engine, self._engine = self._engine, None
+        
+        engine, self._engine = getattr(self, "_engine", None), None
         if engine is not None and worker_gone:  # else the worker closes it when it exits
             engine.close()
+            
         if self._availability is not None and not force:
             state = self._availability()
             if not state.available:
                 self._camera_failed(RuntimeError(state.message))
                 return
-        self._camera_lbl.clear()
-        self._camera_lbl.setText('Set up your camera to practice signs.')
+                
+        if hasattr(self, "_camera_lbl") and self._camera_lbl:
+            self._camera_lbl.clear()
+            self._camera_lbl.setText('Set up your camera to practice signs.')
+            
         self._camera_dialog = request_camera(self, self._prepare_camera, self._camera_off, force=force)
 
     def choose_camera(self, checked=False):
@@ -89,8 +132,9 @@ class LessonCameraMixin:
         self._camera_dialog = None
         if hasattr(self, 'camera_actions') and self.camera_actions is not None:
             self.camera_actions.hide()
-        self._camera_lbl.setText('Preparing your camera…')
-        pass
+            
+        if hasattr(self, "_camera_lbl") and self._camera_lbl:
+            self._camera_lbl.setText('Preparing your camera…')
 
         def prepare():
             engine = self._engine_factory()
@@ -103,13 +147,14 @@ class LessonCameraMixin:
             except Exception:
                 engine.close()
                 raise
+                
         self.loading.run(prepare, self._camera_ready, self._camera_failed,
                          dispose=lambda engine: engine.close(), message='Preparing sign recognition…')
 
     def _set_cam_dot(self, active: bool):
         if hasattr(self, "layout_comp") and hasattr(self.layout_comp, "set_camera_active"):
             self.layout_comp.set_camera_active(active)
-        elif hasattr(self, "camDot"):
+        elif hasattr(self, "camDot") and self.camDot:
             color = "#4ade80" if active else "#ef4444"
             self.camDot.setStyleSheet(f"background-color: {color}; border-radius: 6px;")
 
@@ -119,13 +164,17 @@ class LessonCameraMixin:
         self._set_cam_dot(True)
         if hasattr(self, 'camera_actions') and self.camera_actions is not None:
             self.camera_actions.hide()
-        self._timer.start()
+            
+        if hasattr(self, "_timer") and self._timer:
+            self._timer.start()
 
     def _camera_off(self):
         self._camera_dialog = None
-        self._camera_lbl.clear()
-        self._camera_lbl.setWordWrap(True)
-        self._camera_lbl.setText('Camera is off. You can set it up later or use Back to keep exploring.')
+        if hasattr(self, "_camera_lbl") and self._camera_lbl:
+            self._camera_lbl.clear()
+            self._camera_lbl.setWordWrap(True)
+            self._camera_lbl.setText('Camera is off. You can set it up later or use Back to keep exploring.')
+            
         self._set_cam_dot(False)
         if hasattr(self, 'camera_actions') and self.camera_actions is not None:
             self.camera_actions.show()
@@ -137,11 +186,16 @@ class LessonCameraMixin:
             message = 'Recognition model not installed for this module yet. You can browse the lesson or use Back.'
         else:
             message = friendly_camera_error(error)
-        self._camera_lbl.clear()
-        self._camera_lbl.setWordWrap(True)
-        self._camera_lbl.setText(message)
-        if hasattr(self, '_pred_lbl') and self._pred_lbl is not None:
-            self._pred_lbl.setText('Recognition unavailable')
+            
+        if hasattr(self, "_camera_lbl") and self._camera_lbl:
+            self._camera_lbl.clear()
+            self._camera_lbl.setWordWrap(True)
+            self._camera_lbl.setText(message)
+            
+        pred_lbl = getattr(self, '_pred_lbl', None)
+        if pred_lbl is not None:
+            pred_lbl.setText('Recognition unavailable')
+            
         self._set_cam_dot(False)
         if hasattr(self, 'camera_actions') and self.camera_actions is not None:
             self.camera_actions.show()

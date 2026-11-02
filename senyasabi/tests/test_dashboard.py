@@ -56,7 +56,7 @@ class DashboardTests(unittest.TestCase):
     def test_session_lookup_and_rendering(self):
         data = dashboard_service.get_dashboard_stats("user-42")
         data["user_statistics"]["lessons_completed"] = 3
-        data["module_progress"] = [dict(completion_percentage=50, status="in_progress", last_accessed=None, completed_at=None)]
+        data["module_progress"] = [dict(completion_percentage=50, status="In Progress", last_accessed=None, completed_at=None)]
         data["user_badges"] = [dict(badge_id="first", unlocked_at="2026-01-01")]
         data["leaderboard"]["rank_position"] = 2
         with patch.object(auth_service, "get_current_user", return_value={"user_id": "user-42"}), patch.object(dashboard_service, "get_dashboard_stats", return_value=data) as service:

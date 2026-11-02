@@ -18,7 +18,7 @@ from pathlib import Path
 try:
     from dotenv import load_dotenv
 except ImportError:
-    def load_dotenv(*_args, **_kwargs):
+    def load_dotenv(*_args, **_kwargs) -> bool:
         return False
 
 BACKEND_DIR = Path(__file__).resolve().parent      # .../senyasabi/backend
@@ -39,6 +39,13 @@ SQLITE_URL = f"sqlite:///{DATABASE_PATH.as_posix()}"
 
 MEDIA_CACHE_DIR = Path(os.getenv("SENYASABI_MEDIA_CACHE") or BASE_DIR / "cache" / "media")
 
+# ---- Client Mode -------------------------------------------------------
+# CLIENT_MODE determines how the app connects to Supabase:
+# - "distributed" (default): Client uses FastAPI proxy with anon key, falls back to direct Supabase
+# - "fastapi": Client uses FastAPI proxy (development mode)
+# - "direct": Client connects directly to Supabase with anon key (fallback mode)
+CLIENT_MODE = os.getenv("SYSTEM_MODE", "distributed").lower()
+
 # ---- Postgres (Supabase) -----------------------------------------------
 def _normalize_pg_url(url: str | None) -> str | None:
     """Force the psycopg3 driver. Supabase hands out plain postgresql:// URLs,
@@ -51,13 +58,16 @@ def _normalize_pg_url(url: str | None) -> str | None:
     return url
 
 
+# PostgreSQL is needed for FastAPI backend (server-side)
+# In distributed mode, the FastAPI backend still needs PostgreSQL access
 POSTGRESQL_URL = _normalize_pg_url(os.getenv("DATABASE_URL"))
 
-# ---- Supabase API (server side only) -----------------------------------
+# ---- Supabase API -------------------------------------------------------
 SUPABASE_URL = os.getenv("SUPABASE_URL")
 SUPABASE_ANON_KEY = os.getenv("SUPABASE_ANON_KEY")
+# Service role key is only for server-side admin operations, not for client API
 SUPABASE_SERVICE_ROLE_KEY = os.getenv("SUPABASE_SERVICE_ROLE_KEY")
-SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")  # only for legacy HS256 projects
+SUPABASE_JWT_SECRET = os.getenv("SUPABASE_JWT_SECRET")
 
 # ---- Supabase Storage, S3 protocol (admin scripts only) ----------------
 S3_ENDPOINT = os.getenv("S3_ENDPOINT")

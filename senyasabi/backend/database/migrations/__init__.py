@@ -67,10 +67,10 @@ def run_migration(conn: sqlite3.Connection, migration_path: Path) -> bool:
         
         # Record the migration
         conn.execute(
-            "INSERT INTO schema_migrations (migration) VALUES (?)",
-            (migration_name,)
+            "INSERT OR IGNORE INTO schema_migrations (migration) VALUES (?)",
+            (migration_name,),
         )
-        
+                
         conn.commit()
         logger.info("Migration completed: %s", migration_name)
         return True

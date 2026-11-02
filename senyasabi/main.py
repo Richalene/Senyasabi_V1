@@ -8,6 +8,48 @@ from pathlib import Path
 
 _last_qt_tick = time.time()
 
+import cv2
+import faulthandler
+
+# Enable faulthandler to catch low-level C/C++ segmentation faults (e.g., in OpenCV or MediaPipe)
+faulthandler.enable()
+
+def run_camera_loop(device_index=0):
+    print("1. Starting camera", flush=True)
+    
+    # Use CAP_AVFOUNDATION since you are on macOS
+    cap = cv2.VideoCapture(device_index, cv2.CAP_AVFOUNDATION)
+    print("2. Camera started:", cap.isOpened(), flush=True)
+
+    if not cap.isOpened():
+        print("Error: Could not open camera.", flush=True)
+        return
+
+    try:
+        while cap.isOpened():
+            print("3. Reading frame", flush=True)
+            ok, frame = cap.read()
+
+            if not ok:
+                print("Frame read failed", flush=True)
+                break
+
+            print("4. Frame received", flush=True)
+
+            # --- UNCOMMENT & WRAP YOUR MODEL INFERENCE HERE ---
+            # print("5. Starting model inference", flush=True)
+            # result = self.model.process(frame)  # Replace with your actual model call
+            # print("6. Inference completed", flush=True)
+
+            # Optional: break early during testing if you just want to check if it crashes on startup
+            # break
+
+    except Exception as e:
+        print(f"Exception caught in loop: {e}", flush=True)
+    finally:
+        cap.release()
+        print("Camera released.", flush=True)
+
 def _watchdog_loop():
     global _last_qt_tick
     while True:
@@ -200,6 +242,15 @@ def main() -> int:
     
     # Initialize SQLite database on startup
     initialize_database()
+    
+    # Sync content from server on startup (best effort)
+    try:
+        from backend.progress_sync import sync_content_if_due
+        sync_content_if_due(force=True)
+    except Exception as e:
+        import logging
+        logger = logging.getLogger(__name__)
+        logger.warning("Content sync on startup failed: %s", e)
 
     app = QApplication.instance() or SenyaSabiApplication(sys.argv)
     controller = AppController()

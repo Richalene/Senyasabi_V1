@@ -19,7 +19,7 @@ from backend.database.session import session_scope
 
 # FK order. Media tables are included so links stay consistent if/when they exist.
 TABLES = [m.ContentVersion, m.Module, m.Lesson, m.Sign, m.LessonSign, m.Quiz, m.QuizSign,
-          m.Badge, m.Minigame, m.MinigameSign, m.MediaFile, m.SignMedia]
+          m.Badge, m.Minigame, m.MinigameSign, m.MediaFile, m.LessonMedia, m.SignMedia]
 
 
 def main():

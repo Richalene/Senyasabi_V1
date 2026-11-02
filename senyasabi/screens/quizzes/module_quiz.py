@@ -22,7 +22,7 @@ from screens.media_player import SignVideoPlayer
 from screens.navigation import BackButton, install_page_menu
 from screens.minigames.minigame_ui_components import MinigameHeader, MinigameScoreWidget
 from screens.startup import FittedForm
-
+from backend.media_service import warm_alphabet_stills
 
 class QuizRetryWidget(QWidget):
     """
@@ -159,6 +159,7 @@ class ModuleQuiz(GameCanvas):
     back_requested = Signal()
 
     def __init__(self, module_code: str, parent=None):
+        warm_alphabet_stills()
         super().__init__(parent)
         self.resize(1920, 1080)
         self.module_code = module_code.casefold() if module_code else "greeting"

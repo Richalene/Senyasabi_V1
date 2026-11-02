@@ -60,7 +60,7 @@ def verify_schema():
         required_tables = [
             'users', 'content_versions', 'media_files', 'modules', 'lessons',
             'signs', 'lesson_signs', 'sign_media', 'lesson_media', 'quizzes',
-            'quiz_attempts', 'minigames', 'minigame_signs', 'badges', 
+            'quiz_attempts', 'minigames', 'minigame_signs', 'badges',
             'user_badges', 'lesson_progress', 'user_statistics', 'streaks',
             'minigame_attempts', 'quiz_signs'
         ]

@@ -6,10 +6,13 @@ distinct from the SQLite session used for local caching.
 Uses Supabase Session Pooler for connection pooling.
 Session pooler is optimized for serverless and transaction-based workloads.
 """
+import logging
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, Session
 
-from ..config import POSTGRESQL_URL
+from ..config import POSTGRESQL_URL, CLIENT_MODE
+
+logger = logging.getLogger(__name__)
 
 # Create PostgreSQL engine
 # Using Supabase Session Pooler mode
@@ -28,7 +31,10 @@ if POSTGRESQL_URL:
     )
 else:
     postgres_engine = None
-    print("Warning: POSTGRESQL_URL not set. PostgreSQL features will be unavailable.")
+    if CLIENT_MODE == "fastapi":
+        logger.warning("POSTGRESQL_URL not set. PostgreSQL features will be unavailable.")
+    else:
+        logger.debug("POSTGRESQL_URL not set (optional in distributed/direct mode).")
 
 # Create session factory
 PostgreSQLSessionLocal = sessionmaker(
