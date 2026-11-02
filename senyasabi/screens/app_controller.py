@@ -255,6 +255,12 @@ class AppController:
         self._show_screen(self.module_map)
 
     def open_module(self, code):
+        if code and code.lower() in ("calendar", "actions", "months"):
+            from screens.dialogs import ComingSoonDialog
+            parent = getattr(self, "module_map", None) or getattr(self, "window", None)
+            dlg = ComingSoonDialog(parent)
+            dlg.exec()
+            return
         self.show_module_choices(code)
 
     def show_module_choices(self, code=None):
