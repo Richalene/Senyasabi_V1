@@ -2,7 +2,7 @@ import asyncio
 import logging
 from datetime import datetime, timezone
 
-from sqlalchemy import select, text
+from sqlalchemy import select, text, update
 
 from .config import POSTGRESQL_URL
 from .database.postgre_session import get_postgres_session
@@ -229,7 +229,6 @@ def _apply_snapshot(snapshot: dict) -> dict:
 
     with session_scope() as db:
         # Map logical release number to the local SQLite FK.
-        # Never copy server_content_version_id into local foreign keys.
         local_version = db.scalar(
             select(m.ContentVersion).where(
                 m.ContentVersion.version_number == version_number
@@ -255,25 +254,22 @@ def _apply_snapshot(snapshot: dict) -> dict:
 
         local_version_id = local_version.content_version_id
 
-        # Mark all existing content as deleted first. This preserves rows
-        # referenced by progress/attempts and frees lesson-order slots.
+        # Mark all existing content as deleted first.
         for table, model in DELETE_ORDER:
             result = db.execute(
-                model.__table__.update().values(is_deleted=True)
+                update(model).values(is_deleted=True)
             )
-            counts[f"{table}_retired"] = result.rowcount or 0
+            counts[f"{table}_retired"] = getattr(result, "rowcount", 0) or 0
 
         db.flush()
 
-        # Upsert in parent-before-child order.
+        # 1. Upsert all tables in UPSERT_ORDER dynamically
         for table, model in UPSERT_ORDER:
-            records = snapshot["tables"][table]
+            records = snapshot["tables"].get(table, [])
             mapped_columns = {
                 attr.key for attr in model.__mapper__.column_attrs
             }
-            primary_key_columns = {
-                col.key for col in model.__mapper__.primary_key
-            }
+            pk_cols = [col.key for col in model.__mapper__.primary_key]
 
             for record in records:
                 data = {
@@ -291,14 +287,12 @@ def _apply_snapshot(snapshot: dict) -> dict:
                     data["checksum"] = (
                         bytes.fromhex(checksum_hex) if checksum_hex else None
                     )
-                    # Keep the same local key convention as the existing
-                    # desktop delta applier. This is not the storage object key.
-                    data["object_key"] = f"media/{record['media_id']}"
 
                 if "config" in mapped_columns:
                     data["config"] = record.get("config") or {}
 
-                identity = tuple(data[col] for col in primary_key_columns)
+                # Dynamic primary key identity lookup (supports single & composite keys)
+                identity = tuple(data[col] for col in pk_cols)
                 identity = identity[0] if len(identity) == 1 else identity
                 existing = db.get(model, identity)
 
@@ -308,28 +302,63 @@ def _apply_snapshot(snapshot: dict) -> dict:
                     for key, value in data.items():
                         setattr(existing, key, value)
 
-            # Flush after each table so its parent records exist before
-            # dependent records are written.
             local_version_id = local_version.content_version_id
             db.flush()
             counts[f"{table}_upserted"] = len(records)
 
-        # Badges have no content_version_id in the provided schema.
-        db.execute(m.Badge.__table__.update().values(is_deleted=True))
-        for record in snapshot["badges"]:
-            badge = db.get(m.Badge, record["badge_id"])
-            if badge is None:
-                badge = m.Badge(**record, is_deleted=False)
-                db.add(badge)
-            else:
-                badge.badge_code = record["badge_code"]
-                badge.badge_name = record["badge_name"]
-                badge.description = record.get("description")
-                badge.is_deleted = False
-        db.flush()
-        counts["badges_upserted"] = len(snapshot["badges"])
+        # 2. Upsert lesson_signs dynamically using its composite primary key
+        # Check both top-level and inside snapshot["tables"] to prevent KeyErrors
+        py_lesson_signs = snapshot.get("lesson_signs") or snapshot.get("tables", {}).get("lesson_signs")
 
-    # session_scope has committed successfully when execution reaches here.
+        if py_lesson_signs:
+            model = m.LessonSign
+            mapped_columns = {attr.key for attr in model.__mapper__.column_attrs}
+            pk_cols = [col.key for col in model.__mapper__.primary_key]
+
+            for record in py_lesson_signs:
+                data = {
+                    key: value for key, value in record.items() if key in mapped_columns
+                }
+
+                identity = tuple(data[col] for col in pk_cols)
+                identity = identity[0] if len(identity) == 1 else identity
+                existing = db.get(model, identity)
+
+                if existing is None:
+                    db.add(model(**data))
+                else:
+                    for key, value in data.items():
+                        setattr(existing, key, value)
+
+            db.flush()
+            counts["lesson_signs_upserted"] = len(py_lesson_signs)
+
+        # 3. Upsert badges dynamically
+        if "badges" in snapshot:
+            db.execute(update(m.Badge).values(is_deleted=True))
+            model = m.Badge
+            mapped_columns = {attr.key for attr in model.__mapper__.column_attrs}
+            pk_cols = [col.key for col in model.__mapper__.primary_key]
+
+            for record in snapshot["badges"]:
+                data = {
+                    key: value for key, value in record.items() if key in mapped_columns
+                }
+                data["is_deleted"] = False
+
+                identity = tuple(data[col] for col in pk_cols)
+                identity = identity[0] if len(identity) == 1 else identity
+                existing = db.get(model, identity)
+
+                if existing is None:
+                    db.add(model(**data))
+                else:
+                    for key, value in data.items():
+                        setattr(existing, key, value)
+
+            db.flush()
+            counts["badges_upserted"] = len(snapshot["badges"])
+
     return counts
 
 
@@ -398,6 +427,23 @@ def _verify_snapshot(snapshot: dict, counts: dict) -> None:
 def _sync_startup_content() -> int:
     """Fetch, apply, verify, and then record the published release."""
     snapshot = _fetch_snapshot()
+
+    from collections import Counter
+
+    rows = snapshot.get("lesson_signs") or snapshot.get("tables", {}).get("lesson_signs", [])    
+    counts = Counter(
+        (row["lesson_id"], row["sign_id"])
+        for row in rows
+    )
+
+    duplicates = {
+        pair: count
+        for pair, count in counts.items()
+        if count > 1
+    }
+
+    print("Snapshot lesson_signs rows:", len(rows))
+    print("Duplicate lesson/sign pairs:", duplicates)
 
     try:
         counts = _apply_snapshot(snapshot)

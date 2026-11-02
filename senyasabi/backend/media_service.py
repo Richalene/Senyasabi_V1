@@ -172,11 +172,28 @@ def _download(media_id: int) -> Path | None:
 
     fd, tmp_name = tempfile.mkstemp(dir=MEDIA_CACHE_DIR, suffix=".part")
     try:
+        logger.info(
+            "Downloading media_id=%s, file_name=%s, url=%s",
+            media_id,
+            info.get("file_name"),
+            info.get("url"),
+        )
         with os.fdopen(fd, "wb") as f, requests.get(info["url"], stream=True, timeout=30) as r:
-            r.raise_for_status()
+            if not r.ok:
+                logger.error(
+                    "Media download failed: id=%s, status=%s, "
+                    "url=%s, response=%s",
+                    media_id,
+                    r.status_code,
+                    r.url,
+                    r.text[:1000],
+                )
+                r.raise_for_status()
+
             for chunk in r.iter_content(CHUNK):
-                f.write(chunk)
-                sha.update(chunk)
+                if chunk:
+                    f.write(chunk)
+                    sha.update(chunk)
 
         expected = info.get("checksum_sha256")
         if expected and sha.hexdigest() != expected:
@@ -192,18 +209,36 @@ def _download(media_id: int) -> Path | None:
         version = repo.get_content_version_by_number(db, info["content_version_number"])
         if version is None:
             logger.warning("Content version %s missing locally", info["content_version_number"])
-            return dest                          # file is usable; skip DB record
+            return dest  # file is usable; skip DB record
+        
         cv_id = version.content_version_id
-        # media_cache has an FK to media_files, so make sure the row exists locally.
-        db.merge(MediaFile(
-            media_id=media_id, file_name=info.get("file_name"),
-            object_key=f"media/{media_id}",      # placeholder; real key stays server-side
-            media_type=info["media_type"], width=info.get("width"),
-            height=info.get("height"), duration_seconds=info.get("duration_seconds"),
-            file_size=info.get("file_size"), checksum=digest, content_version_id=cv_id))
-        db.flush()
-        db.merge(MediaCache(media_id=media_id, local_path=name, content_version_id=cv_id,
-                            checksum=digest, cached_at=utcnow()))
+
+        # 1. Ensure the media_files row exists without overwriting its real object_key
+        media_record = db.get(MediaFile, media_id)
+        if media_record is None:
+            # Fallback only if the sync missed it; otherwise, let server snapshot provide the key
+            db.add(MediaFile(
+                media_id=media_id,
+                file_name=info.get("file_name"),
+                object_key=info.get("object_key"),  # Use real key from info if available
+                media_type=info["media_type"],
+                width=info.get("width"),
+                height=info.get("height"),
+                duration_seconds=info.get("duration_seconds"),
+                file_size=info.get("file_size"),
+                checksum=digest,
+                content_version_id=cv_id
+            ))
+            db.flush()
+
+        # 2. Record only local cache metadata in MediaCache (local_path vs remote storage)
+        db.merge(MediaCache(
+            media_id=media_id,
+            local_path=name,                  # Local disk path
+            content_version_id=cv_id,
+            checksum=digest,
+            cached_at=utcnow()
+        ))
     return dest
 
 
@@ -214,6 +249,10 @@ def _get_media_info_supabase(media_id: int) -> dict | None:
         from .database.session import session_scope
         from .database import repository as repo
         from .config import SUPABASE_URL
+        from urllib.parse import quote
+
+        if not SUPABASE_URL:
+            return None
         
         supabase = get_supabase_client()
         
@@ -224,31 +263,34 @@ def _get_media_info_supabase(media_id: int) -> dict | None:
                 return None
             
             object_key = media.object_key
+            logger.info("object_key: %s", object_key)
             file_name = media.file_name
             media_type = media.media_type
+            width = media.width
+            height = media.height
+            duration = media.duration_seconds
+            file_size = media.file_size
             content_version = repo.get_content_version(db, media.content_version_id)
         
         if not content_version:
             return None
         
-        # Generate public URL from Supabase Storage
-        # Note: For production with private buckets, use signed URLs via Supabase REST API
-        # For now, assuming public bucket or using Supabase's default public access
-        
-        # Construct public URL (assuming bucket is public)
-        storage_url = f"{SUPABASE_URL}/storage/v1/object/public/{object_key}"
-        
+        storage_url = (
+            f"{SUPABASE_URL.rstrip('/')}"
+            f"/storage/v1/object/public/senyasabi-media/"
+            f"{quote(object_key, safe='/')}"
+        )
+
         return {
-            "media_id": media_id,
+            "url": storage_url,
             "file_name": file_name,
             "media_type": media_type,
-            "url": storage_url,
+            "width": width,
+            "height": height,
+            "duration_seconds": duration,
+            "file_size": file_size,
+            "checksum_sha256": getattr(content_version, "checksum_sha256", None),
             "content_version_number": content_version.version_number,
-            "checksum_sha256": media.checksum.hex() if media.checksum else None,
-            "width": media.width,
-            "height": media.height,
-            "duration_seconds": media.duration_seconds,
-            "file_size": media.file_size
         }
         
     except Exception as e:
