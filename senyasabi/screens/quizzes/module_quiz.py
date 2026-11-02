@@ -17,12 +17,12 @@ from PySide6.QtWidgets import (
 
 from backend.quiz_service import QuizSession
 from backend.content_service import get_signs_for_module
-from screens.minigames.common import GameCanvas, SignImage, ROOT
+from screens.minigames.common import GameCanvas, ROOT
 from screens.media_player import SignVideoPlayer
 from screens.navigation import BackButton, install_page_menu
 from screens.minigames.minigame_ui_components import MinigameHeader, MinigameScoreWidget
 from screens.startup import FittedForm
-from backend.media_service import warm_alphabet_stills
+from backend.media_service import warm_alphabet_stills, alphabet_still, _cached_path
 
 class QuizRetryWidget(QWidget):
     """
@@ -65,8 +65,9 @@ class QuizRetryWidget(QWidget):
             "}"
         )
 
+        # Aligned directly next to baked 'Score:' in scores_bg.png (y: 682..748)
         self.lbl_score_val = QLabel("0/5", self)
-        self.lbl_score_val.setGeometry(475, 580, 300, 130)
+        self.lbl_score_val.setGeometry(475, 640, 260, 140)
         self.lbl_score_val.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.lbl_score_val.setStyleSheet(
             "QLabel {"
@@ -79,7 +80,7 @@ class QuizRetryWidget(QWidget):
         )
 
         self.badge_acc = QLabel("0% Score", self)
-        self.badge_acc.setGeometry(740, 610, 240, 68)
+        self.badge_acc.setGeometry(740, 665, 230, 68)
         self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.badge_acc.setStyleSheet(
             "QLabel {"
@@ -97,24 +98,24 @@ class QuizRetryWidget(QWidget):
             "You need at least 75% to pass. Review the signs and try again!",
             self,
         )
-        self.lbl_message.setGeometry(165, 710, 960, 80)
+        self.lbl_message.setGeometry(165, 785, 960, 75)
         self.lbl_message.setWordWrap(True)
         self.lbl_message.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
         self.lbl_message.setStyleSheet(
             "QLabel {"
             "  font-family: 'Segoe UI', sans-serif;"
-            "  font-size: 26px;"
+            "  font-size: 24px;"
             "  font-weight: 700;"
             "  color: #5C3B28;"
             "  background-color: rgba(255, 248, 225, 220);"
             "  border: 2px solid #E2D9C8;"
             "  border-radius: 24px;"
-            "  padding: 10px 24px;"
+            "  padding: 8px 24px;"
             "}"
         )
 
         self.btn_retry = QPushButton("Try Again", self)
-        self.btn_retry.setGeometry(170, 815, 340, 85)
+        self.btn_retry.setGeometry(170, 885, 340, 85)
         self.btn_retry.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_retry.setStyleSheet(
             "QPushButton {"
@@ -132,7 +133,7 @@ class QuizRetryWidget(QWidget):
         self.btn_retry.clicked.connect(self.retry_requested.emit)
 
         self.btn_back = QPushButton("Back to Lessons", self)
-        self.btn_back.setGeometry(540, 815, 340, 85)
+        self.btn_back.setGeometry(540, 885, 340, 85)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
         self.btn_back.setStyleSheet(
             "QPushButton {"
@@ -164,7 +165,6 @@ class ModuleQuiz(GameCanvas):
         self.resize(1920, 1080)
         self.module_code = module_code.casefold() if module_code else "greeting"
         self.session = QuizSession(self.module_code)
-        self._sequence_columns = 5
 
         # Background foliage
         self.bg_label = QLabel(self)
@@ -200,7 +200,7 @@ class ModuleQuiz(GameCanvas):
         self.notice.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; font-size: 18px; font-style: italic; color: #8F8C78; background: transparent;"
         )
-        self.notice.setText("Fingerspelling quiz: decode the letters or sign to find this module’s word.")
+        self.notice.setText("Watch the sign and identify the correct word or phrase.")
         self.notice.setWordWrap(True)
 
         self.progress = QLabel(self.card)
@@ -225,12 +225,14 @@ class ModuleQuiz(GameCanvas):
         self.video.setMinimumHeight(300)
         left_layout.addWidget(self.video, 1)
 
-        # Visual Media: Scroll Area for Fingerspelling Sign Sequence
-        self.scroll = QScrollArea(self.left_card)
-        self.scroll.setWidgetResizable(True)
-        self.scroll.setHorizontalScrollBarPolicy(Qt.ScrollBarPolicy.ScrollBarAlwaysOff)
-        self.scroll.setStyleSheet("background: transparent; border: none;")
-        left_layout.addWidget(self.scroll, 1)
+        # Visual Media: Static Sign Image fallback when video is unavailable
+        self.sign_image = QLabel(self.left_card)
+        self.sign_image.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.sign_image.setStyleSheet("background: transparent;")
+        self.sign_image.setSizePolicy(QSizePolicy.Policy.Expanding, QSizePolicy.Policy.Expanding)
+        self.sign_image.hide()
+        left_layout.addWidget(self.sign_image, 1)
+        self._current_sign_pixmap = None
 
         # Right Column: Answer Interface
         self.right_card = QWidget(self.card)
@@ -286,7 +288,7 @@ class ModuleQuiz(GameCanvas):
 
         self.answer = QLineEdit(self.right_card)
         self.answer.setFixedHeight(60)
-        self.answer.setPlaceholderText("Type the decoded answer")
+        self.answer.setPlaceholderText("Type your answer here")
         self.answer.setStyleSheet(
             "QLineEdit {"
             "  background-color: #FFFFFF;"
@@ -443,7 +445,7 @@ class ModuleQuiz(GameCanvas):
             btn.setEnabled(not self.session.complete)
 
         if self.session.complete:
-            self.scroll.hide()
+            self.sign_image.hide()
             self.video.hide()
             self.card.hide()
             total = len(self.session.questions)
@@ -481,15 +483,14 @@ class ModuleQuiz(GameCanvas):
             btn.setText(ch)
         self._sync_choice_highlight("")
 
-        # Visual Media: Render fingerspell sequence & check video
-        self.render_sequence(force=True)
+        # Visual Media: Show sign video or fallback to static sign image
         if current_sign:
             try:
                 sign_module = getattr(current_sign, "module_code", None) or self.module_code
                 self.video.set_sign(sign_module, current_sign.sign_code)
                 if self.video.media and self.video.media.available:
+                    self.sign_image.hide()
                     self.video.show()
-                    self.scroll.hide()
                     self._play_token = getattr(self, "_play_token", 0) + 1
                     if self.isVisible():
                         self.video.play()
@@ -498,46 +499,87 @@ class ModuleQuiz(GameCanvas):
                         QTimer.singleShot(0, lambda t=token: self._play_if_ready(t))
                 else:
                     self.video.hide()
-                    self.scroll.show()
+                    self._show_sign_image(current_sign)
             except Exception:
                 self.video.hide()
-                self.scroll.show()
+                self._show_sign_image(current_sign)
+        else:
+            self.video.hide()
+            self._show_sign_image(None)
 
-    def render_sequence(self, force=False):
-        if self.session.complete:
+    def _resolve_sign_pixmap(self, sign) -> QPixmap | None:
+        if not sign:
+            return None
+        candidates = []
+        if getattr(sign, "sign_code", None):
+            candidates.append(str(sign.sign_code))
+        if getattr(sign, "label", None):
+            candidates.append(str(sign.label))
+
+        for cand in candidates:
+            # 1. Alphabet stills (Supabase cached or bundled VRM letter PNG)
+            try:
+                still = alphabet_still(cand)
+                if still and Path(still).is_file():
+                    pm = QPixmap(str(still))
+                    if not pm.isNull():
+                        return pm
+            except Exception:
+                pass
+
+            # 2. Bundled VRM_SIGNS image
+            try:
+                vrm_path = ROOT / "resources" / "VRM_SIGNS" / f"{cand.upper()}.png"
+                if vrm_path.is_file():
+                    pm = QPixmap(str(vrm_path))
+                    if not pm.isNull():
+                        return pm
+            except Exception:
+                pass
+
+        # 3. Media cache via media_id
+        media_id = getattr(sign, "media_id", None)
+        if media_id is not None:
+            try:
+                cached = _cached_path(media_id)
+                if cached and Path(cached).is_file():
+                    pm = QPixmap(str(cached))
+                    if not pm.isNull():
+                        return pm
+            except Exception:
+                pass
+
+        return None
+
+    def _show_sign_image(self, sign):
+        self._current_sign_pixmap = self._resolve_sign_pixmap(sign)
+        self._update_sign_image_pixmap()
+        self.sign_image.show()
+
+    def _update_sign_image_pixmap(self):
+        if not hasattr(self, "sign_image") or not self.sign_image:
             return
-        columns = max(1, min(7, self.scroll.viewport().width() // 105))
-        if not force and getattr(self, "_sequence_columns", None) == columns:
-            return
-        self._sequence_columns = columns
-        old = self.scroll.takeWidget()
-        if old:
-            old.deleteLater()
-        canvas = QWidget()
-        grid = QGridLayout(canvas)
-        grid.setAlignment(Qt.AlignmentFlag.AlignTop | Qt.AlignmentFlag.AlignLeft)
-        grid.setSpacing(10)
-        grid.setContentsMargins(10, 10, 10, 10)
-        row, col = 0, 0
-        current = self.session.current
-        if current and current.label:
-            for char in current.label.upper():
-                if char == " ":
-                    row, col = row + 1, 0
-                elif "A" <= char <= "Z":
-                    grid.addWidget(SignImage(char, 95), row, col)
-                    col += 1
-                    if col == columns:
-                        row, col = row + 1, 0
-        self.scroll.setWidget(canvas)
+        pixmap = getattr(self, "_current_sign_pixmap", None)
+        if pixmap and not pixmap.isNull():
+            size = self.sign_image.size()
+            w = max(200, size.width() - 40)
+            h = max(200, size.height() - 40)
+            scaled = pixmap.scaled(
+                w, h,
+                Qt.AspectRatioMode.KeepAspectRatio,
+                Qt.TransformationMode.SmoothTransformation,
+            )
+            self.sign_image.setPixmap(scaled)
+            self.sign_image.setText("")
+        else:
+            self.sign_image.setPixmap(QPixmap())
+            self.sign_image.setText("No sign media available")
+            self.sign_image.setStyleSheet("color: #8F8C78; font-size: 18px; font-weight: 600; background: transparent;")
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
-        if hasattr(self, "scroll"):
-            QTimer.singleShot(0, self.reflow_sequence)
-
-    def reflow_sequence(self):
-        self.render_sequence()
+        if hasattr(self, "sign_image") and self.sign_image.isVisible():
+            QTimer.singleShot(0, self._update_sign_image_pixmap)
 
     def submit(self):
         if self.session.complete or self.session.answered:
@@ -547,7 +589,7 @@ class ModuleQuiz(GameCanvas):
         target_name = self.session.current.label if self.session.current else ""
 
         if correct:
-            self.feedback.setText(f"✔  Correct! You decoded '{target_name}'.")
+            self.feedback.setText(f"✔  Correct! That is '{target_name}'.")
             self.feedback.setStyleSheet(
                 "background-color: #EAF8EE; color: #1E3A2F; border: 2.5px solid #5ECF8A; "
                 "border-radius: 18px; padding: 12px 24px; font-family: 'Segoe UI', sans-serif; font-size: 20px; font-weight: bold;"

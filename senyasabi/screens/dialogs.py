@@ -40,11 +40,14 @@ class WaitConfirmDialog(QDialog):
 
         # Main backdrop container
         container = QWidget(self)
+        container.setObjectName("waitConfirmContainer")
         container.setGeometry(0, 0, 760, 420)
         container.setStyleSheet(
-            "background-color: #FFFDF0; "
-            "border: 4px solid #D6DFA0; "
-            "border-radius: 40px;"
+            "QWidget#waitConfirmContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #D6DFA0; "
+            "  border-radius: 40px;"
+            "}"
         )
 
         shadow = QGraphicsDropShadowEffect(container)
@@ -89,6 +92,7 @@ class WaitConfirmDialog(QDialog):
             "font-size: 26px; "
             "color: #4F3222; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(lbl_msg)
         layout.addSpacing(6)
@@ -171,11 +175,14 @@ class ComingSoonDialog(QDialog):
         self.resize(760, 480)
 
         container = QWidget(self)
+        container.setObjectName("comingSoonContainer")
         container.setGeometry(0, 0, 760, 480)
         container.setStyleSheet(
-            "background-color: #FFFDF0; "
-            "border: 4px solid #D6DFA0; "
-            "border-radius: 40px;"
+            "QWidget#comingSoonContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #D6DFA0; "
+            "  border-radius: 40px;"
+            "}"
         )
 
         shadow = QGraphicsDropShadowEffect(container)
@@ -213,14 +220,14 @@ class ComingSoonDialog(QDialog):
             "line-height: 1.1; "
             "color: #1A1A1A; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(title)
 
         # Subtitle
         desc = QLabel(
-            "We appreciate your patience as we continue to work on a\n"
-            "few features and, eventually, more complex and advanced\n"
-            "learning courses.", container
+            "We appreciate your patience as we continue to work on a few features "
+            "and, eventually, more complex and advanced learning courses.", container
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
@@ -229,6 +236,7 @@ class ComingSoonDialog(QDialog):
             "color: #555555; "
             "line-height: 1.4; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(desc)
         layout.addSpacing(10)
@@ -615,11 +623,14 @@ class ErrorDialog(QDialog):
 
         # Main backdrop container
         container = QWidget(self)
+        container.setObjectName("errorDialogContainer")
         container.setGeometry(0, 0, 680, 400)
         container.setStyleSheet(
-            "background-color: #FFFDF0; "
-            "border: 4px solid #E57373; "
-            "border-radius: 40px;"
+            "QWidget#errorDialogContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #E57373; "
+            "  border-radius: 40px;"
+            "}"
         )
 
         shadow = QGraphicsDropShadowEffect(container)
@@ -664,6 +675,7 @@ class ErrorDialog(QDialog):
             "font-size: 18px; "
             "color: #4F3222; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(lbl_msg)
 

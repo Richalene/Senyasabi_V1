@@ -923,3 +923,77 @@ Thread 0x000026ec (most recent call first):
     sys.exit(main())
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 260, in main
     return app.exec()
+
+[01:32:58] *** UI THREAD HUNG FOR 15.4s ***
+
+--- Thread 6608 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 21256 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 256, in main
+    controller = AppController()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 18, in __init__
+    self.login = LoginScreen()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\auth\login.py", line 34, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
+    return result
+
+[02:52:50] *** UI THREAD HUNG FOR 7.0s ***
+
+--- Thread 37500 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 1640 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 259, in main
+    controller.show_welcome()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 71, in show_welcome
+    self._show_screen(self.welcome)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 52, in _show_screen
+    screen.show()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
+    return result
+
+[03:02:34] *** UI THREAD HUNG FOR 7.6s ***
+
+--- Thread 28288 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 11148 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 259, in main
+    controller.show_welcome()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 71, in show_welcome
+    self._show_screen(self.welcome)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 52, in _show_screen
+    screen.show()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
+    return result
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
+    return result

@@ -76,16 +76,14 @@ class UiPolishTests(unittest.TestCase):
             self.assertTrue(viewport.rect().contains(center))
         self.assertLessEqual(game.image.width(), 250)
 
-    def test_quiz_long_sequences_reflow_without_losing_answer(self):
-        quiz = ModuleQuiz('relationships')
+    def test_quiz_resizes_without_losing_answer(self):
+        quiz = ModuleQuiz('family')
         quiz.resize(800, 600)
         quiz.show()
         self.app.processEvents()
-        quiz.answer.setText('HARD OF HEARING')
+        quiz.answer.setText('MOTHER')
         quiz.resize(640, 600)
         self.app.processEvents()
-        quiz.reflow_sequence()
-        self.app.processEvents()
-        self.assertEqual(quiz.answer.text(), 'HARD OF HEARING')
-        self.assertLessEqual(quiz._sequence_columns, 5)
-        self.assertEqual(quiz.scroll.horizontalScrollBar().maximum(), 0)
+        self.assertEqual(quiz.answer.text(), 'MOTHER')
+        self.assertIsNotNone(quiz.sign_image)
+        quiz.close()
