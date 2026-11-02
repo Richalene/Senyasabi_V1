@@ -407,3 +407,37 @@ Thread 0x000026ec (most recent call first):
     screen.show()
   File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 154, in notify
     result = super().notify(receiver, event)
+
+[04:09:53] *** UI THREAD HUNG FOR 7.5s ***
+
+--- Thread 10308 ---
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 24, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 5776 ---
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 222, in <module>
+    sys.exit(main())
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 217, in main
+    controller.show_welcome()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 85, in show_welcome
+    self._show_screen(self.welcome)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 58, in _show_screen
+    present(screen)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 181, in _present
+    window.showFullScreen()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 176, in notify
+    fitted.fit()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\startup.py", line 61, in eventFilter
+    return super().eventFilter(watched, event)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\startup.py", line 130, in fit
+    for button, size in self.icons:
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 177, in notify
+    return result
