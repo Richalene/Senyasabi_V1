@@ -17,11 +17,11 @@ from backend.database.session import session_scope
 
 _log = logging.getLogger(__name__)
 CONTENT_SYNC_INTERVAL = 600  # seconds between content checks
-_content_lock = threading.Lock()
 _last_content_sync = 0.0
 
 # FK order
 _TABLES = {
+    "users": m.User,  
     "lesson_progress": m.LessonProgress,
     "quiz_attempts": m.QuizAttempt,
     "minigame_attempts": m.MinigameAttempt,
@@ -72,8 +72,8 @@ def apply_snapshot(snapshot):
 def sync_content_if_due(force=False):
     """Best effort content delta pull. Never raises. Returns True if content is current."""
     global _last_content_sync
-    if not _content_lock.acquire(blocking=False):
-        return False  # another worker is already syncing
+    # if not _content_lock.acquire(blocking=False):
+    #     return False  # another worker is already syncing
     try:
         if not force and time.monotonic() - _last_content_sync < CONTENT_SYNC_INTERVAL:
             return True
@@ -87,13 +87,14 @@ def sync_content_if_due(force=False):
     except Exception as error:
         _log.warning("Content sync failed: %s", error)
         return False
-    finally:
-        _content_lock.release()
+    # finally:
+    #     _content_lock.release()
 
 def pull_user_progress():
     """Refresh local content, then progress (and the leaderboard cache). Never raises."""
     try:
         token = auth_service.get_access_token()
+        _log.debug("Sync upload token available: %s", bool(token))
         if not token:
             return False
         sync_content_if_due()  # failure is fine: progress merge falls back to whatever is cached
@@ -109,5 +110,7 @@ def pull_user_progress():
         leaderboard_service.get_leaderboard()
     except Exception as error:
         _log.warning("Leaderboard refresh failed: %s", error)
+    # finally:
+    #     _pull_lock.release()
     return True
 

@@ -216,7 +216,12 @@ def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
         supabase = get_supabase_client()
 
         if supabase is None:
-            logger.warning("Supabase client not available, skipping sync upload")
+            # This is expected in distributed mode when FastAPI is available
+            # Only log at debug level to avoid spamming
+            if CLIENT_MODE == "distributed":
+                logger.debug("Supabase client not available (using FastAPI instead)")
+            else:
+                logger.warning("Supabase client not available in direct mode")
             return None
 
         processed = 0

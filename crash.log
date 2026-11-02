@@ -246,3 +246,26 @@ Traceback (most recent call last):
 ModuleNotFoundError: No module named 'sqlalchemy'
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 264, in <module>
+    sys.exit(main())
+             ^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 256, in main
+    controller = AppController()
+                 ^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 20, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+                     ^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 92, in __init__
+    self._render_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 137, in _render_stats
+    chart_pix = self._draw_spider_chart(data.get("module_performance", []), data.get("lesson_progress", []))
+                ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 291, in _draw_spider_chart
+    tb = fm.boundingRect(0, 0, 115, 65, text_flags, full_text)
+         ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+KeyboardInterrupt
+
+================================================

@@ -10,6 +10,7 @@ import time
 from typing import Protocol
 import uuid
 from uuid import uuid4
+import logging
 
 from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError
@@ -41,6 +42,7 @@ __all__ = [
     "register_user", "authenticate_user", "authenticate_offline",
     "authenticate_with_supabase",
     "establish_session", "logout_user", "get_current_user", "get_access_token",
+    "sync_user_info"
 ]
 
 USERNAME_RE = re.compile(r"^[a-z0-9_.-]{3,30}$")
@@ -108,7 +110,7 @@ class SQLiteUserRepository:
                         created_at=u.updated_at or _utcnow(),
                         updated_at=u.updated_at or _utcnow(),
                     )
-                u = repo.get_user_by_email(db, key) if "@" in key else repo.get_user_by_username(db, key)
+                u = repo.get_user_by_username(db, key)
                 if u is None:
                     return None
                 return User(
@@ -145,6 +147,14 @@ _pending_tokens: dict[str, dict] = {}  # user_id -> tokens from a background log
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
+
+
+def _is_valid_uuid(value) -> bool:
+    try:
+        uuid.UUID(str(value))
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
 
 
 def _public_user(user) -> dict:
@@ -507,8 +517,14 @@ def get_access_token() -> str | None:
     """Valid access token or None. Refreshes when close to expiry. api_client calls this."""
     global _session
     if _current_user is None:
+        logging.warning("No current user in auth_service")
         return None
     user_id = _current_user.get("user_id")
+    logging.info(
+        "Auth state: user_present=True, user_id_valid=%s, session_present=%s",
+        _is_valid_uuid(user_id),
+        _session is not None,
+    )
     if isinstance(_repository, InMemoryUserRepository) or user_id == "dev-session":
         return None
     try:
@@ -529,6 +545,11 @@ def get_access_token() -> str | None:
         _session = None
         return None
     _apply_tokens(_current_user["user_id"], data["session"])
+    logging.debug(
+        "Access-token check: has_user=%s, has_session=%s",
+        _current_user is not None,
+        _session is not None,
+    )
     return _session["access_token"]
 
 
@@ -546,3 +567,18 @@ def logout_user() -> None:
 
 def get_current_user() -> dict | None:
     return dict(_current_user) if _current_user is not None else None
+
+def sync_user_info(user_id) -> None:
+    """Pull the signed-in learner's server data into SQLite. Blocking: call from a worker thread."""
+    try:
+        uid = uuid.UUID(str(user_id))
+    except ValueError:
+        return                                   # e.g. "dev-session"
+    current = _current_user
+    if current is None or str(current.get("user_id")) != str(uid):
+        return                                   # logged out or switched user meanwhile
+    from .progress_sync import pull_user_progress   # lazy: progress_sync imports auth_service
+    try:
+        pull_user_progress()
+    except Exception:
+        logging.getLogger(__name__).exception("Post-login sync failed")

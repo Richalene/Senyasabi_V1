@@ -9,7 +9,7 @@ from backend import auth_service
 from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
-
+import threading
 
 class AppController:
     def __init__(self):
@@ -46,6 +46,17 @@ class AppController:
         self.welcome.ui.btnContinue.clicked.connect(self.show_landing)
         self.landing.ui.btnGetStarted.clicked.connect(self.show_register)
         self.landing.ui.btnLogin.clicked.connect(self.show_login)
+
+    def _post_login_sync(self, user):
+        """Warm the local SQLite caches without blocking the UI. Never fails the login."""
+        try:
+            from backend import leaderboard_service
+            for board in ("all_time", "weekly", "monthly"):
+                leaderboard_service.refresh_leaderboard(board)   # already runs on a worker
+            threading.Thread(target=auth_service.sync_user_info, args=(user["user_id"],),
+                             daemon=True, name="post-login-sync").start()
+        except Exception:
+            logging.getLogger(__name__).exception("Post-login sync could not start")
 
     def _show_screen(self, screen):
         # Reuse each screen and show the destination before hiding the source.
@@ -96,8 +107,9 @@ class AppController:
             auth_service.establish_session(user)
             from backend.score_service import flush_pending_async
             flush_pending_async()          # anything queued while offline last session
+            self._post_login_sync(user)
             self.show_main_menu()
-            
+
         # In distributed mode: Try FastAPI first, fall back to direct Supabase
         # In direct mode: Use direct Supabase
         # In fastapi mode (development): Use FastAPI with service role

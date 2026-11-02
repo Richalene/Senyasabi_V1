@@ -59,13 +59,18 @@ def record_minigame_result(kind, score, total, duration_seconds):
 
 
 def flush_pending_async():
-    """Upload queued items for the signed-in user. No-op offline (the queue persists)."""
+    """Upload queued items for the signed-in user if authenticated. No-op offline or unauthenticated."""
     if not is_online():
         return
+    
+    # Check if a valid user and access token/session exist before triggering sync
+    user = auth_service.get_current_user()
+    if not user or not auth_service.get_access_token():
+        return  # Skip flushing if unauthenticated to avoid token warning loops
+        
     uid = _user_uuid()
     if uid is not None:
         _executor.submit(_flush, uid)
-
 
 def _flush(uid):
     try:
