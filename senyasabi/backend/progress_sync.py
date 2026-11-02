@@ -10,6 +10,7 @@ import uuid
 from datetime import date, datetime
 import threading
 import time
+import logging
 
 from backend import auth_service
 from backend.database import models as m

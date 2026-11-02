@@ -997,3 +997,21 @@ Thread 0x000026ec (most recent call first):
     return result
   File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
     return result
+
+[03:27:09] *** UI THREAD HUNG FOR 5.6s ***
+
+--- Thread 16288 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 31764 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 260, in main
+    return app.exec()
