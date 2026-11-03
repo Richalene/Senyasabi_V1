@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timezone, date
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 import uuid
 import json
 from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
 
 from .models import (
     User,
@@ -1816,3 +1819,24 @@ def migrate_local_user_id(db: Session, old_uid: uuid.UUID, new_uid: uuid.UUID) -
     db.commit()
     return True
 
+from datetime import timedelta
+
+def record_activity_streak(db: Session, user_id: uuid.UUID,
+                           activity_date: date | None = None) -> Streak:
+    """Count one day of activity. Same-day calls are no-ops."""
+    today = activity_date or datetime.now(timezone.utc).date()
+    streak = db.get(Streak, user_id)
+    if streak is None:
+        streak = Streak(user_id=user_id, current_streak=1, longest_streak=1,
+                        last_activity_date=today)
+        db.add(streak)
+    else:
+        last = streak.last_activity_date
+        if last is not None and today <= last:
+            return streak                      # same day (or backfilled older activity)
+        streak.current_streak = (streak.current_streak + 1
+                                 if last == today - timedelta(days=1) else 1)
+        streak.longest_streak = max(streak.longest_streak, streak.current_streak)
+        streak.last_activity_date = today
+    db.flush()
+    return streak

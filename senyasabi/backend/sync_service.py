@@ -26,6 +26,7 @@ from .database.repository import (
     rebuild_user_statistics,
     upsert_quiz_attempt,
     upsert_minigame_attempt,
+    record_activity_streak
 )
 from .database.models import SyncQueue
 from .database import models as m
@@ -144,7 +145,7 @@ class SyncService:
                 operation="upsert",
             )
             sync_id = item.sync_id
-
+            record_activity_streak(db, user_id, completed_at.astimezone(timezone.utc).date())
         return sync_id
     
     def queue_minigame_attempt(
@@ -197,6 +198,7 @@ class SyncService:
                 operation="upsert",
             )
             sync_id = item.sync_id
+            record_activity_streak(db, user_id, completed_at.astimezone(timezone.utc).date())
         return sync_id
 
     def queue_lesson_progress(
@@ -245,6 +247,7 @@ class SyncService:
                 payload=payload, operation="upsert",
             )
             sync_id = item.sync_id
+            record_activity_streak(db, user_id, now.date())
         return sync_id
     
     # Backward-compatible alias for the old name

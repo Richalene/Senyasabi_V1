@@ -70,7 +70,7 @@ class AppController:
         except Exception:
             logging.getLogger(__name__).exception("Post-login sync could not start")
 
-    def _show_screen(self, screen):
+    def _show_screen(self, screen, *, transition_direction=None):
         # Reuse each screen and show the destination before hiding the source.
         screen.show()
         windows = [self.welcome, self.landing, self.login, self.register,

@@ -58,6 +58,40 @@ def record_minigame_result(kind, score, total, duration_seconds):
     return attempt_id
 
 
+def record_lesson_progress(lesson_id, progress, completed=False):
+    """Record lesson progress locally and flush it in the background."""
+    uid = _user_uuid()
+    if uid is None:
+        return None
+
+    updated_at = datetime.now(timezone.utc)
+    status = "completed" if completed else "in_progress"
+    sync_service.queue_lesson_progress(uid, lesson_id, status, int(progress), updated_at)
+    flush_pending_async()
+    return updated_at
+
+
+def record_quiz_attempt(quiz_id, score, total, duration_seconds):
+    """Record a quiz attempt locally and flush it in the background."""
+    uid = _user_uuid()
+    if uid is None:
+        return None
+
+    completed = datetime.now(timezone.utc)
+    attempt_id = uuid.uuid4()
+    sync_service.queue_quiz_attempt(
+        uid, attempt_id, quiz_id,
+        completed - timedelta(seconds=duration_seconds), completed,
+        int(score), int(duration_seconds),
+        round(100.0 * score / max(1, total), 2),
+        passed=score >= total)
+    with session_scope() as db:
+        rebuild_user_statistics(db, uid)
+    notify_scores_changed()
+    flush_pending_async()
+    return attempt_id
+
+
 def flush_pending_async():
     """Upload queued items for the signed-in user if authenticated. No-op offline or unauthenticated."""
     if not is_online():
@@ -76,5 +110,8 @@ def _flush(uid):
     try:
         result = sync_service.process_pending_syncs(uid, batch_size=50)
         log.info("Sync flush: %s", result)
+        if result["succeeded"]:
+            from . import progress_sync
+            progress_sync.pull_user_progress()
     except Exception:
         log.exception("Sync flush failed")

@@ -76,6 +76,12 @@ def apply_snapshot(snapshot):
                             float(existing.completion_percentage or 0),
                             float(converted.get("completion_percentage") or 0)
                         )
+                if model is m.Streak:
+                    existing = db.get(m.Streak, converted["user_id"])
+                    new_last = converted.get("last_activity_date")
+                    if (existing and existing.last_activity_date
+                            and (new_last is None or existing.last_activity_date > new_last)):
+                        continue          # local is ahead; the server catches up after the upload
                 db.merge(model(**converted))
             db.flush()
             counts[name] = len(rows)

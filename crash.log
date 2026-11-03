@@ -291,3 +291,31 @@ Traceback (most recent call last):
 KeyboardInterrupt
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 55, in deliver
+    overlay._complete(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 138, in _complete
+    success(result)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 133, in signed_in
+    self.show_main_menu()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 258, in show_main_menu
+    self._show_screen(self.main_menu, transition_direction=transition_direction)
+TypeError: AppController._show_screen() got an unexpected keyword argument 'transition_direction'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 55, in deliver
+    overlay._complete(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 138, in _complete
+    success(result)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 133, in signed_in
+    self.show_main_menu()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 258, in show_main_menu
+    self._show_screen(self.main_menu, transition_direction=transition_direction)
+TypeError: AppController._show_screen() got an unexpected keyword argument 'transition_direction'
+
+================================================
