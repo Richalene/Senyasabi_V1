@@ -84,11 +84,13 @@ class SignSprintGameView(QWidget):
     back_requested = Signal()
     close_clicked = Signal()
     game_finished = Signal(int, int)  # score, total
+    BASE_WIDTH = 1920
+    BASE_HEIGHT = 1080
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
-        self.resize(1920, 1080)
+        self.resize(self.BASE_WIDTH, self.BASE_HEIGHT)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         # Background foliage
@@ -180,10 +182,32 @@ class SignSprintGameView(QWidget):
         self.is_paused = False
         self.tile_rows = []
         self.tiles_list = []
+        self._scale_layout()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._scale_layout()
+
+    def _scale_layout(self):
+        if self.width() <= 0 or self.height() <= 0:
+            return
+        sx = self.width() / float(self.BASE_WIDTH)
+        sy = self.height() / float(self.BASE_HEIGHT)
+        scale = min(sx, sy)
+
+        self.bg_label.setGeometry(0, 0, self.width(), self.height())
+        self.header.setGeometry(0, 0, self.width(), max(60, int(90 * sy)))
+        self.card.setGeometry(int(50 * sx), int(95 * sy), max(1, int(1820 * sx)), max(1, int(935 * sy)))
+        self.avatar.setGeometry(int(70 * sx), int(70 * sy), max(1, int(650 * scale)), max(1, int(650 * scale)))
+        self.avatar.setFixedSize(max(120, int(650 * scale)), max(120, int(650 * scale)))
+        self.instruction_note.setGeometry(int(780 * sx), int(835 * sy), max(1, int(900 * sx)), max(1, int(40 * sy)))
+        self.controls_widget.setGeometry(int(1000 * sx), int(70 * sy), max(1, int(700 * sx)), max(1, int(90 * sy)))
+        self.tiles_container.setGeometry(int(780 * sx), int(220 * sy), max(1, int(960 * sx)), max(1, int(580 * sy)))
+        self.mascot_correct.setGeometry(int(1580 * sx), int(680 * sy), max(1, int(240 * sx)), max(1, int(240 * sy)))
 
     def fit_sequence(self):
-        w_scale = self.width() / 1920
-        h_scale = self.height() / 1080
+        w_scale = self.width() / self.BASE_WIDTH
+        h_scale = self.height() / self.BASE_HEIGHT
         if hasattr(self, "game_view") and hasattr(self.game_view, "controls_widget"):
             self.game_view.controls_widget.setGeometry(
                 int(200 * w_scale), int(70 * h_scale),
@@ -411,6 +435,17 @@ class SignSprint(QWidget):
     def replay(self):
         self.game_view.replay()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.stack.resize(self.size())
+        self.how_to.resize(self.size())
+        self.score_view.resize(self.size())
+        try:
+            self.game_view.resize(self.size())
+            self.game_view._scale_layout()
+        except Exception:
+            pass
+
     @property
     def image(self):
         return self.game_view.avatar
@@ -477,11 +512,13 @@ class SignSprint(QWidget):
                 int(200 * w_scale), int(70 * h_scale),
                 max(1, int(500 * w_scale)), max(1, int(90 * h_scale))
             )
-        size = max(100, min(250, int(self.height() - 150)))
+        size = max(120, min(280, int(min(self.width(), self.height()) * 0.32)))
         if hasattr(self, "game_view") and hasattr(self.game_view, "avatar"):
             self.game_view.avatar.setFixedSize(size, size)
 
     def start_game(self):
+        self.session = GameSession("sprint", rounds=5, module_code=self.module_code, scope=self.scope)
+        self.game_view.session = self.session
         self.stack.setCurrentWidget(self.game_view)
         self.game_view.start_game()
 

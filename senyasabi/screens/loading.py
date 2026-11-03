@@ -68,8 +68,9 @@ class LoadingOverlay(QWidget):
     Call cancel() when leaving a screen. A cancelled result is disposed, never
     delivered to the screen. Callbacks and all widget changes run on the UI thread.
     """
-    def __init__(self, parent):
+    def __init__(self, parent, *, cancel_on_hide=True):
         super().__init__(parent)
+        self.cancel_on_hide = cancel_on_hide
         self.setProperty("ownsGeometry", True)
         self.setObjectName("loadingOverlay")
         self.setAccessibleName("Loading")
@@ -206,7 +207,7 @@ class LoadingOverlay(QWidget):
     def eventFilter(self, watched, event):
         if event.type() == QEvent.Type.Resize:
             self.setGeometry(watched.rect())
-        elif event.type() == QEvent.Type.Hide:
+        elif event.type() == QEvent.Type.Hide and self.cancel_on_hide:
             self.cancel()
         return super().eventFilter(watched, event)
 

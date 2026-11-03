@@ -64,3 +64,146 @@ Traceback (most recent call last):
 SyntaxError: invalid syntax
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AttributeError: 'AppController' object has no attribute 'dev_login'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 9, in <module>
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 75, in show_welcome
+    self._show_screen(self.welcome)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 53, in _show_screen
+    app = QApplication.instance()
+          ^^^^^^^^^^^^
+NameError: name 'QApplication' is not defined
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 18, in <module>
+AttributeError: 'AppController' object has no attribute 'dev_login'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 157, in notify
+    result = super().notify(receiver, event)
+             ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 139, in notify
+    if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+       ^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 32, in boundingRectFor
+    pad_x = source_rect.width() * (self.max_scale - 1) / 2
+            ^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 37, in draw
+    pixmap, offset = self.sourcePixmap(
+    ^^^^^^^^^^^^^^
+TypeError: Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
+
+================================================

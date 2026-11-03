@@ -62,11 +62,13 @@ class SignDetectiveGameView(QWidget):
     back_requested = Signal()
     close_clicked = Signal()
     game_finished = Signal(int, int)
+    BASE_WIDTH = 1920
+    BASE_HEIGHT = 1080
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
-        self.resize(1920, 1080)
+        self.resize(self.BASE_WIDTH, self.BASE_HEIGHT)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
 
         # Background foliage
@@ -147,6 +149,35 @@ class SignDetectiveGameView(QWidget):
         self.sign_rows = []
         self.tile_rows = []
         self.tiles_list = []
+        self._scale_layout()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._scale_layout()
+
+    def _scale_layout(self):
+        if self.width() <= 0 or self.height() <= 0:
+            return
+        sx = self.width() / float(self.BASE_WIDTH)
+        sy = self.height() / float(self.BASE_HEIGHT)
+        scale = min(sx, sy)
+
+        self.bg_label.setGeometry(0, 0, self.width(), self.height())
+        self.header.setGeometry(0, 0, self.width(), max(60, int(90 * sy)))
+        self.card.setGeometry(int(50 * sx), int(95 * sy), max(1, int(1820 * sx)), max(1, int(935 * sy)))
+        self.instruction_note.setGeometry(int(100 * sx), int(40 * sy), max(1, int(800 * sx)), max(1, int(40 * sy)))
+        self.timer_container.setGeometry(int(90 * sx), int(110 * sy), max(1, int(260 * sx)), max(1, int(80 * sy)))
+        self.btn_next.move(int(1670 * sx), int(70 * sy))
+        self.signs_container.setGeometry(int(150 * sx), int(130 * sy), max(1, int(1520 * sx)), max(1, int(340 * sy)))
+        self.tiles_container.setGeometry(int(150 * sx), int(500 * sy), max(1, int(1520 * sx)), max(1, int(380 * sy)))
+        self.mascot_correct.setGeometry(int(1580 * sx), int(680 * sy), max(1, int(240 * sx)), max(1, int(240 * sy)))
+
+        if self.sign_rows:
+            for row in self.sign_rows:
+                row.setFixedWidth(max(10, int(self.signs_container.width() * 0.9)))
+        if self.tile_rows:
+            for row in self.tile_rows:
+                row.setFixedWidth(max(10, int(self.tiles_container.width() * 0.9)))
 
     def start_game(self):
         self.load_round()
@@ -362,6 +393,17 @@ class SignDetective(QWidget):
     def replay(self):
         self.game_view.replay()
 
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.stack.resize(self.size())
+        self.how_to.resize(self.size())
+        self.score_view.resize(self.size())
+        try:
+            self.game_view.resize(self.size())
+            self.game_view._scale_layout()
+        except Exception:
+            pass
+
     @property
     def countdown(self):
         return self.game_view.countdown_timer
@@ -387,6 +429,8 @@ class SignDetective(QWidget):
         self._fitted_form = FittedForm(self)
 
     def start_game(self):
+        self.session = GameSession("detective", rounds=5, module_code=self.module_code, scope=self.scope)
+        self.game_view.session = self.session
         self.stack.setCurrentWidget(self.game_view)
         self.game_view.start_game()
 

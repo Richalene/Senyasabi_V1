@@ -64,10 +64,13 @@ class FingerSpellQuestGameView(QWidget):
 
         # Left: Target Letter Tiles Container
         self.tiles_container = QWidget(self.card)
-        self.tiles_container.setGeometry(100, 260, 850, 300)
+        # Spans the left half of the card (0-1000) and is vertically centered on the camera (y center = 460)
+        self.tiles_container.setGeometry(0, 310, 1000, 300)
         self.tiles_container.setStyleSheet("background: transparent;")
         self.tiles_layout = QVBoxLayout(self.tiles_container)
-        self.tiles_layout.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self.tiles_layout.setContentsMargins(0, 0, 0, 0)
+        self.tiles_layout.setSpacing(20)
+        self.tiles_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Checkmark icon indicator
         self.checkmark_lbl = QLabel(self.card)
@@ -119,7 +122,7 @@ class FingerSpellQuestGameView(QWidget):
         self.btn_retry_cam = QPushButton("Camera Options", self.card)
         self.btn_retry_cam.setGeometry(1020, 835, 200, 45)
         self.btn_retry_cam.setStyleSheet(
-            "QPushButton { background: #526536; color: white; border-radius: 15px; font-weight: bold; } "
+            "QPushButton { background: #526536; color: white; border-radius: 999px; font-weight: bold; } "
             "QPushButton:hover { background: #687D43; }"
         )
         self.btn_retry_cam.clicked.connect(lambda: self.open_camera(force=True))
@@ -228,8 +231,9 @@ class FingerSpellQuestGameView(QWidget):
         for w in words:
             row_widget = QWidget(self.tiles_container)
             row_layout = QHBoxLayout(row_widget)
+            row_layout.setContentsMargins(0, 0, 0, 0)
             row_layout.setSpacing(15)
-            row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
+            row_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             for ch in w:
                 tile = LetterTile(ch, row_widget)
                 row_layout.addWidget(tile)

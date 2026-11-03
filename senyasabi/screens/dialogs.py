@@ -212,12 +212,12 @@ class ComingSoonDialog(QDialog):
         layout.addWidget(pill)
 
         # Title
-        title = QLabel("Building\nBridges, One\nSign at a Time.", container)
+        title = QLabel("Building Bridges, One Sign at a Time.", container)
+        title.setWordWrap(True)
         title.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
-            "font-size: 38px; "
+            "font-size: 36px; "
             "font-weight: 800; "
-            "line-height: 1.1; "
             "color: #1A1A1A; "
             "background: transparent;"
             "border: none;"
@@ -226,15 +226,14 @@ class ComingSoonDialog(QDialog):
 
         # Subtitle
         desc = QLabel(
-            "We appreciate your patience as we continue to work on a few features "
-            "and, eventually, more complex and advanced learning courses.", container
+            "We appreciate your patience as we continue building more features, "
+            "including complex and advanced learning courses.", container
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
             "font-size: 16px; "
             "color: #555555; "
-            "line-height: 1.4; "
             "background: transparent;"
             "border: none;"
         )

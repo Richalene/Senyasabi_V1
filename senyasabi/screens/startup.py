@@ -16,6 +16,7 @@ class FittedForm(QObject):
     def __init__(self, window):
         super().__init__(window)
         self.window = window
+        self._screen_handle = None
         self.base_style = window.styleSheet()
         self.base_font = window.font()
         self.layout_canvas = getattr(window, "_ui", None)
@@ -53,9 +54,30 @@ class FittedForm(QObject):
         window.installEventFilter(self)
 
     def eventFilter(self, watched, event):
-        if event.type() == QEvent.Type.Resize:
+        if watched is self.window and event.type() in (QEvent.Type.Show, QEvent.Type.WinIdChange):
+            self._watch_screen()
+        elif event.type() == QEvent.Type.Resize:
             self.fit()
         return super().eventFilter(watched, event)
+
+    def _watch_screen(self):
+        handle = self.window.windowHandle()
+        if handle is None or handle is self._screen_handle:
+            return
+        self._screen_handle = handle
+        handle.screenChanged.connect(self._screen_changed)
+
+    def _screen_changed(self, screen):
+        if screen is None or self.window.isFullScreen() or self.window.isMaximized():
+            return
+        available = screen.availableGeometry()
+        geometry = self.window.geometry()
+        width = min(geometry.width(), available.width())
+        height = min(geometry.height(), available.height())
+        x = min(max(geometry.x(), available.left()), available.right() - width + 1)
+        y = min(max(geometry.y(), available.top()), available.bottom() - height + 1)
+        if (x, y, width, height) != geometry.getRect():
+            self.window.setGeometry(x, y, width, height)
 
     def fit(self):
         scale = min(self.window.width() / self.canvas.width(),
@@ -166,13 +188,8 @@ class LandingScreen(StartupScreen):
         self._fitted_form = FittedForm(self)
 
     def show_about(self):
-        import os
         from PySide6.QtWidgets import QMessageBox
         QMessageBox.information(self, 'About SenyaSabi',
             'Learn Filipino Sign Language through lessons, quizzes, and three spelling games. '
             'Camera recognition runs only when you choose a camera-based activity. '
             'You can explore the other activities without a camera.')
-        if os.environ.get("QT_QPA_PLATFORM") != "offscreen":
-            from screens.dialogs import ComingSoonDialog
-            dialog = ComingSoonDialog(self)
-            dialog.exec()

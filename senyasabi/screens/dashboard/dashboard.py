@@ -4,7 +4,9 @@ import sys
 
 import math
 import os
-from PySide6.QtCore import Qt, Signal, QPointF, QRectF
+import re
+from PySide6.QtCore import (QEasingCurve, QEvent, QObject, Qt, Signal, QPoint,
+                            QPointF, QRect, QRectF, QVariantAnimation)
 from PySide6.QtGui import (
     QPixmap, QCloseEvent, QFontDatabase, QPainter,
     QColor, QPen, QBrush, QPolygonF, QFont
@@ -45,6 +47,120 @@ class _DataStatus(QWidget):
         row.addWidget(self.retry)
         row.addStretch()
         self.hide()
+
+
+class _BounceHover(QObject):
+    _FONT_SIZE = re.compile(r"(font-size\s*:\s*)(\d+(?:\.\d+)?)(px|pt)", re.IGNORECASE)
+
+    def __init__(self, button, window):
+        super().__init__(button)
+        self.button = button
+        button.setProperty("hoverBounceHandled", True)
+        self.window = window
+        self.animation = None
+        self.baseline = None
+        self.current_scale = 1.0
+        button.installEventFilter(self)
+        window.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if watched is self.button:
+            if event.type() == QEvent.Type.Enter:
+                self._animate(True)
+            elif event.type() == QEvent.Type.Leave:
+                self._animate(False)
+        elif watched is self.window and event.type() == QEvent.Type.Resize:
+            self._stop_animation()
+            self._restore_baseline()
+            self.baseline = None
+            self.current_scale = 1.0
+        return super().eventFilter(watched, event)
+
+    @staticmethod
+    def _scaled_rect(rect, factor):
+        width = max(1, round(rect.width() * factor))
+        height = max(1, round(rect.height() * factor))
+        center = rect.center()
+        return QRect(
+            round(center.x() - width / 2), round(center.y() - height / 2),
+            width, height,
+        )
+
+    @classmethod
+    def _scaled_font_style(cls, style, factor):
+        return cls._FONT_SIZE.sub(
+            lambda match: (
+                f"{match.group(1)}{float(match.group(2)) * factor:.1f}{match.group(3)}"
+            ),
+            style,
+        )
+
+    def _restore_baseline(self):
+        if self.baseline is None:
+            return
+        button_rect, children = self.baseline
+        self.button.setGeometry(button_rect)
+        for child, rect, style in children:
+            child.setGeometry(rect)
+            child.setStyleSheet(style)
+
+    def _stop_animation(self):
+        animation, self.animation = self.animation, None
+        if animation is not None:
+            animation.stop()
+            animation.deleteLater()
+
+    def _animate(self, entering):
+        self._stop_animation()
+        if entering and self.baseline is None:
+            children = self.button.findChildren(
+                QLabel, options=Qt.FindChildOption.FindDirectChildrenOnly
+            )
+            self.baseline = (
+                self.button.geometry(),
+                [(child, child.geometry(), child.styleSheet()) for child in children],
+            )
+        if self.baseline is None:
+            return
+
+        button_rect, children = self.baseline
+        animation = QVariantAnimation(self.button)
+        animation.setDuration(330 if entering else 185)
+        animation.setStartValue(self.current_scale)
+        if entering:
+            animation.setKeyValueAt(0.42, 1.15)
+            animation.setEndValue(1.065)
+            animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        else:
+            animation.setEndValue(1.0)
+            animation.setEasingCurve(QEasingCurve.Type.OutBack)
+
+        def apply_scale(value):
+            factor = float(value)
+            scaled_button = self._scaled_rect(button_rect, factor)
+            self.button.setGeometry(scaled_button)
+            offset = QPoint(button_rect.x() - scaled_button.x(),
+                            button_rect.y() - scaled_button.y())
+            for child, rect, style in children:
+                child.setGeometry(rect.translated(offset))
+                child.setStyleSheet(self._scaled_font_style(style, factor))
+            self.current_scale = factor
+
+        animation.valueChanged.connect(apply_scale)
+        self.animation = animation
+
+        def finish():
+            if self.animation is not animation:
+                return
+            self.animation = None
+            if self.current_scale <= 1.0:
+                self._restore_baseline()
+                self.baseline = None
+                self.current_scale = 1.0
+            animation.deleteLater()
+
+        animation.finished.connect(finish)
+        animation.start()
 
 
 def _session_user_id():
@@ -364,6 +480,14 @@ class DashboardWindow(QWidget):
         _ensure_cherry_bomb_font()
         self.ui = Ui_main()
         self.ui.setupUi(self)
+        self.ui.btnStartLearning.setGeometry(930, 180, 400, 198)
+        self.ui.lblStartLearningText.setGeometry(20, 22, 360, 154)
+        self.ui.lblStartLearningText.setStyleSheet(
+            'font-family: "Cherry Bomb One", "Segoe UI"; font-size: 40px; '
+            'color: #5c3b28; background: transparent;'
+        )
+        self.ui.btnMinigames.setGeometry(1330, 196, 400, 182)
+        self.ui.lblMinigamesText.setGeometry(20, 20, 360, 142)
         root = Path(__file__).resolve().parents[2]
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/home_bg.png")))
@@ -410,7 +534,18 @@ class DashboardWindow(QWidget):
         self._loading_user_id = None
         self._render_home_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
         self._fitted_form = FittedForm(self)
-        self.loading = LoadingOverlay(self)
+        self._hover_bounces = [
+            _BounceHover(button, self)
+            for button in (
+                self.ui.btnStartLearning,
+                self.ui.btnMinigames,
+                self.ui.btnLessonsCompleted,
+                self.ui.btnModule,
+                self.ui.btnLatestBadge,
+                self.ui.btnLeaderboardRank,
+            )
+        ]
+        self.loading = LoadingOverlay(self, cancel_on_hide=False)
 
     def refresh_home_stats(self):
         user = auth_service.get_current_user() or {}
@@ -457,11 +592,18 @@ class DashboardWindow(QWidget):
         self.ui.lblLeaderboardRank.setText(f"#{rank}" if rank else "Unranked")
 
     def showEvent(self, event):
-        self.refresh_home_stats()
+        user = auth_service.get_current_user() or {}
+        user_id = user.get("user_id")
+        display_name = user.get("display_name") or user.get("username") or "Learner"
+        self.ui.welcomeLabel.setText(f"Welcome Back, {display_name}!")
+        if self._displayed_user_id != user_id:
+            self.refresh_home_stats()
         super().showEvent(event)
 
+    def invalidate_home_stats(self):
+        self._displayed_user_id = object()
+
     def hideEvent(self, event):
-        self.loading.cancel()
         super().hideEvent(event)
 
     def closeEvent(self, event):
