@@ -52,16 +52,11 @@ class AppController:
         try:
             from backend import leaderboard_service
             for board in ("all_time", "weekly", "monthly"):
-                leaderboard_service.refresh_leaderboard(board)   # already runs on a worker
+                leaderboard_service.refresh_leaderboard_if_stale(board)   # only fetches if cache is stale (> 5 min)
 
             def _background_pull():
                 try:
                     auth_service.sync_user_info(user["user_id"])
-                except Exception:
-                    pass
-                try:
-                    from backend import progress_sync
-                    progress_sync.pull_user_progress()
                 except Exception as err:
                     logging.getLogger(__name__).warning("Post-login progress pull failed: %s", err)
 

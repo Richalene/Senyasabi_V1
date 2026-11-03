@@ -144,6 +144,10 @@ class SyncService:
                 operation="upsert",
             )
             sync_id = item.sync_id
+            try:
+                rebuild_user_statistics(db, user_id)
+            except Exception as e:
+                _log.warning("Could not rebuild statistics after quiz attempt: %s", e)
 
         return sync_id
     
@@ -197,6 +201,10 @@ class SyncService:
                 operation="upsert",
             )
             sync_id = item.sync_id
+            try:
+                rebuild_user_statistics(db, user_id)
+            except Exception as e:
+                _log.warning("Could not rebuild statistics after minigame attempt: %s", e)
         return sync_id
 
     def queue_lesson_progress(
@@ -245,6 +253,10 @@ class SyncService:
                 payload=payload, operation="upsert",
             )
             sync_id = item.sync_id
+            try:
+                rebuild_user_statistics(db, user_id)
+            except Exception as e:
+                _log.warning("Could not rebuild statistics after lesson progress: %s", e)
         return sync_id
     
     # Backward-compatible alias for the old name

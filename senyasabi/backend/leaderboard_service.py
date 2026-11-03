@@ -288,3 +288,14 @@ def refresh_leaderboard(board_code="all_time"):
     if board_code not in BOARD_CODES:
         raise ValueError(f"Unknown leaderboard: {board_code}")
     _repository._fetch_background(board_code)
+
+
+def refresh_leaderboard_if_stale(board_code="all_time"):
+    """Refresh the leaderboard from the server only if the local cache is stale (> 5 min).
+
+    Returns immediately; if stale, background fetch is scheduled.
+    """
+    if board_code not in BOARD_CODES:
+        raise ValueError(f"Unknown leaderboard: {board_code}")
+    if _repository._is_cache_stale(board_code):
+        _repository._fetch_background(board_code)

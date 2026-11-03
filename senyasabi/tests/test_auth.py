@@ -112,6 +112,12 @@ class NavigationTests(unittest.TestCase):
         auth._repository = auth.InMemoryUserRepository()
         auth.logout_user()
         self.controller = AppController()
+        p_sync = patch.object(self.controller, "_post_login_sync", lambda user: None)
+        p_sync.start()
+        self.addCleanup(p_sync.stop)
+        p_supa = patch("backend.supabase_client.get_supabase_client", return_value=None)
+        p_supa.start()
+        self.addCleanup(p_supa.stop)
         self.controller.show_login()
 
     def tearDown(self):
