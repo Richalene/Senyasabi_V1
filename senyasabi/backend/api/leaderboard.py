@@ -173,64 +173,26 @@ async def refresh_leaderboard(board_code: str = "all_time",
         )
 
 @router.get("/user/{user_id}")
-async def get_user_leaderboard_position(user_id: str, board_code: str = "all_time"):
-    """
-    Get user's position on the leaderboard.
-
-    Args:
-        user_id: The user ID (UUID)
-        board_code: The leaderboard type (all_time, weekly, monthly)
-
-    Returns:
-        User's leaderboard position with display_name, total_score, and rank
-    """
+async def get_user_leaderboard_position(user_id: str, board_code: str = "all_time",
+                                        me: str = Depends(get_current_user_id)):
     if board_code not in PERIODS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown board_code")
+    if user_id != me:
+        raise HTTPException(status.HTTP_403_FORBIDDEN, "Not your data")
 
-    try:
-        with get_postgres_session() as db:
-            result = db.execute(text("""
-                WITH scores AS (
-                    SELECT u.user_id,
-                           COALESCE(NULLIF(btrim(u.display_name), ''), u.username) AS display_name,
-                           (COALESCE((SELECT SUM(qa.score) FROM public.quiz_attempts qa
-                                       WHERE qa.user_id = u.user_id AND qa.completed_at IS NOT NULL
-                                         AND (CAST(:period AS text) IS NULL
-                                              OR qa.completed_at >= now() - CAST(:period AS interval))), 0)
-                              + COALESCE((SELECT SUM(ma.score) FROM public.minigame_attempts ma
-                                           WHERE ma.user_id = u.user_id AND ma.completed_at IS NOT NULL
-                                             AND (CAST(:period AS text) IS NULL
-                                                  OR ma.completed_at >= now() - CAST(:period AS interval))), 0))::BIGINT AS total_score,
-                           COALESCE((SELECT s.current_streak FROM public.streaks s WHERE s.user_id = u.user_id), 0) AS current_streak,
-                           (SELECT COUNT(*) FROM public.user_badges ub WHERE ub.user_id = u.user_id)::INT AS badge_count
-                      FROM public.users u
-                )
-                SELECT user_id::text AS user_id, display_name, total_score, current_streak, badge_count,
-                       RANK() OVER (ORDER BY total_score DESC)::INT AS rank_position
-                  FROM scores
-                 WHERE user_id = :user_id
-            """), {"user_id": user_id, "period": PERIODS[board_code]}).mappings().first()
+    ranked_sql = _LEADERBOARD_SQL.replace("LIMIT :limit", "")
+    with get_postgres_session() as db:
+        result = db.execute(
+            text(f"SELECT * FROM ({ranked_sql}) r WHERE user_id = :user_id"),
+            {"user_id": user_id, "period": PERIODS[board_code]},
+        ).mappings().first()
 
-            if not result:
-                return {
-                    "user_id": user_id,
-                    "board_code": board_code,
-                    "rank": None,
-                    "message": "User not found or no score recorded"
-                }
-
-            return {
-                "user_id": user_id,
-                "board_code": board_code,
-                "rank": result["rank_position"],
-                "display_name": result["display_name"],
-                "total_score": result["total_score"],
-                "current_streak": result["current_streak"],
-                "badge_count": result["badge_count"]
-            }
-
-    except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching user position: {str(e)}"
-        )
+    if not result:
+        return {"user_id": user_id, "board_code": board_code, "rank": None,
+                "message": "User not found or no score recorded"}
+    return {
+        "user_id": user_id, "board_code": board_code,
+        "rank": result["rank_position"], "rank_position": result["rank_position"],
+        "display_name": result["display_name"], "total_score": result["total_score"],
+        "current_streak": result["current_streak"], "badge_count": result["badge_count"],
+    }
