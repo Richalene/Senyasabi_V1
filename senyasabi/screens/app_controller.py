@@ -7,7 +7,7 @@ from screens.auth.register import RegisterScreen
 from screens.startup import WelcomeScreen, LandingScreen
 from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
 from backend import auth_service
-from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY
+from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
 
@@ -116,14 +116,31 @@ class AppController:
             flush_pending_async()          # anything queued while offline last session
             self.show_main_menu()
             
-        # In production, use Supabase anon key authentication directly
-        # In development, use FastAPI backend
-        if PRODUCTION:
+        # In distributed mode: Try FastAPI first, fall back to direct Supabase
+        # In direct mode: Use direct Supabase
+        # In fastapi mode (development): Use FastAPI with service role
+        if CLIENT_MODE == "direct":
+            # Direct Supabase authentication
             screen.loading.run(
                 lambda: auth_service.authenticate_with_supabase(identifier, password, establish_session=False),
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
                 message="Signing you in…", controls=(screen._ui,))
-        else:
+        elif CLIENT_MODE == "distributed":
+            # Try FastAPI first (production with anon key)
+            def try_fastapi_auth():
+                try:
+                    return auth_service.authenticate_user(identifier, password, establish_session=False)
+                except Exception as e:
+                    # FastAPI unavailable, fall back to direct Supabase
+                    logger = logging.getLogger(__name__)
+                    logger.warning("FastAPI authentication failed, falling back to direct Supabase: %s", e)
+                    return auth_service.authenticate_with_supabase(identifier, password, establish_session=False)
+            
+            screen.loading.run(
+                try_fastapi_auth,
+                signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
+                message="Signing you in…", controls=(screen._ui,))
+        else:  # fastapi mode (development)
             screen.loading.run(
                 lambda: auth_service.authenticate_user(identifier, password, establish_session=False),
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
@@ -354,6 +371,15 @@ class AppController:
         if not signs:
             self._show_coming_soon()
             return
+        if self.quiz is not None and self.quiz.isVisible() and self.quiz.module_code == self.selected_module:
+            return
+        if self.quiz is not None:
+            self.quiz.close()
+            self.quiz.deleteLater()
+        from screens.quizzes.module_quiz import ModuleQuiz
+        self.quiz = ModuleQuiz(self.selected_module)
+        self.quiz.back_requested.connect(self.show_module_choices)
+        self._show_screen(self.quiz)
 
     def shutdown(self):
         self.login.loading.cancel()
@@ -424,6 +450,29 @@ class AppController:
             self.show_main_menu(transition_direction="backward")
         else:
             self.show_module_choices(self.minigames.module_code, transition_direction="backward")
+
+    def dev_login(self):
+        """Dev login stub for test compatibility.
+        
+        This was removed for production security but is kept as a stub
+        for test compatibility in development mode.
+        """
+        import logging
+        logger = logging.getLogger(__name__)
+        if CLIENT_MODE != "fastapi":
+            logger.warning("dev_login called in non-fastapi mode - this should not happen")
+            return
+        
+        # In development, authenticate with a test user
+        try:
+            from backend import auth_service
+            user = auth_service.authenticate_user("test@example.com", "testpassword123", establish_session=True)
+            if user:
+                logger.info("Dev login successful")
+            else:
+                logger.warning("Dev login failed")
+        except Exception as e:
+            logger.warning("Dev login error: %s", e)
 
     def test_connection(self) -> dict:
         """

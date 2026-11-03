@@ -43,22 +43,25 @@ AttributeError: 'AppController' object has no attribute 'dev_login'
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "<string>", line 18, in <module>
-AttributeError: 'AppController' object has no attribute 'dev_login'
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 118, in <module>
+    from backend.api_client import start_connection_monitoring, add_connection_status_listener
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/api_client.py", line 19
+    from .config import FASTAPI_HOST, FASTAPI_PORT, CLIENT_MODE, API_BASE_URL, SUPABASE_ANON_KEY, 
+                                                                                                  ^
+SyntaxError: trailing comma not allowed without surrounding parentheses
 
 ================================================
 
 ================ CRITICAL CRASH ================
 Traceback (most recent call last):
-  File "<string>", line 18, in <module>
-AttributeError: 'AppController' object has no attribute 'dev_login'
-
-================================================
-
-================ CRITICAL CRASH ================
-Traceback (most recent call last):
-  File "<string>", line 18, in <module>
-AttributeError: 'AppController' object has no attribute 'dev_login'
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 119, in <module>
+    from backend.score_service import flush_pending_async
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 9, in <module>
+    from . import auth_service, sync_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/sync_service.py", line 539
+    print("===========================\n")if name == "signs":
+                                                            ^
+SyntaxError: invalid syntax
 
 ================================================
 

@@ -297,7 +297,7 @@ class StatisticsDashboardWindow(QWidget):
         if completed_lessons:
             try:
                 from backend import content_service
-                for code in ("alphabet", "number", "family", "greeting", "survival", "days", "basic_communication"):
+                for code in ("alphabet", "number", "family", "greeting", "days", "calendar", "actions"):
                     lessons = content_service.get_lessons_for_module(code)
                     if not lessons:
                         continue
@@ -307,8 +307,7 @@ class StatisticsDashboardWindow(QWidget):
                         if lid is None:
                             order = les.get("lesson_number", idx) if isinstance(les, dict) else idx
                             sub_code = (les.get("module_code") if isinstance(les, dict) else None) or code
-                            sub_order = order - 3 if (code == "basic_communication" and sub_code == "survival" and order > 3) else order
-                            lid = content_service.get_lesson_id(sub_code, sub_order)
+                            lid = content_service.get_lesson_id(sub_code, order)
                         if lid is not None:
                             lesson_ids.append(lid)
                     if lesson_ids:

@@ -10,7 +10,7 @@ from .common import GameCanvas
 from .sign_sprint import SignSprint
 from .sign_detective import SignDetective
 from .fingerspell_quest import FingerSpellQuest
-
+from backend.media_service import warm_alphabet_stills
 
 class MinigameMenuWidget(QWidget):
     """The hub screen displaying the 3 minigame buttons based on Figma mockup."""
@@ -136,6 +136,7 @@ class MinigameSelect(GameCanvas):
         self.context = MinigameContext(scope="global", module_code=None)
 
     def open_game(self, kind, module_code=None, *, scope="global"):
+        warm_alphabet_stills()
         context = MinigameContext(scope=scope, module_code=module_code)
         factory = {"sprint": SignSprint, "quest": FingerSpellQuest, "detective": SignDetective}[kind]
         self.return_menu()

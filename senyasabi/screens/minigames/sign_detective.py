@@ -18,7 +18,7 @@ from backend.minigame_service import ROOT, GameSession
 from screens.startup import FittedForm
 from .minigame_ui_components import (HowToPlayWidget, MinigameScoreWidget,
                                      MinigameHeader, LetterTile, CircularActionButton)
-
+from backend.media_service import alphabet_still
 
 class SignDetectiveCard(QWidget):
     """
@@ -41,8 +41,8 @@ class SignDetectiveCard(QWidget):
 
         self.img_label = QLabel(self)
         self.img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        path = ROOT / "resources/VRM_SIGNS" / f"{self.letter}.png"
-        if path.exists():
+        path = alphabet_still(self.letter)
+        if path:
             self.img_label.setPixmap(QPixmap(str(path)))
             self.img_label.setScaledContents(True)
         else:

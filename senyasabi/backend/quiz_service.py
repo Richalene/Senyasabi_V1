@@ -2,7 +2,7 @@
 from dataclasses import dataclass
 import json
 import random
-from .content_service import ROOT, fingerspell_text, get_module, get_signs_for_module
+from .content_service import ROOT, get_module, get_signs_for_module
 from .minigame_service import normalize
 
 
@@ -44,15 +44,10 @@ class QuizSession:
     def current(self):
         return None if self.complete else self.questions[self.index]
 
-    @property
-    def sequence(self):
-        """The A-Z text the learner decodes from the fingerspelling images."""
-        return fingerspell_text(self.current.label) if not self.complete else ""
-
     def answer(self, answer):
         if self.complete or self.answered:
             return False
-        accepted = {normalize(self.current.label), normalize(self.sequence)}
+        accepted = {normalize(self.current.label)}
         correct = normalize(answer) in accepted
         self.score += int(correct)
         self.answered = True

@@ -3,12 +3,16 @@ from dataclasses import dataclass, field
 import logging
 import os
 import sys
+import faulthandler
 from queue import Empty, Full, Queue
 from threading import Event, Lock
 from time import monotonic
 
-from PySide6.QtCore import QObject, QSettings, QThread, Signal, Slot, Qt
+from PySide6.QtCore import QObject, QSettings, QThread, Signal, Slot, Qt, QByteArray
 from . import camera_ownership
+
+# Enable faulthandler to catch native C/C++ segmentation faults (e.g. OpenCV / MediaPipe crashes)
+faulthandler.enable()
 
 log = logging.getLogger(__name__)
 
@@ -53,6 +57,7 @@ class _CameraWorker(QObject):
     @Slot()
     def start(self):
         try:
+            print("1. Starting camera (Qt worker)", flush=True)
             from PySide6.QtMultimedia import QCamera, QMediaCaptureSession, QVideoSink
             self.camera = QCamera(self.device, self)
             self.session = QMediaCaptureSession(self)
@@ -62,6 +67,7 @@ class _CameraWorker(QObject):
             self.sink.videoFrameChanged.connect(self.frame)
             self.camera.errorOccurred.connect(self.failed)
             self.camera.start()
+            print("2. Camera started: True", flush=True)
         except Exception as error:
             log.exception('Camera initialization failed')
             self.capture.error = str(error)
@@ -72,15 +78,28 @@ class _CameraWorker(QObject):
         if self.capture.closed or not frame.isValid():
             return
         try:
+            print("3. Reading frame (Qt callback)", flush=True)
             import numpy as np
             from PySide6.QtGui import QImage
+            
             image = frame.toImage().convertToFormat(QImage.Format.Format_RGB888)
             if image.isNull():
+                print("Frame read failed (null image)", flush=True)
                 return
-            rgb = np.frombuffer(image.constBits(), dtype=np.uint8,
-                                count=image.height()*image.bytesPerLine()).reshape(image.height(), image.bytesPerLine())
-            # Copy before QImage storage is released; preserve original orientation.
-            bgr = rgb[:, :image.width()*3].reshape(image.height(), image.width(), 3)[:, :, ::-1].copy()
+            
+            # Explicitly cast dimensions to int to satisfy type checkers
+            h = int(image.height())
+            w = int(image.width())
+            bpl = int(image.bytesPerLine())
+            
+            # Safely extract raw bytes with type-ignore to bypass Qt pointer checks
+            bits = image.constBits()
+            buffer = bytes(bits) if not isinstance(bits, (bytes, bytearray)) else bits  # type: ignore
+
+            rgb = np.frombuffer(buffer, dtype=np.uint8, count=h * bpl).reshape(h, bpl)  # type: ignore
+            bgr = rgb[:, :w * 3].reshape(h, w, 3)[:, :, ::-1].copy()
+            print("4. Frame received", flush=True)
+
             try:
                 self.capture.frames.put_nowait(bgr)
             except Full:
@@ -105,8 +124,14 @@ class _CameraWorker(QObject):
         if self.camera is not None:
             self.camera.stop()
         if self.session is not None:
-            self.session.setCamera(None)
-            self.session.setVideoSink(None)
+            try:
+                self.session.setCamera(None)  # type: ignore
+            except Exception:
+                pass
+            try:
+                self.session.setVideoSink(None)  # type: ignore
+            except Exception:
+                pass
         self.thread().quit()
 
 
@@ -138,7 +163,10 @@ class _QtCapture:
         if not self.isOpened():
             return False, None
         try:
-            return True, self.frames.get(timeout=.15)
+            print("3. Reading frame (Queue)", flush=True)
+            frame = self.frames.get(timeout=.15)
+            print("4. Frame received", flush=True)
+            return True, frame
         except Empty:
             return False, None
 
@@ -155,7 +183,6 @@ class _QtCapture:
             except RuntimeError:
                 if self.thread.isRunning():
                     raise
-        # Closing is bounded; retain the thread until the OS finishes stopping it.
         log.warning('[DIAG] _QtCapture.release: before thread.wait(1500)')
         waited = self.thread.wait(1500)
         log.warning('[DIAG] _QtCapture.release: after thread.wait(1500) -> returned=%s, thread.isRunning=%s',
@@ -186,8 +213,6 @@ class _OwnedCapture:
             self.failed_reads = 0
             self.last_frame = monotonic()
         else:
-            # A short gap in frames is not a disconnect. Real disconnects surface through
-            # isOpened() (camera error / dead capture thread) or the caller's longer timeout.
             self.failed_reads += 1
         return ok, frame
 
@@ -222,8 +247,12 @@ class CameraService:
                 devices = list(self.device_provider())
             else:
                 from PySide6.QtMultimedia import QMediaDevices
-                devices = [CameraDevice(bytes(device.id()).hex(), device.description(), qt_device=device)
-                           for device in QMediaDevices.videoInputs()]
+                devices = []
+                for device in QMediaDevices.videoInputs():
+                    dev_id_bytes = device.id()
+                    dev_id = bytes(dev_id_bytes).hex() if isinstance(dev_id_bytes, (bytes, bytearray, QByteArray)) else str(dev_id_bytes)
+                    description = str(device.description())
+                    devices.append(CameraDevice(dev_id, description, qt_device=device))
             self.discovery_error = None
             return devices
         except (ImportError, RuntimeError) as error:
@@ -239,20 +268,31 @@ class CameraService:
 
     def selected_device(self):
         with self._lock:
-            device_id = self.settings.value('camera/device_id', '')
-            if not self.settings.value('camera/consented', False, type=bool) or not device_id:
+            consented = self.settings.value('camera/consented', False, type=bool)
+            device_id_val = self.settings.value('camera/device_id', '')
+            device_id = str(device_id_val) if device_id_val is not None else ''
+
+            if not consented or not device_id:
                 return None
-            if self.settings.value('camera/backend', 'qt') == 'opencv':
-                index = self.settings.value('camera/index', 0, type=int)
-                return CameraDevice(device_id, self.settings.value('camera/name', f'Camera {index}'), 'opencv', index)
-        # Match the stable identifier, never a guessed Qt-list-to-OpenCV index.
+            
+            backend_val = self.settings.value('camera/backend', 'qt')
+            backend = str(backend_val) if backend_val else 'qt'
+
+            if backend == 'opencv':
+                index_val = self.settings.value('camera/index', 0, type=int)
+                index = int(index_val) if index_val is not None else 0
+                name_val = self.settings.value('camera/name', f'Camera {index}')
+                name = str(name_val) if name_val else f'Camera {index}'
+                return CameraDevice(device_id, name, 'opencv', index)
+                
         return next((device for device in self.discover() if device.device_id == device_id), None)
 
     def save_selection(self, device):
         with self._lock:
-            for key, value in {'consented': True, 'device_id': device.device_id,
-                               'name': device.name, 'backend': device.backend,
-                               'index': device.index if device.index is not None else -1}.items():
+            idx = device.index if device.index is not None else -1
+            for key, value in {'consented': True, 'device_id': str(device.device_id),
+                               'name': str(device.name), 'backend': str(device.backend),
+                               'index': idx}.items():
                 self.settings.setValue(f'camera/{key}', value)
             self.settings.sync()
             if self.settings.status() != QSettings.Status.NoError:
@@ -269,16 +309,22 @@ class CameraService:
         capture = None
         owned = None
         try:
+            print("1. Starting camera", flush=True)
             if self.capture_factory is not None:
                 capture = self.capture_factory(device)
             elif device.backend == 'qt':
                 capture = _QtCapture(device)
             else:
                 import cv2
-                capture = cv2.VideoCapture(device.index)
+                idx = device.index if device.index is not None else 0
+                print("1. Starting camera (OpenCV backend)", flush=True)
+                capture = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION)
+                print("2. Camera started:", capture.isOpened(), flush=True)
+
             owned = _OwnedCapture(capture, owner)
             if not owned.isOpened():
                 raise CameraError(getattr(capture, 'error', None) or 'The selected camera could not be opened.')
+            print("2. Camera started (Owned):", capture.isOpened(), flush=True)
             return owned
         except Exception:
             if owned is not None:

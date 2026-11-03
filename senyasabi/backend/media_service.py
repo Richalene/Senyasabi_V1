@@ -7,11 +7,12 @@ import os
 from pathlib import Path
 import tempfile
 from typing import Protocol
+import threading
 
 import requests
 
 from .api_client import get_api_client
-from .config import MEDIA_CACHE_DIR
+from .config import MEDIA_CACHE_DIR, CLIENT_MODE
 from .content_service import ROOT, get_sign
 from .database import repository as repo
 from .database.models import MediaCache, MediaFile, utcnow
@@ -22,7 +23,10 @@ log = logging.getLogger(__name__)
 logger = log
 VIDEO_ROOT = ROOT / "resources/videos"
 CHUNK = 1024 * 1024
-
+_STILLS = {}                      # 'A' -> Path, filled from lesson_media of the alphabet lessons
+_stills_lock = threading.Lock()
+_warming = False
+_BUNDLED = ROOT / "resources/VRM_SIGNS"
 
 @dataclass(frozen=True)
 class MediaRecord:
@@ -156,7 +160,12 @@ def _cached_path(media_id: int) -> Path | None:
 
 
 def _download(media_id: int) -> Path | None:
-    info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
+    # Get media info from appropriate source
+    if CLIENT_MODE == "distributed":
+        info = _get_media_info_supabase(media_id)
+    else:
+        info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
+    
     if not info or not info.get("url"):
         return None                              # offline / not found
 
@@ -167,16 +176,40 @@ def _download(media_id: int) -> Path | None:
 
     fd, tmp_name = tempfile.mkstemp(dir=MEDIA_CACHE_DIR, suffix=".part")
     try:
+        logger.info(
+            "Downloading media_id=%s, file_name=%s, url=%s",
+            media_id,
+            info.get("file_name"),
+            info.get("url"),
+        )
         with os.fdopen(fd, "wb") as f, requests.get(info["url"], stream=True, timeout=30) as r:
-            r.raise_for_status()
+            if not r.ok:
+                logger.error(
+                    "Media download failed: id=%s, status=%s, "
+                    "url=%s, response=%s",
+                    media_id,
+                    r.status_code,
+                    r.url,
+                    r.text[:1000],
+                )
+                r.raise_for_status()
+
             for chunk in r.iter_content(CHUNK):
-                f.write(chunk)
-                sha.update(chunk)
+                if chunk:
+                    f.write(chunk)
+                    sha.update(chunk)
 
         expected = info.get("checksum_sha256")
         if expected and sha.hexdigest() != expected:
             raise ValueError("checksum mismatch")
+        
         os.replace(tmp_name, dest)               # atomic: never a half-written file
+        logger.info(
+            "Successfully downloaded and verified media_id=%s, file_name=%s, destination=%s",
+            media_id,
+            info.get("file_name"),
+            dest,
+        )
     except Exception:
         logger.exception("Media download failed for %s", media_id)
         Path(tmp_name).unlink(missing_ok=True)
@@ -187,16 +220,142 @@ def _download(media_id: int) -> Path | None:
         version = repo.get_content_version_by_number(db, info["content_version_number"])
         if version is None:
             logger.warning("Content version %s missing locally", info["content_version_number"])
-            return dest                          # file is usable; skip DB record
+            return dest  # file is usable; skip DB record
+        
         cv_id = version.content_version_id
-        # media_cache has an FK to media_files, so make sure the row exists locally.
-        db.merge(MediaFile(
-            media_id=media_id, file_name=info.get("file_name"),
-            object_key=f"media/{media_id}",      # placeholder; real key stays server-side
-            media_type=info["media_type"], width=info.get("width"),
-            height=info.get("height"), duration_seconds=info.get("duration_seconds"),
-            file_size=info.get("file_size"), checksum=digest, content_version_id=cv_id))
-        db.flush()
-        db.merge(MediaCache(media_id=media_id, local_path=name, content_version_id=cv_id,
-                            checksum=digest, cached_at=utcnow()))
+
+        # 1. Ensure the media_files row exists without overwriting its real object_key
+        media_record = db.get(MediaFile, media_id)
+        if media_record is None:
+            # Fallback only if the sync missed it; otherwise, let server snapshot provide the key
+            db.add(MediaFile(
+                media_id=media_id,
+                file_name=info.get("file_name"),
+                object_key=info.get("object_key"),  # Use real key from info if available
+                media_type=info["media_type"],
+                width=info.get("width"),
+                height=info.get("height"),
+                duration_seconds=info.get("duration_seconds"),
+                file_size=info.get("file_size"),
+                checksum=digest,
+                content_version_id=cv_id
+            ))
+            db.flush()
+
+        # 2. Record only local cache metadata in MediaCache (local_path vs remote storage)
+        db.merge(MediaCache(
+            media_id=media_id,
+            local_path=name,                  # Local disk path
+            content_version_id=cv_id,
+            checksum=digest,
+            cached_at=utcnow()
+        ))
     return dest
+
+
+def _get_media_info_supabase(media_id: int) -> dict | None:
+    """Get media info and signed URL from Supabase Storage (distributed mode)."""
+    try:
+        from .supabase_client import get_supabase_client
+        from .database.session import session_scope
+        from .database import repository as repo
+        from .config import SUPABASE_URL
+        from urllib.parse import quote
+
+        if not SUPABASE_URL:
+            return None
+        
+        supabase = get_supabase_client()
+        
+        # Get media metadata from database
+        with session_scope() as db:
+            media = db.get(MediaFile, media_id)
+            if media is None or media.is_deleted:
+                return None
+            
+            object_key = media.object_key
+            file_name = media.file_name
+            media_type = media.media_type
+            width = media.width
+            height = media.height
+            duration = media.duration_seconds
+            file_size = media.file_size
+            content_version = repo.get_content_version(db, media.content_version_id)
+        
+        if not content_version:
+            return None
+        
+        storage_url = (
+            f"{SUPABASE_URL.rstrip('/')}"
+            f"/storage/v1/object/public/senyasabi-media/"
+            f"{quote(object_key, safe='/')}"
+        )
+
+        return {
+            "url": storage_url,
+            "file_name": file_name,
+            "media_type": media_type,
+            "width": width,
+            "height": height,
+            "duration_seconds": duration,
+            "file_size": file_size,
+            "checksum_sha256": getattr(content_version, "checksum_sha256", None),
+            "content_version_number": content_version.version_number,
+        }
+        
+    except Exception as e:
+        logger.warning("Failed to get media info from Supabase: %s", e)
+        return None
+
+def load_alphabet_stills(download=False) -> int:
+    """Fill the in-memory letter map from lesson_media. download=False only reads files that are
+    already cached (fast, UI-safe); download=True fetches missing ones (blocking: worker thread)."""
+    from .content_service import get_synced_lessons
+    found = {}
+    for lesson in get_synced_lessons("alphabet"):
+        if lesson["lesson_id"] is None:
+            continue
+        for key, media_id in get_lesson_media(lesson["lesson_id"]).items():
+            path = get_media_path(media_id) if download else _cached_path(media_id)
+            if path is not None:
+                found[key] = path
+    with _stills_lock:
+        _STILLS.update(found)
+    return len(found)
+
+
+def alphabet_still(letter):
+    """Path for a letter's image: Supabase-cached copy, else the bundled PNG, else None.
+    Memory lookup only, safe to call from paint code."""
+    key = str(letter).upper()
+    with _stills_lock:
+        path = _STILLS.get(key)
+    if path is not None and path.is_file():
+        return path
+    bundled = _BUNDLED / f"{key}.png"
+    return bundled if bundled.is_file() else None
+
+
+def warm_alphabet_stills():
+    """Load cached images now, then download the rest in the background. Never raises."""
+    global _warming
+    try:
+        load_alphabet_stills(download=False)
+    except Exception as error:
+        log.warning("Alphabet image cache unavailable: %s", error)
+    with _stills_lock:
+        if _warming:
+            return
+        _warming = True
+
+    def work():
+        global _warming
+        try:
+            load_alphabet_stills(download=True)
+        except Exception as error:
+            log.warning("Alphabet image download failed: %s", error)
+        finally:
+            with _stills_lock:
+                _warming = False
+
+    threading.Thread(target=work, name="alphabet-stills", daemon=True).start()

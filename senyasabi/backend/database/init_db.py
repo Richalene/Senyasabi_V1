@@ -56,74 +56,47 @@ def run_schema_sql():
         conn.close()
 
 
+
 def initialize_database(force_rebuild: bool = False):
     """
-    Initialize the SQLite database with all tables and initial data.
+    Initialize the local SQLite database schema.
 
-    This should be called on application startup.
-
-    Args:
-        force_rebuild: If True, will delete and recreate the database even if it exists.
+    Content is populated separately through Supabase synchronization.
     """
     logger.info("Initializing database at: %s", DATABASE_PATH)
 
-    # Ensure directory exists
     ensure_database_directory()
 
-    # Check if database already exists
     db_path = Path(DATABASE_PATH)
-    if db_path.exists() and not force_rebuild:
-        logger.info("Database already exists. Running migrations...")
-        migration_result = run_migrations()
-        if migration_result["success"]:
-            logger.info("Migrations completed: %d applied", migration_result["applied"])
-        else:
-            logger.warning("Some migrations failed: %d applied, %d failed", 
-                         migration_result["applied"], migration_result["failed"])
-        return
 
-    # Delete existing database if forcing rebuild
     if db_path.exists() and force_rebuild:
         db_path.unlink()
         logger.info("Deleted existing database for rebuild.")
 
-    # Run schema to create tables
-    logger.info("Creating database schema...")
-    run_schema_sql()
+    if not db_path.exists():
+        logger.info("Creating database schema...")
+        run_schema_sql()
 
-    # Run initial migration
-    logger.info("Running initial migration...")
-    run_migrations()
+        logger.info("Running initial migrations...")
+        run_migrations()
 
-    # Seed initial content version
-    logger.info("Seeding initial data...")
-    seed_initial_data()
+    else:
+        logger.info("Database exists. Checking migrations...")
+        migration_result = run_migrations()
 
-    logger.info("Database initialization complete.")
-
-
-def seed_initial_data():
-    """Seed initial data required for the application to function."""
-    from .session import SessionLocal
-    from .models import ContentVersion
-
-    with SessionLocal() as db:
-        # Check if content version already exists
-        existing = db.query(ContentVersion).filter(ContentVersion.version_number == 1).first()
-        if existing is None:
-            # Create initial content version
-            content_version = ContentVersion(
-                version_number=1,
-                changelog="Initial content version",
-                is_published=True,
-                is_deleted=False,
+        if migration_result["success"]:
+            logger.info(
+                "Migrations completed: %d applied",
+                migration_result["applied"]
             )
-            db.add(content_version)
-            db.commit()
-            print("Created initial content version (v1).")
         else:
-            print("Content version already exists.")
+            logger.warning(
+                "Some migrations failed: %d applied, %d failed",
+                migration_result["applied"],
+                migration_result["failed"]
+            )
 
+    logger.info("Database schema initialization complete.")
 
 def rebuild_database():
     """
@@ -142,6 +115,14 @@ def rebuild_database():
 
     # Reinitialize
     initialize_database()
+
+def has_cached_content() -> bool:
+    """Check whether initial content has been synchronized locally."""
+    from .session import SessionLocal
+    from .models import Module
+
+    with SessionLocal() as db:
+        return db.query(Module).first() is not None
 
 
 def get_schema_version():

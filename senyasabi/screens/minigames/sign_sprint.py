@@ -18,7 +18,7 @@ from backend.minigame_service import ROOT, GameSession
 from screens.startup import FittedForm
 from .minigame_ui_components import (HowToPlayWidget, MinigameScoreWidget,
                                      MinigameHeader, LetterTile, CircularActionButton)
-
+from backend.media_service import alphabet_still
 
 class SignAvatarCard(QWidget):
     """
@@ -32,11 +32,8 @@ class SignAvatarCard(QWidget):
         self.is_paused = False
 
     def set_sign(self, letter):
-        if letter == " ":
-            self.pixmap_sign = QPixmap()
-        else:
-            path = ROOT / "resources/VRM_SIGNS" / f"{letter.upper()}.png"
-            self.pixmap_sign = QPixmap(str(path)) if path.exists() else QPixmap()
+        path = alphabet_still(letter) if letter != " " else None
+        self.pixmap_sign = QPixmap(str(path)) if path else QPixmap()
         self.update()
 
     def set_paused(self, paused):
