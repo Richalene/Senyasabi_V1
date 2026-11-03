@@ -259,6 +259,12 @@ def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time", force_refresh=
     ]
     try:
         entries = _repository.get_leaderboard(board_code, force_refresh=force_refresh)
+    except LeaderboardUnavailable as error:
+        if user_id and str(user_id).startswith("mock-"):
+            _log.warning("Leaderboard unavailable for mock user: %s", error)
+            entries = []
+        else:
+            raise
     except (OSError, ConnectionError, TimeoutError) as error:
         _log.warning("Leaderboard unavailable: %s", error)
         entries = []

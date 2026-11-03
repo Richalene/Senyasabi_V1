@@ -58,15 +58,36 @@ def fetch_snapshot(token=None):
 
 
 def apply_snapshot(snapshot):
-    """Merge a snapshot dict into SQLite. Returns {table: rows_merged}."""
+    """Merge a snapshot dict into SQLite with conflict safeguards. Returns {table: rows_merged}."""
     counts = {}
     with session_scope() as db:
         for name, model in _TABLES.items():
             rows = snapshot.get(name) or []
             for row in rows:
-                db.merge(model(**_convert(model, row)))
+                converted = _convert(model, row)
+                # Safeguard: do not overwrite local Completed lesson with stale non-completed status
+                if model is m.LessonProgress:
+                    pk = (converted.get("user_id"), converted.get("lesson_id"))
+                    existing = db.get(m.LessonProgress, pk)
+                    if existing and existing.status == "Completed" and converted.get("status") != "Completed":
+                        converted["status"] = "Completed"
+                        converted["completion_percentage"] = max(
+                            float(existing.completion_percentage or 0),
+                            float(converted.get("completion_percentage") or 0)
+                        )
+                db.merge(model(**converted))
             db.flush()
             counts[name] = len(rows)
+
+        # Refresh local user_statistics from live view after applying remote snapshot
+        user = auth_service.get_current_user()
+        if user and user.get("user_id"):
+            try:
+                from backend.database.repository import rebuild_user_statistics
+                uid = uuid.UUID(str(user["user_id"]))
+                rebuild_user_statistics(db, uid)
+            except Exception as e:
+                _log.warning("Could not rebuild statistics after snapshot: %s", e)
     return counts
 
 def sync_content_if_due(force=False):

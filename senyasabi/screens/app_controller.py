@@ -53,8 +53,19 @@ class AppController:
             from backend import leaderboard_service
             for board in ("all_time", "weekly", "monthly"):
                 leaderboard_service.refresh_leaderboard(board)   # already runs on a worker
-            threading.Thread(target=auth_service.sync_user_info, args=(user["user_id"],),
-                             daemon=True, name="post-login-sync").start()
+
+            def _background_pull():
+                try:
+                    auth_service.sync_user_info(user["user_id"])
+                except Exception:
+                    pass
+                try:
+                    from backend import progress_sync
+                    progress_sync.pull_user_progress()
+                except Exception as err:
+                    logging.getLogger(__name__).warning("Post-login progress pull failed: %s", err)
+
+            threading.Thread(target=_background_pull, daemon=True, name="post-login-sync").start()
         except Exception:
             logging.getLogger(__name__).exception("Post-login sync could not start")
 
@@ -124,6 +135,8 @@ class AppController:
             def try_fastapi_auth():
                 try:
                     return auth_service.authenticate_user(identifier, password, establish_session=False)
+                except auth_service.AuthError:
+                    raise
                 except Exception as e:
                     # FastAPI unavailable, fall back to direct Supabase
                     logger = logging.getLogger(__name__)
@@ -221,6 +234,10 @@ class AppController:
             self.show_login()
             return
         self._show_screen(self.dashboard)
+        try:
+            self.dashboard.refresh_stats()
+        except Exception:
+            pass
 
     def show_main_menu(self):
         if auth_service.get_current_user() is None:

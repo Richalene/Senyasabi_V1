@@ -353,8 +353,9 @@ def register_user(username, email, password, display_name=None) -> dict:
                                     (display_name or "").strip() or None)
     except NetworkError:
         now = _utcnow()
+        uid = uuid4()
         user = User(
-            str(uuid4()), norm_username, norm_email, _hasher.hash(password),
+            str(uid), norm_username, norm_email, _hasher.hash(password),
             (display_name or "").strip() or norm_username, True, False, now, now,
         )
         _repository.add(user)
@@ -390,23 +391,57 @@ def authenticate_user(identifier, password, *, establish_session=True) -> dict:
             _current_user = dict(public_user)
         return public_user
 
-    # In distributed mode, if identifier is username, we need to look up email
+    # Check local repository for existing offline-registered credentials
+    local_user = _repository.find_by_identifier(identifier)
+
+    # In distributed mode, if identifier is username, look up email
     login_identifier = identifier
-    if CLIENT_MODE == "distributed" and "@" not in identifier:
-        try:
-            from .api.auth_client_distributed import get_user_by_username
-            # Try to get email from username
-            user = get_user_by_username(identifier)
-            if user:
-                login_identifier = user["email"]
-        except Exception:
-            # Fall through to existing logic (will try offline)
-            pass
+    if "@" not in identifier:
+        if local_user and local_user.email:
+            login_identifier = local_user.email
+        elif CLIENT_MODE == "distributed":
+            try:
+                from .api.auth_client_distributed import get_user_by_username
+                user = get_user_by_username(identifier)
+                if user:
+                    login_identifier = user["email"]
+            except Exception:
+                pass
 
     try:
         data = auth_client.login(login_identifier, password)
+    except AuthError as auth_err:
+        # Check if this user was created offline and can be safely linked/registered remotely
+        if local_user and local_user.password_hash:
+            try:
+                _hasher.verify(local_user.password_hash, password)
+                # Verified locally: create remote Supabase identity and sign in
+                try:
+                    auth_client.register(
+                        local_user.username, local_user.email, password, local_user.display_name
+                    )
+                    data = auth_client.login(local_user.email, password)
+                except Exception as link_err:
+                    logging.getLogger(__name__).warning("Remote account link failed: %s; falling back to offline", link_err)
+                    return authenticate_offline(identifier, password, establish_session=establish_session)
+            except (VerificationError, InvalidHashError):
+                raise auth_err
+        else:
+            raise
     except NetworkError:
         return authenticate_offline(identifier, password, establish_session=establish_session)
+
+    # Migrate local records if user ID changed from temporary offline UUID to authenticated remote UUID
+    try:
+        remote_user_id = uuid.UUID(data["profile"]["user_id"])
+        if local_user and _is_valid_uuid(local_user.user_id):
+            local_uid = uuid.UUID(str(local_user.user_id))
+            if local_uid != remote_user_id:
+                with session_scope() as db:
+                    repo.migrate_local_user_id(db, local_uid, remote_user_id)
+    except Exception as exc:
+        logging.getLogger(__name__).warning("User ID migration check failed: %s", exc)
+
     return _complete_online_login(data, password, establish_session=establish_session)
 
 

@@ -997,3 +997,77 @@ Thread 0x000026ec (most recent call first):
     return result
   File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
     return result
+
+[03:32:01] *** UI THREAD HUNG FOR 5.6s ***
+
+--- Thread 28960 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 12112 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 259, in main
+    controller.show_welcome()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 82, in show_welcome
+    self._show_screen(self.welcome)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 63, in _show_screen
+    screen.show()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
+    return result
+
+[08:04:48] *** UI THREAD HUNG FOR 15.4s ***
+
+--- Thread 7872 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 27364 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 260, in main
+    return app.exec()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 196, in notify
+    result = super().notify(receiver, event)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 196, in notify
+    result = super().notify(receiver, event)
+
+[08:16:19] *** UI THREAD HUNG FOR 6.1s ***
+
+--- Thread 32056 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 30284 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 256, in main
+    controller = AppController()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 20, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 74, in __init__
+    self.header = SenyaSabiHeader(self)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\navigation.py", line 205, in __init__
+    self.streak = StreakDisplay(self) if show_streak else None
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\navigation.py", line 164, in __init__
+    self.flame = _artwork("streak.png", trim=True)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\navigation.py", line 72, in _artwork
+    bounds = QRegion(QBitmap.fromImage(source.toImage().createAlphaMask())).boundingRect()

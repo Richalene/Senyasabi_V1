@@ -382,78 +382,61 @@ def fetch_progress_snapshot() -> Optional[Dict]:
             )
             return None
 
-        # Get current user ID from auth service
+        # Get current user and token from auth service
         from . import auth_service
 
         user = auth_service.get_current_user()
-
-        if not user:
+        if not user or not user.get("user_id"):
             return None
 
-        user_id = user.get("user_id")
-
-        if not user_id:
+        token = auth_service.get_access_token()
+        if not token:
+            logger.debug("No active access token; skipping remote progress snapshot")
             return None
 
-        # Fetch lesson progress
-        lesson_progress_response = (
-            supabase.table('lesson_progress')
-            .select('*')
-            .eq('user_id', user_id)
-            .execute()
-        )
+        user_id = str(user.get("user_id"))
 
-        # Fetch quiz attempts
-        quiz_attempts_response = (
-            supabase.table('quiz_attempts')
-            .select('*')
-            .eq('user_id', user_id)
-            .execute()
-        )
+        # Authenticate PostgREST query with user's JWT, restoring original anon key in finally
+        orig_key = getattr(supabase, "supabase_key", None)
+        try:
+            if hasattr(supabase, "postgrest"):
+                supabase.postgrest.auth(token)
 
-        # Fetch minigame attempts
-        minigame_attempts_response = (
-            supabase.table('minigame_attempts')
-            .select('*')
-            .eq('user_id', user_id)
-            .execute()
-        )
+            # Fetch lesson progress
+            lp_resp = supabase.table('lesson_progress').select('*').eq('user_id', user_id).execute()
+            # Fetch quiz attempts
+            qa_resp = supabase.table('quiz_attempts').select('*').eq('user_id', user_id).execute()
+            # Fetch minigame attempts
+            ma_resp = supabase.table('minigame_attempts').select('*').eq('user_id', user_id).execute()
+            # Fetch user badges
+            ub_resp = supabase.table('user_badges').select('*').eq('user_id', user_id).execute()
+            # Fetch streaks
+            st_resp = supabase.table('streaks').select('*').eq('user_id', user_id).execute()
+            # Fetch user statistics
+            us_resp = supabase.table('user_statistics').select('*').eq('user_id', user_id).execute()
+        finally:
+            if orig_key and hasattr(supabase, "postgrest"):
+                try:
+                    supabase.postgrest.auth(orig_key)
+                except Exception:
+                    pass
 
-        # Fetch user badges
-        user_badges_response = (
-            supabase.table('user_badges')
-            .select('*')
-            .eq('user_id', user_id)
-            .execute()
-        )
-
-        # Fetch streaks
-        streaks_response = (
-            supabase.table('streaks')
-            .select('*')
-            .eq('user_id', user_id)
-            .execute()
-        )
-
-        # Fetch user statistics
-        user_stats_response = (
-            supabase.table('user_statistics')
-            .select('*')
-            .eq('user_id', user_id)
-            .execute()
-        )
+        # Verify identity on returned data before returning snapshot
+        def _own_rows(resp):
+            rows = getattr(resp, "data", None) or []
+            return [r for r in rows if str(r.get("user_id", "")) == user_id]
 
         return {
-            "lesson_progress": lesson_progress_response.data or [],
-            "quiz_attempts": quiz_attempts_response.data or [],
-            "minigame_attempts": minigame_attempts_response.data or [],
-            "user_badges": user_badges_response.data or [],
-            "streaks": streaks_response.data or [],
-            "user_statistics": user_stats_response.data or []
+            "lesson_progress": _own_rows(lp_resp),
+            "quiz_attempts": _own_rows(qa_resp),
+            "minigame_attempts": _own_rows(ma_resp),
+            "user_badges": _own_rows(ub_resp),
+            "streaks": _own_rows(st_resp),
+            "user_statistics": _own_rows(us_resp),
         }
 
-    except Exception:
-        logger.exception(
-            "Failed to fetch progress snapshot from Supabase"
+    except Exception as exc:
+        logger.warning(
+            "Failed to fetch progress snapshot from Supabase: %s", type(exc).__name__
         )
         return None

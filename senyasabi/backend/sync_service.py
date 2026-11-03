@@ -23,6 +23,7 @@ from .database.repository import (
     get_sync_queue_stats,
     get_content_version_by_number,
     create_or_update_lesson_progress,
+    rebuild_user_statistics,
     upsert_quiz_attempt,
     upsert_minigame_attempt,
 )
