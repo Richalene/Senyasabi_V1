@@ -18,11 +18,11 @@ from backend.database.session import session_scope
 
 _log = logging.getLogger(__name__)
 CONTENT_SYNC_INTERVAL = 600  # seconds between content checks
-_content_lock = threading.Lock()
 _last_content_sync = 0.0
 
 # FK order
 _TABLES = {
+    "users": m.User,  
     "lesson_progress": m.LessonProgress,
     "quiz_attempts": m.QuizAttempt,
     "minigame_attempts": m.MinigameAttempt,
@@ -59,22 +59,43 @@ def fetch_snapshot(token=None):
 
 
 def apply_snapshot(snapshot):
-    """Merge a snapshot dict into SQLite. Returns {table: rows_merged}."""
+    """Merge a snapshot dict into SQLite with conflict safeguards. Returns {table: rows_merged}."""
     counts = {}
     with session_scope() as db:
         for name, model in _TABLES.items():
             rows = snapshot.get(name) or []
             for row in rows:
-                db.merge(model(**_convert(model, row)))
+                converted = _convert(model, row)
+                # Safeguard: do not overwrite local Completed lesson with stale non-completed status
+                if model is m.LessonProgress:
+                    pk = (converted.get("user_id"), converted.get("lesson_id"))
+                    existing = db.get(m.LessonProgress, pk)
+                    if existing and existing.status == "Completed" and converted.get("status") != "Completed":
+                        converted["status"] = "Completed"
+                        converted["completion_percentage"] = max(
+                            float(existing.completion_percentage or 0),
+                            float(converted.get("completion_percentage") or 0)
+                        )
+                db.merge(model(**converted))
             db.flush()
             counts[name] = len(rows)
+
+        # Refresh local user_statistics from live view after applying remote snapshot
+        user = auth_service.get_current_user()
+        if user and user.get("user_id"):
+            try:
+                from backend.database.repository import rebuild_user_statistics
+                uid = uuid.UUID(str(user["user_id"]))
+                rebuild_user_statistics(db, uid)
+            except Exception as e:
+                _log.warning("Could not rebuild statistics after snapshot: %s", e)
     return counts
 
 def sync_content_if_due(force=False):
     """Best effort content delta pull. Never raises. Returns True if content is current."""
     global _last_content_sync
-    if not _content_lock.acquire(blocking=False):
-        return False  # another worker is already syncing
+    # if not _content_lock.acquire(blocking=False):
+    #     return False  # another worker is already syncing
     try:
         if not force and time.monotonic() - _last_content_sync < CONTENT_SYNC_INTERVAL:
             return True
@@ -88,13 +109,14 @@ def sync_content_if_due(force=False):
     except Exception as error:
         _log.warning("Content sync failed: %s", error)
         return False
-    finally:
-        _content_lock.release()
+    # finally:
+    #     _content_lock.release()
 
 def pull_user_progress():
     """Refresh local content, then progress (and the leaderboard cache). Never raises."""
     try:
         token = auth_service.get_access_token()
+        _log.debug("Sync upload token available: %s", bool(token))
         if not token:
             return False
         sync_content_if_due()  # failure is fine: progress merge falls back to whatever is cached
@@ -110,5 +132,7 @@ def pull_user_progress():
         leaderboard_service.get_leaderboard()
     except Exception as error:
         _log.warning("Leaderboard refresh failed: %s", error)
+    # finally:
+    #     _pull_lock.release()
     return True
 

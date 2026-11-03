@@ -51,8 +51,11 @@ def _should_refresh_cache(fetched_at) -> bool:
     """Check if cache is stale and needs refresh."""
     if fetched_at is None:
         return True
-    from datetime import datetime, timedelta
-    cache_age = (datetime.utcnow() - fetched_at).total_seconds()
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    if getattr(fetched_at, "tzinfo", None) is None:
+        fetched_at = fetched_at.replace(tzinfo=timezone.utc)
+    cache_age = (now - fetched_at).total_seconds()
     return cache_age > CACHE_TTL_SECONDS
 
 
@@ -67,6 +70,7 @@ async def _refresh_cache_background(board_code: str):
         print(f"Background cache refresh failed for {board_code}: {e}")
 
 
+@router.get("")
 @router.get("/")
 async def get_leaderboard(board_code: str = "all_time", limit: int = 100,
                           _user_id: str = Depends(get_current_user_id)):

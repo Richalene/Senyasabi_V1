@@ -261,6 +261,14 @@ class ComingSoonDialog(QDialog):
         btn_back.clicked.connect(self.accept)
         layout.addWidget(btn_back)
 
+    def showEvent(self, event):
+        super().showEvent(event)
+        parent = self.parentWidget()
+        if parent:
+            top = parent.window()
+            if top:
+                self.move(top.geometry().center() - self.rect().center())
+
 
 
 class SpeakerButton(QPushButton):

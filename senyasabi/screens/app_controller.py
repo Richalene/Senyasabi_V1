@@ -10,7 +10,7 @@ from backend import auth_service
 from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
-
+import threading
 
 class AppController:
     def __init__(self):
@@ -48,16 +48,31 @@ class AppController:
         self.landing.ui.btnGetStarted.clicked.connect(self.show_register)
         self.landing.ui.btnLogin.clicked.connect(self.show_login)
 
-    def _show_screen(self, screen, *, transition_direction=None):
-        # Set the native presentation before showing a hidden top-level window.
-        app = QApplication.instance()
-        present = getattr(app, "_present", None)
-        matches_presentation = getattr(app, "_matches_presentation", None)
-        if (present is not None and matches_presentation is not None
-                and not matches_presentation(screen)):
-            present(screen)
-        else:
-            screen.show()
+    def _post_login_sync(self, user):
+        """Warm the local SQLite caches without blocking the UI. Never fails the login."""
+        try:
+            from backend import leaderboard_service
+            for board in ("all_time", "weekly", "monthly"):
+                leaderboard_service.refresh_leaderboard(board)   # already runs on a worker
+
+            def _background_pull():
+                try:
+                    auth_service.sync_user_info(user["user_id"])
+                except Exception:
+                    pass
+                try:
+                    from backend import progress_sync
+                    progress_sync.pull_user_progress()
+                except Exception as err:
+                    logging.getLogger(__name__).warning("Post-login progress pull failed: %s", err)
+
+            threading.Thread(target=_background_pull, daemon=True, name="post-login-sync").start()
+        except Exception:
+            logging.getLogger(__name__).exception("Post-login sync could not start")
+
+    def _show_screen(self, screen):
+        # Reuse each screen and show the destination before hiding the source.
+        screen.show()
         windows = [self.welcome, self.landing, self.login, self.register,
                    self.main_menu, self.dashboard, self.dashboard._leaderboard, self.minigames, self.module_map, self.module_lessons,
                    self.quiz, self.active_lesson]
@@ -114,8 +129,9 @@ class AppController:
             auth_service.establish_session(user)
             from backend.score_service import flush_pending_async
             flush_pending_async()          # anything queued while offline last session
+            self._post_login_sync(user)
             self.show_main_menu()
-            
+
         # In distributed mode: Try FastAPI first, fall back to direct Supabase
         # In direct mode: Use direct Supabase
         # In fastapi mode (development): Use FastAPI with service role
@@ -130,6 +146,8 @@ class AppController:
             def try_fastapi_auth():
                 try:
                     return auth_service.authenticate_user(identifier, password, establish_session=False)
+                except auth_service.AuthError:
+                    raise
                 except Exception as e:
                     # FastAPI unavailable, fall back to direct Supabase
                     logger = logging.getLogger(__name__)
@@ -228,6 +246,10 @@ class AppController:
             self.show_login()
             return
         self._show_screen(self.dashboard)
+        try:
+            self.dashboard.refresh_stats()
+        except Exception:
+            pass
 
     def show_main_menu(self, checked=False, *, transition_direction=None):
         if auth_service.get_current_user() is None:
@@ -264,6 +286,12 @@ class AppController:
         self._show_screen(self.module_map, transition_direction=transition_direction)
 
     def open_module(self, code):
+        if code and code.lower() in ("calendar", "actions", "months"):
+            from screens.dialogs import ComingSoonDialog
+            parent = getattr(self, "module_map", None) or getattr(self, "window", None)
+            dlg = ComingSoonDialog(parent)
+            dlg.exec()
+            return
         self.show_module_choices(code)
 
     def show_module_choices(self, code=None, *, transition_direction="forward"):
