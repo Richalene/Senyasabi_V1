@@ -1,9 +1,9 @@
 """
 Hand-landmark extraction + sign prediction + camera capture.
 
-Pure OpenCV / MediaPipe / TensorFlow — no Qt. Feed it frames (or let it own
-the camera) and read back plain Python/NumPy results; wire those into
-whatever widgets you built in Qt Creator (PySide6).
+Recognition returns plain Python/NumPy results. Capture is supplied by the
+shared local camera service; landmark extraction and model mathematics remain
+independent of the camera settings UI.
 """
 import json
 import pickle
@@ -12,17 +12,17 @@ from pathlib import Path
 from typing import Optional
 
 import cv2
-import mediapipe as mp
 import numpy as np
-import tensorflow as tf
 
 from . import config
+from .camera_service import open_selected_capture
 
 
 @dataclass
 class PredictionResult:
     label: str
     confidence: float
+    probabilities: Optional[dict] = None
 
 
 @dataclass
@@ -37,9 +37,11 @@ class FrameResult:
 class HandLandmarkExtractor:
     """Wraps a single MediaPipe Hands instance."""
 
-    def __init__(self, max_num_hands: int = 1,
+    def __init__(self, max_num_hands: int = 2,
                  min_detection_confidence: float = 0.5,
                  min_tracking_confidence: float = 0.5):
+        import mediapipe as mp
+        self.max_num_hands = max_num_hands
         self._mp_hands = mp.solutions.hands
         self._mp_drawing = mp.solutions.drawing_utils
         self._hands = self._mp_hands.Hands(
@@ -57,14 +59,20 @@ class HandLandmarkExtractor:
         result = self._hands.process(rgb)
         if not result.multi_hand_landmarks:
             return None, result
-        lm = result.multi_hand_landmarks[0].landmark
-        coords = np.array([[p.x, p.y, p.z] for p in lm])
-        coords -= coords[0]                      # translate to wrist origin
-        scale = np.linalg.norm(coords[9])         # normalize by palm length
-        if scale == 0:
-            return None, result
-        coords /= scale
-        return coords.flatten(), result
+
+        # Select primary hand (largest palm scale) for single-hand feature vector (63-dim)
+        best_features = None
+        max_scale = -1.0
+        for hand_landmarks in result.multi_hand_landmarks:
+            lm = hand_landmarks.landmark
+            coords = np.array([[p.x, p.y, p.z] for p in lm])
+            coords -= coords[0]                      # translate to wrist origin
+            scale = np.linalg.norm(coords[9])         # normalize by palm length
+            if scale > 0 and scale > max_scale:
+                max_scale = scale
+                best_features = (coords / scale).flatten()
+
+        return best_features, result
 
     def draw(self, frame_bgr: np.ndarray, mp_result) -> np.ndarray:
         """Returns a copy of frame_bgr with the hand skeleton drawn on it."""
@@ -94,6 +102,7 @@ class SignPredictor:
                  labels_path: Optional[Path] = None,
                  labels_fallback: Optional[list] = None,
                  scaler_path: Optional[Path] = None):
+        import tensorflow as tf
         self.model = tf.keras.models.load_model(model_path)
 
         if labels_path is not None:
@@ -106,12 +115,15 @@ class SignPredictor:
         self.scaler = None
         if scaler_path is not None:
             self.scaler = pickle.loads(Path(scaler_path).read_bytes())
+        import tensorflow as tf
+        self._infer = tf.function(lambda x: self.model(x, training=False))
 
     def predict(self, features: np.ndarray) -> PredictionResult:
-        x = self.scaler.transform([features]) if self.scaler is not None else np.array([features])
-        probs = self.model.predict(x, verbose=0)[0]
+        x = self.scaler.transform([features]) if self.scaler is not None else np.array([features], dtype=np.float32)
+        probs = np.asarray(self._infer(x))[0]
         idx = int(np.argmax(probs))
-        return PredictionResult(self.class_names[idx], float(probs[idx]))
+        probs_dict = {self.class_names[i]: float(probs[i]) for i in range(len(self.class_names))}
+        return PredictionResult(self.class_names[idx], float(probs[idx]), probabilities=probs_dict)
 
 
 class SignRecognitionEngine:
@@ -146,12 +158,12 @@ class SignRecognitionEngine:
             event.accept()
     """
 
-    def __init__(self, mode: str = "alphabet", cam_index: int = config.CAM_INDEX):
-        self.cam_index = cam_index
-        self.extractor = HandLandmarkExtractor()
+    def __init__(self, mode: str = "alphabet"):
         self.mode = mode
         self.predictor = self._build_predictor(mode)
-        self._cap: Optional[cv2.VideoCapture] = None
+        self.extractor = HandLandmarkExtractor(max_num_hands=2)
+        self._cap = None
+        self._closed = False
 
     @staticmethod
     def _build_predictor(mode: str) -> SignPredictor:
@@ -173,18 +185,40 @@ class SignRecognitionEngine:
         self.mode = mode
 
     def open_camera(self) -> bool:
-        self._cap = cv2.VideoCapture(self.cam_index)
-        return self._cap.isOpened()
+        if self._closed:
+            return False
+        if self._cap is not None:
+            try:
+                if self._cap.isOpened():
+                    return True
+            except cv2.error:
+                pass
+            self.close_camera()
+        try:
+            self._cap = open_selected_capture(self)
+            if self._cap.isOpened():
+                return True
+        except Exception:
+            self.close_camera()
+            raise
+        if self._cap is not None:
+            self.close_camera()
+        return False
 
     def close_camera(self):
-        if self._cap is not None:
-            self._cap.release()
-            self._cap = None
+        capture = self._cap
+        self._cap = None
+        if capture is not None:
+            capture.release()
 
     def read_frame(self) -> Optional[FrameResult]:
         if self._cap is None:
-            raise RuntimeError("Camera not open — call open_camera() first.")
-        ok, frame = self._cap.read()
+            return None
+        try:
+            ok, frame = self._cap.read()
+        except cv2.error:
+            self.close_camera()
+            return None
         if not ok:
             return None
         frame = cv2.flip(frame, 1)
@@ -199,5 +233,8 @@ class SignRecognitionEngine:
         )
 
     def close(self):
+        if self._closed:
+            return
         self.close_camera()
         self.extractor.close()
+        self._closed = True

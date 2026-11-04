@@ -1,0 +1,20 @@
+{
+  "num_frames": 24,
+  "feature_dim": 172,
+  "num_hands": 2,
+  "pose_indices": [
+    0,
+    7,
+    8,
+    9,
+    10,
+    11,
+    12,
+    13,
+    14,
+    15,
+    16
+  ],
+  "feature_order": "pose xyz+visibility, left hand xyz, right hand xyz, presence flags",
+  "normalization": "shoulder midpoint origin and shoulder-width scale"
+}

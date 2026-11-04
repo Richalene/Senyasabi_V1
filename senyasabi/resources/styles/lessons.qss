@@ -1,0 +1,14 @@
+/* Keep lesson controls readable against the existing pale botanical canvas. */
+QLabel#lessonTitle { color: #704833; font-size: 20px; }
+QLabel#wordDisplay, QLabel#letterDisplay { color: #4e602f; }
+QLabel#progressLabel, QLabel#scoreLabel, QLabel#wordSubtitle,
+QLabel#letterSubtitle, QLabel#predictionLabel { color: #704833; }
+QPushButton#backBtn {
+    color: #704833; background: #fff6d2; border: 1px solid #704833;
+    border-radius: 8px; padding: 4px 12px; font-size: 14px; font-weight: 600;
+}
+QPushButton#backBtn:hover { background: #fff0b8; color: #4e602f; }
+QWidget#cameraActions { background: transparent; }
+QWidget#cameraActions QPushButton { color: #704833; background: #fff6d2; border: 1px solid #a39b68; border-radius: 12px; padding: 6px 10px; font-size: 14px; }
+QWidget#cameraActions QPushButton:hover { background: #fff0b8; }
+QWidget#cameraActions QPushButton:disabled { background: #b9be98; color: #6d735a; }
