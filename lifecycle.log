@@ -13301,3 +13301,29 @@ Thread 0x000026ec (most recent call first):
     self._ui = QUiLoader().load(str(_UI_FILE), self)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 183, in notify
     return result
+
+[18:08:59] *** UI THREAD HUNG FOR 9.2s ***
+
+--- Thread 428 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 30, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 14316 ---
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 237, in <module>
+    sys.exit(main())
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 229, in main
+    controller = AppController()
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\screens\app_controller.py", line 21, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 178, in __init__
+    self.ui.setupUi(self)
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\ui\generated\dashboard_ui.py", line 117, in setupUi
+    self.lblLatestBadge.setVisible(False)
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 183, in notify
+    return result
