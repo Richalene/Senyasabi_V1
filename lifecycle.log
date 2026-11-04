@@ -1015,3 +1015,85 @@ Thread 0x000026ec (most recent call first):
     sys.exit(main())
   File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 260, in main
     return app.exec()
+
+[11:30:28] *** UI THREAD HUNG FOR 7.8s ***
+
+--- Thread 13752 ---
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 11348 ---
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 273, in <module>
+    sys.exit(main())
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 268, in main
+    controller.show_welcome()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 85, in show_welcome
+    self._show_screen(self.welcome)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 58, in _show_screen
+    present(screen)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 223, in _present
+    window.showFullScreen()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 182, in notify
+    from screens.hover_bounce import install_hover_bounce
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 1, in <module>
+    from PIL.ImageChops import offset
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\.venv\Lib\site-packages\PIL\ImageChops.py", line 20, in <module>
+    from . import Image
+  File "<frozen importlib._bootstrap>", line 1415, in _handle_fromlist
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 999, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\.venv\Lib\site-packages\PIL\Image.py", line 58, in <module>
+    from ._util import DeferredError, is_path
+  File "shibokensupport/signature/loader.py", line 72, in feature_imported
+  File "shibokensupport/feature.py", line 148, in feature_imported
+  File "shibokensupport/feature.py", line 172, in _mod_uses_pyside
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\inspect.py", line 1286, in getsource
+    return ''.join(lines)
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\inspect.py", line 1275, in getsourcelines
+    return lines, 0
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\inspect.py", line 1099, in findsource
+    return lines, 0
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\linecache.py", line 46, in getlines
+    return updatecache(filename, module_globals)
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\linecache.py", line 149, in updatecache
+    return lines
+
+[15:53:13] *** UI THREAD HUNG FOR 7.3s ***
+
+--- Thread 6440 ---
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Arrcann\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 16184 ---
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 273, in <module>
+    sys.exit(main())
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\main.py", line 268, in main
+    controller.show_welcome()
+  File "C:\Users\Arrcann\Downloads\Main\Programming\Senyasabi_V1\senyasabi\screens\app_controller.py", line 49, in __init__
+    self.landing.ui.btnLogin.clicked.connect(self.show_login)
