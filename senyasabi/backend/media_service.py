@@ -406,6 +406,11 @@ def alphabet_still(letter):
     Memory lookup only, safe to call from paint code."""
     key = str(letter).upper()
     with _stills_lock:
+        if not _STILLS:
+            try:
+                load_alphabet_stills(download=False)
+            except Exception:
+                pass
         path = _STILLS.get(key)
     if path is not None and path.is_file():
         return path

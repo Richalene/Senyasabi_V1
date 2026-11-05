@@ -328,13 +328,37 @@ class LessonAvatarCard(QWidget):
 
         if not self.pixmap_sign.isNull():
             target_rect = card_rect.adjusted(20, 20, -20, -20)
-            scaled = self.pixmap_sign.scaled(
-                int(target_rect.width()), int(target_rect.height()),
-                Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
-            )
-            x = target_rect.x() + (target_rect.width() - scaled.width()) / 2
-            y = target_rect.y() + (target_rect.height() - scaled.height()) / 2
+            # Clip drawing to rounded rectangle of the card
+            clip_path = QPainterPath()
+            clip_path.addRoundedRect(target_rect, 30, 30)
+            painter.save()
+            painter.setClipPath(clip_path)
+
+            pw, ph = self.pixmap_sign.width(), self.pixmap_sign.height()
+            tw, th = target_rect.width(), target_rect.height()
+
+            # If image is wide (e.g. 16:9 like 1920x1080), zoom in / crop sides to fill the square card
+            if pw > ph * 1.2:
+                # Crop a centered square from the source image
+                side = ph
+                src_x = (pw - side) // 2
+                cropped = self.pixmap_sign.copy(src_x, 0, side, side)
+                scaled = cropped.scaled(
+                    int(tw), int(th),
+                    Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            else:
+                scaled = self.pixmap_sign.scaled(
+                    int(tw), int(th),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+
+            x = target_rect.x() + (tw - scaled.width()) / 2
+            y = target_rect.y() + (th - scaled.height()) / 2
             painter.drawPixmap(int(x), int(y), scaled)
+            painter.restore()
 
         if self.is_paused:
             painter.setBrush(QColor(0, 0, 0, 70))

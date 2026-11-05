@@ -411,3 +411,36 @@ def get_lesson_model_code(module_code: str, lesson_order: int = 1) -> str:
 
 def get_words_for_lesson(module_code, lesson_order=1) -> list[str]:
     return [s.label for s in get_signs_for_lesson(module_code, lesson_order)]
+
+def get_quiz_id(module_code: str):
+    code = module_code.casefold()
+    if code == 'basic_communication':
+        code = 'communication'
+    try:
+        from .database.session import SessionLocal
+        from .database.models import Quiz, Module
+        with SessionLocal() as db:
+            mod = db.query(Module).filter(Module.module_code == code).first()
+            if mod:
+                quiz = db.query(Quiz).filter(Quiz.module_id == mod.module_id, Quiz.is_deleted.is_(False)).first()
+                if quiz:
+                    return quiz.quiz_id
+    except Exception as e:
+        logger.warning('Failed to query quiz_id for %s: %s', code, e)
+    return {
+        'alphabet': 14,
+        'greeting': 15,
+        'survival': 16,
+        'number': 17,
+        'calendar': 18,
+        'days': 19,
+        'family': 20,
+        'relationships': 21,
+        'color': 22,
+        'food': 23,
+        'drink': 24,
+        'communication': 46,
+        'basic_communication': 46,
+        'months': 48,
+        'actions': 49,
+    }.get(code)

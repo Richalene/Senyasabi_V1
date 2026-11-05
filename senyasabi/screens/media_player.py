@@ -82,7 +82,7 @@ class SignVideoPlayer(QWidget):
         if is_avail:
             self.message.hide()
             if self.video is not None:
-                self.video.show()
+                self.show(); self.video.show()
         else:
             self.stop()
             msg = getattr(self.media, "message", None) or "Lesson video is not installed yet."
@@ -169,12 +169,12 @@ class SignVideoPlayer(QWidget):
                     return
                 if self.player.playbackState() == QMediaPlayer.PlaybackState.PausedState:
                     self.message.hide()
-                    self.video.show()
+                    self.show(); self.video.show()
                     self.player.play()
                     return
 
             self.message.hide()
-            self.video.show()
+            self.show(); self.video.show()
             # setSource() resets the player itself; an explicit stop() first was observed
             # blocking the UI thread inside Qt Multimedia.
             self.player.setSource(target_source)

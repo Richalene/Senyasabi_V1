@@ -25,9 +25,9 @@ class SignDetectiveCard(QWidget):
     Individual alphabet sign card in Sign Detective:
     Displays the sign corresponding to a letter on a clean white rounded card.
     """
-    def __init__(self, letter, parent=None):
+    def __init__(self, letter, card_size=165, parent=None):
         super().__init__(parent)
-        self.setFixedSize(130, 130)
+        self.setFixedSize(card_size, card_size)
         self.letter = letter.upper()
         self.setStyleSheet(
             "SignDetectiveCard {"
@@ -41,9 +41,16 @@ class SignDetectiveCard(QWidget):
 
         self.img_label = QLabel(self)
         self.img_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        path = ROOT / "resources/VRM_SIGNS" / f"{self.letter}.png"
-        if path.exists():
-            self.img_label.setPixmap(QPixmap(str(path)))
+        from backend.media_service import alphabet_still
+        path = alphabet_still(self.letter) or (ROOT / "resources/VRM_SIGNS" / f"{self.letter}.png")
+        if path and path.exists():
+            pm = QPixmap(str(path))
+            pw, ph = pm.width(), pm.height()
+            if pw > ph * 1.2:
+                side = ph
+                src_x = (pw - side) // 2
+                pm = pm.copy(src_x, 0, side, side)
+            self.img_label.setPixmap(pm)
             self.img_label.setScaledContents(True)
         else:
             self.img_label.setText(self.letter)
@@ -121,14 +128,14 @@ class SignDetectiveGameView(QWidget):
 
         # Signs Display Container (Upper Center)
         self.signs_container = QWidget(self.card)
-        self.signs_container.setGeometry(150, 130, 1520, 340)
+        self.signs_container.setGeometry(100, 100, 1620, 420)
         self.signs_container.setStyleSheet("background: transparent;")
         self.signs_layout = QVBoxLayout(self.signs_container)
         self.signs_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
 
         # Letter Tiles Input Container (Lower Center)
         self.tiles_container = QWidget(self.card)
-        self.tiles_container.setGeometry(150, 500, 1520, 380)
+        self.tiles_container.setGeometry(100, 540, 1620, 330)
         self.tiles_container.setStyleSheet("background: transparent;")
         self.tiles_layout = QVBoxLayout(self.tiles_container)
         self.tiles_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -168,8 +175,8 @@ class SignDetectiveGameView(QWidget):
         self.instruction_note.setGeometry(int(100 * sx), int(40 * sy), max(1, int(800 * sx)), max(1, int(40 * sy)))
         self.timer_container.setGeometry(int(90 * sx), int(110 * sy), max(1, int(260 * sx)), max(1, int(80 * sy)))
         self.btn_next.move(int(1670 * sx), int(70 * sy))
-        self.signs_container.setGeometry(int(150 * sx), int(130 * sy), max(1, int(1520 * sx)), max(1, int(340 * sy)))
-        self.tiles_container.setGeometry(int(150 * sx), int(500 * sy), max(1, int(1520 * sx)), max(1, int(380 * sy)))
+        self.signs_container.setGeometry(int(100 * sx), int(100 * sy), max(1, int(1620 * sx)), max(1, int(420 * sy)))
+        self.tiles_container.setGeometry(int(100 * sx), int(540 * sy), max(1, int(1620 * sx)), max(1, int(330 * sy)))
         self.mascot_correct.setGeometry(int(1580 * sx), int(680 * sy), max(1, int(240 * sx)), max(1, int(240 * sy)))
 
         if self.sign_rows:
@@ -209,6 +216,21 @@ class SignDetectiveGameView(QWidget):
         else:
             word_groups = [words]
 
+        # Dynamic card size for larger, more readable sign cards
+        max_letters_in_group = max((sum(len(w) for w in grp) for grp in word_groups), default=6)
+        if max_letters_in_group <= 6:
+            card_size = 230
+            tile_size = 105
+            card_spacing = 18
+        elif max_letters_in_group <= 8:
+            card_size = 205
+            tile_size = 96
+            card_spacing = 15
+        else:
+            card_size = 180
+            tile_size = 88
+            card_spacing = 12
+
         # 1. Build Signs Display
         for group in word_groups:
             row_w = QWidget(self.signs_container)
@@ -222,7 +244,7 @@ class SignDetectiveGameView(QWidget):
                 word_l.setContentsMargins(0, 0, 0, 0)
                 for ch in w:
                     if "A" <= ch.upper() <= "Z":
-                        card = SignDetectiveCard(ch, word_w)
+                        card = SignDetectiveCard(ch, card_size=card_size, parent=word_w)
                         word_l.addWidget(card)
                 row_l.addWidget(word_w)
             self.signs_layout.addWidget(row_w)
@@ -241,7 +263,7 @@ class SignDetectiveGameView(QWidget):
                 word_l.setContentsMargins(0, 0, 0, 0)
                 for ch in w:
                     if "A" <= ch.upper() <= "Z":
-                        tile = LetterTile("", word_w)
+                        tile = LetterTile("", tile_size=tile_size, parent=word_w)
                         word_l.addWidget(tile)
                         self.tiles_list.append((tile, ch))
                 row_l.addWidget(word_w)

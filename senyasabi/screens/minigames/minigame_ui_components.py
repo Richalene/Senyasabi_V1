@@ -305,11 +305,11 @@ class LetterTile(QLabel):
     - wrong: soft error tint for incorrect attempt
     - revealed: golden dashed border when round expires
     """
-    def __init__(self, letter="", parent=None):
+    def __init__(self, letter="", tile_size=100, parent=None):
         super().__init__(parent)
         self.letter = letter.upper()
         self.state = "filled" if letter else "empty"
-        self.setFixedSize(88, 88)
+        self.setFixedSize(tile_size, tile_size)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText(self.letter)
         self.update_style()

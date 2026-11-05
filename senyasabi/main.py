@@ -150,7 +150,7 @@ if sys.platform == "win32":
     os.environ.setdefault("QT_MEDIA_BACKEND", "ffmpeg")
 from PySide6.QtCore import QEvent, QTimer, Qt
 from PySide6.QtGui import QColor, QPalette
-from PySide6.QtWidgets import QApplication, QWidget, QMessageBox
+from PySide6.QtWidgets import QApplication, QPushButton, QWidget, QMessageBox
 
 from screens.startup import FittedForm
 
@@ -178,6 +178,9 @@ class SenyaSabiApplication(QApplication):
         self._wd_thread.start()
 
     def notify(self, receiver, event):
+        if event.type() == QEvent.Type.Show and isinstance(receiver, QPushButton):
+            from screens.hover_bounce import install_hover_bounce
+            install_hover_bounce(receiver)
         screen = (isinstance(receiver, QWidget) and receiver.isWindow()
                   and receiver.windowType() == Qt.WindowType.Window)
         if event.type() == QEvent.Type.KeyPress and isinstance(receiver, QWidget):

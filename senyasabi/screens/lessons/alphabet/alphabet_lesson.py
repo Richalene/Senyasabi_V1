@@ -96,7 +96,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         self._engine = None
         self._camera_misses = 0
         self._resources_closed = False
-        self._session = CameraPracticeSession(targets=self._letters)
+        self._session = CameraPracticeSession(targets=self._letters, hold_frames=6, grace_frames=6)
 
         self._timer = QTimer(self)
         self._timer.setInterval(33)
@@ -290,7 +290,11 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             return
 
         self._camera_misses = 0
-        self._camera_lbl.set_bgr_frame(result.annotated_bgr if result.annotated_bgr is not None else result.frame_bgr)
+        display_bgr = result.annotated_bgr if result.annotated_bgr is not None else result.frame_bgr
+        if display_bgr is not None:
+            import cv2
+            display_bgr = cv2.flip(display_bgr, 1)
+        self._camera_lbl.set_bgr_frame(display_bgr)
 
         # Recognition evaluation
         if self._feedback_action is not None:
@@ -330,11 +334,11 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         target_upper = target.upper()
 
         if target_prob >= other_max_prob and target_prob > 0.03:
-            accuracy_pct = min(98, 85 + int(min(target_prob, 0.70) / 0.70 * 13))
+            accuracy_pct = min(100, 85 + int(min(target_prob, 0.70) / 0.70 * 15))
             is_match = True
         elif other_max_prob > 0 and (target_prob / other_max_prob) >= 0.35 and target_prob >= 0.08:
             ratio = target_prob / other_max_prob
-            accuracy_pct = int(65 + (ratio - 0.35) / 0.65 * 19)
+            accuracy_pct = min(100, int(70 + (ratio - 0.35) / 0.65 * 30))
             is_match = True
         else:
             ratio = (target_prob / other_max_prob) if other_max_prob > 0 else 0.0

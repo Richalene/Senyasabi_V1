@@ -98,3 +98,7 @@ ext_models/
 scratch/
 
 cache/
+
+# Log files
+*.log
+**/*.log

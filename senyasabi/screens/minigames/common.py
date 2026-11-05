@@ -47,7 +47,9 @@ class SignImage(QLabel):
     def __init__(self, letter, size=120):
         super().__init__()
         style(self, "signImageCard")
-        self.source = QPixmap(str(ROOT / "resources/VRM_SIGNS" / f"{letter}.png"))
+        from backend.media_service import alphabet_still
+        path = alphabet_still(letter) or (ROOT / "resources/VRM_SIGNS" / f"{letter}.png")
+        self.source = QPixmap(str(path)) if path and path.exists() else QPixmap()
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setFixedSize(size, size)
         self.refresh()

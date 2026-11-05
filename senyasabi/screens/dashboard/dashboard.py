@@ -416,6 +416,19 @@ class DashboardWindow(QWidget):
         self._loading_user_id = None
         self._render_home_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
         self._fitted_form = FittedForm(self)
+        try:
+            from screens.hover_bounce import install_hover_bounce
+            for btn in (
+                self.ui.btnStartLearning,
+                self.ui.btnMinigames,
+                self.ui.btnLessonsCompleted,
+                self.ui.btnModule,
+                self.ui.btnLatestBadge,
+                self.ui.btnLeaderboardRank,
+            ):
+                install_hover_bounce(btn)
+        except Exception:
+            pass
         self.loading = LoadingOverlay(self)
 
     def refresh_home_stats(self):

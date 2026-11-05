@@ -19,7 +19,7 @@ class CameraSetupDialog(QDialog):
         self.setObjectName('cameraSetupDialog')
         self.setWindowTitle('SenyaSabi — Camera Settings')
         self.setWindowModality(Qt.WindowModality.WindowModal)
-        self.resize(640, 590)
+        self.resize(720, 780)
         self.capture = None
         self.tested_id = None
         self.devices = []
@@ -27,7 +27,8 @@ class CameraSetupDialog(QDialog):
         self._misses = 0
         self.setStyleSheet((Path(__file__).resolve().parents[1] / 'resources/styles/common.qss').read_text())
         self.body = QVBoxLayout(self)
-        self.body.setContentsMargins(24, 20, 24, 20)
+        self.body.setContentsMargins(36, 28, 36, 28)
+        self.body.setSpacing(14)
         title_row = QHBoxLayout()
         title = self.heading('Your camera, your choice')
         title.setMinimumHeight(64)
@@ -60,6 +61,8 @@ class CameraSetupDialog(QDialog):
         self.pages.addWidget(consent)
         self.selection = QWidget()
         choices = QVBoxLayout(self.selection)
+        choices.setContentsMargins(0, 4, 0, 4)
+        choices.setSpacing(14)
         self.status = QLabel('Choose which camera SenyaSabi uses.')
         self.status.setWordWrap(True)
         self.status.setProperty('class', 'bodyText')
@@ -69,6 +72,7 @@ class CameraSetupDialog(QDialog):
         self.combo.currentIndexChanged.connect(self.selection_changed)
         choices.addWidget(self.combo)
         controls = QHBoxLayout()
+        controls.setSpacing(16)
         self.test_button = QPushButton('Test Camera')
         self.test_button.setProperty('class', 'primaryButton')
         self.test_button.clicked.connect(self.test_camera)
@@ -81,7 +85,7 @@ class CameraSetupDialog(QDialog):
         self.preview.setObjectName('cameraPreview')
         self.preview.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.preview.setWordWrap(True)
-        self.preview.setMinimumHeight(170)
+        self.preview.setMinimumHeight(280)
         choices.addWidget(self.preview, 1)
         self.manual_button = QPushButton('Choose by device number')
         self.manual_button.setProperty('class', 'quietButton')
