@@ -1071,3 +1071,77 @@ Thread 0x000026ec (most recent call first):
     self.flame = _artwork("streak.png", trim=True)
   File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\navigation.py", line 72, in _artwork
     bounds = QRegion(QBitmap.fromImage(source.toImage().createAlphaMask())).boundingRect()
+
+[10:38:07] inference worker started
+
+[13:12:38] *** UI THREAD HUNG FOR 6.3s ***
+
+--- Thread 2460 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 16896 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 259, in main
+    controller.show_welcome()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 101, in show_welcome
+    self._show_screen(self.welcome)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 82, in _show_screen
+    screen.show()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 196, in notify
+    result = super().notify(receiver, event)
+
+[13:16:04] inference worker started
+
+[15:48:42] *** UI THREAD HUNG FOR 29.2s ***
+
+--- Thread 20460 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 66, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 3616 ---
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 264, in <module>
+    sys.exit(main())
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 256, in main
+    controller = AppController()
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 31, in __init__
+    self.register = RegisterScreen()
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\auth\register.py", line 22, in __init__
+    self._ui = QUiLoader().load(str(_UI_FILE), self)
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 213, in notify
+    return result
+
+[15:50:11] inference worker started
+
+[15:50:27] inference worker started
+
+[15:52:22] inference worker started
+
+[15:53:40] inference worker started
+
+[15:56:53] inference worker started
+
+[15:57:21] inference worker started
+
+[15:57:38] inference worker started
+
+[15:58:36] inference worker started
+
+[15:58:46] inference worker started
+
+[15:59:43] inference worker started
+
+[16:00:25] inference worker started

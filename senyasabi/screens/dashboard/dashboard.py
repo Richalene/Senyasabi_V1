@@ -54,6 +54,7 @@ def _session_user_id():
 
 class StatisticsDashboardWindow(QWidget):
     """Statistics view; all dashboard data comes through dashboard_service."""
+    logout_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -74,6 +75,10 @@ class StatisticsDashboardWindow(QWidget):
         self.header = SenyaSabiHeader(self)
         self.header.anchor_to_canvas(self.size())
         install_page_menu(self, header=self.header)
+        if self.header.menu_button is not None and hasattr(self.header.menu_button, "menu"):
+            menu = self.header.menu_button.menu()
+            if hasattr(menu, "sign_out_action"):
+                menu.sign_out_action.triggered.connect(self.logout_requested.emit)
         self.ui.lblCurrentStreak = self.header.streak_label
         self.ui.btnMenu = self.header.menu_button
         self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
@@ -324,6 +329,7 @@ class StatisticsDashboardWindow(QWidget):
             from screens.dashboard.leaderboard import LeaderboardWindow
             self._leaderboard = LeaderboardWindow()
             self._leaderboard.back_requested.connect(self._back_from_leaderboard)
+            self._leaderboard.logout_requested.connect(self.logout_requested.emit)
         self._leaderboard.show()
         self.hide()
 

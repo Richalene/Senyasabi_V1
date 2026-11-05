@@ -18,6 +18,7 @@ class MinigameMenuWidget(QWidget):
     quest_requested = Signal()
     detective_requested = Signal()
     back_requested = Signal()
+    logout_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -80,6 +81,10 @@ class MinigameMenuWidget(QWidget):
         self.header = SenyaSabiHeader(self)
         self.header.anchor_to_canvas(QSize(1920, 1080))
         install_page_menu(self, header=self.header)
+        if self.header.menu_button is not None and hasattr(self.header.menu_button, "menu"):
+            menu = self.header.menu_button.menu()
+            if hasattr(menu, "sign_out_action"):
+                menu.sign_out_action.triggered.connect(self.logout_requested.emit)
 
         # FittedForm for proportional scaling to any resolution
         self._fitted_form = FittedForm(self)
@@ -92,6 +97,7 @@ class MinigameMenuWidget(QWidget):
 
 class MinigameSelect(GameCanvas):
     back_requested = Signal()
+    logout_requested = Signal()
 
     def __init__(self):
         super().__init__()
@@ -111,6 +117,7 @@ class MinigameSelect(GameCanvas):
         self.menu.quest_requested.connect(lambda: self.open_game("quest"))
         self.menu.detective_requested.connect(lambda: self.open_game("detective"))
         self.menu.back_requested.connect(self.back_requested.emit)
+        self.menu.logout_requested.connect(self.logout_requested.emit)
 
         # Expose legacy attributes for backwards-compatibility
         self.back_button = self.menu.back_button

@@ -5,6 +5,7 @@ import json
 import logging
 import os
 from pathlib import Path
+import re
 import tempfile
 from typing import Protocol
 import threading
@@ -27,6 +28,12 @@ _STILLS = {}                      # 'A' -> Path, filled from lesson_media of the
 _stills_lock = threading.Lock()
 _warming = False
 _BUNDLED = ROOT / "resources/VRM_SIGNS"
+
+NUMBER_WORD_MAP = {
+    "1": "one", "2": "two", "3": "three", "4": "four", "5": "five",
+    "6": "six", "7": "seven", "8": "eight", "9": "nine", "10": "ten",
+}
+WORD_TO_NUMBER_MAP = {v: k for k, v in NUMBER_WORD_MAP.items()}
 
 @dataclass(frozen=True)
 class MediaRecord:
@@ -72,7 +79,13 @@ class MediaService:
         self.root = Path(video_root).resolve()
 
     def resolve_sign_video(self, module_code, sign_code):
+        clean_code = str(sign_code).strip().casefold() if sign_code is not None else ""
         sign = get_sign(module_code, sign_code)
+        if sign is None and clean_code:
+            if clean_code in WORD_TO_NUMBER_MAP:
+                sign = get_sign(module_code, WORD_TO_NUMBER_MAP[clean_code])
+            elif clean_code in NUMBER_WORD_MAP:
+                sign = get_sign(module_code, NUMBER_WORD_MAP[clean_code])
         if sign is None:
             raise ValueError(f"Unknown sign: {module_code}/{sign_code}")
         record = MediaRecord(sign.module_code, sign.sign_code, media_id=sign.media_id)
@@ -84,22 +97,86 @@ class MediaService:
             cached = Path(record.local_cached_path)
             if cached.is_file():
                 return replace(record, local_path=cached, status="cached", message="")
-        folder = self.root / ("alphabet" if sign.module_code == "alphabet"
-                              else f"word_categories/{sign.module_code}")
+
+        candidate_modules = []
+        if module_code and str(module_code).casefold() not in ("communication", "basic_communication"):
+            candidate_modules.append(str(module_code).casefold())
+        if sign.module_code:
+            sm = str(sign.module_code).casefold()
+            if sm not in candidate_modules:
+                candidate_modules.append(sm)
+        if any(m in ("communication", "basic_communication") for m in (str(module_code).casefold(), str(sign.module_code).casefold())):
+            for sub in ("greeting", "survival"):
+                if sub not in candidate_modules:
+                    candidate_modules.append(sub)
+
+        candidate_sign_codes = []
+        for sc in (sign_code, getattr(sign, "sign_code", None), getattr(sign, "label", None), getattr(sign, "recognition_label", None)):
+            if not sc:
+                continue
+            sc_clean = str(sc).strip().casefold()
+            sc_snake = sc_clean.replace(" ", "_").replace("-", "_")
+            for v in (sc_clean, sc_snake):
+                if v and v not in candidate_sign_codes:
+                    candidate_sign_codes.append(v)
+                if v in NUMBER_WORD_MAP:
+                    w = NUMBER_WORD_MAP[v]
+                    if w not in candidate_sign_codes:
+                        candidate_sign_codes.append(w)
+                elif v in WORD_TO_NUMBER_MAP:
+                    n = WORD_TO_NUMBER_MAP[v]
+                    if n not in candidate_sign_codes:
+                        candidate_sign_codes.append(n)
+
         # Optional manifest maps stable sign codes to arbitrary relative filenames.
         manifest = self.root / "media_manifest.json"
         relative = None
         if manifest.is_file():
             try:
-                relative = json.loads(manifest.read_text(encoding="utf-8-sig")).get(
-                    sign.module_code, {}).get(sign.sign_code)
-                if relative is not None and not isinstance(relative, str):
-                    raise ValueError("Media paths must be strings")
+                manifest_data = json.loads(manifest.read_text(encoding="utf-8-sig"))
+                if not isinstance(manifest_data, dict):
+                    raise ValueError("Manifest content must be a JSON object")
+
+                def _norm(k):
+                    return re.sub(r"[^a-z0-9]+", "", str(k).casefold())
+
+                clean_candidates = {_norm(sc) for sc in candidate_sign_codes if _norm(sc)}
+
+                for mod in candidate_modules:
+                    mod_section = manifest_data.get(mod)
+                    if not isinstance(mod_section, dict):
+                        continue
+                    for sc in candidate_sign_codes:
+                        rel = mod_section.get(sc)
+                        if rel is not None:
+                            if not isinstance(rel, str):
+                                raise ValueError("Media paths must be strings")
+                            relative = rel
+                            break
+                    if relative:
+                        break
+                    for m_key, rel in mod_section.items():
+                        if _norm(m_key) in clean_candidates:
+                            if not isinstance(rel, str):
+                                raise ValueError("Media paths must be strings")
+                            relative = rel
+                            break
+                    if relative:
+                        break
             except (OSError, ValueError, TypeError, AttributeError) as error:
                 log.warning("Invalid media manifest %s: %s", manifest, error)
                 relative = None
-        candidates = [(self.root / relative).resolve()] if relative else [
-            folder / f"{sign.sign_code}{extension}" for extension in (".mp4", ".webm", ".mov", ".m4v")]
+
+        if relative:
+            candidates = [(self.root / relative).resolve()]
+        else:
+            candidates = [
+                (self.root / ("alphabet" if mod == "alphabet" else f"word_categories/{mod}") / f"{sc}{extension}").resolve()
+                for mod in candidate_modules
+                for sc in candidate_sign_codes
+                for extension in (".mp4", ".webm", ".mov", ".m4v")
+            ]
+
         for path in candidates:
             if path.is_relative_to(self.root) and path.is_file():
                 return replace(record, local_path=path, status="bundled", message="")

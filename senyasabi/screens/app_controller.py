@@ -10,9 +10,21 @@ from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_M
 from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
 import threading
+from PySide6.QtWidgets import QApplication
+
+_active_controller = None
+
+def get_active_controller():
+    return _active_controller
 
 class AppController:
     def __init__(self):
+        global _active_controller
+        _active_controller = self
+        app = QApplication.instance()
+        if app is not None:
+            app.setProperty("app_controller", self)
+
         self.welcome = WelcomeScreen()
         self.landing = LandingScreen()
         self.login = LoginScreen()
@@ -35,6 +47,7 @@ class AppController:
         self.dashboard.ui.btnBack.clicked.connect(self.show_main_menu)
         self.main_menu.stats_requested.connect(self.show_dashboard)
         self.main_menu.logout_requested.connect(self.logout)
+        self.dashboard.logout_requested.connect(self.logout)
         self.main_menu.camera_settings_requested.connect(self.show_camera_settings)
 
         self.login.continue_requested.connect(self.login_user)
@@ -205,14 +218,23 @@ class AppController:
                            message="Creating your account…", controls=(screen._ui,))
 
     def logout(self):
-        self.login.loading.cancel()
-        self.register.loading.cancel()
-        if self.camera_settings is not None:
-            self.camera_settings.reject()
-        auth_service.logout_user()
-        self.selected_module = None
-        self.login.email_input.clear()
-        self.show_login()
+        if getattr(self, "_logging_out", False):
+            return
+        self._logging_out = True
+        try:
+            self.login.loading.cancel()
+            self.register.loading.cancel()
+            if self.camera_settings is not None:
+                self.camera_settings.reject()
+            self._dispose_lesson()
+            if self.minigames is not None:
+                self.minigames.return_menu()
+            auth_service.logout_user()
+            self.selected_module = None
+            self.login.email_input.clear()
+            self.show_login()
+        finally:
+            self._logging_out = False
 
     def show_login(self):
         self._clear_passwords()
@@ -253,6 +275,7 @@ class AppController:
             from screens.minigames.minigame_select import MinigameSelect
             self.minigames = MinigameSelect()
             self.minigames.back_requested.connect(self.back_from_minigames)
+            self.minigames.logout_requested.connect(self.logout)
         return self.minigames
 
     def show_module_map(self):
