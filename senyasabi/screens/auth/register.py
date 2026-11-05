@@ -2,6 +2,7 @@ from pathlib import Path
 
 from screens.loading import LoadingOverlay
 from screens.startup import FittedForm
+from screens.auth.password_visibility import add_password_visibility_toggle
 
 from PySide6.QtCore import Qt, Signal
 from PySide6.QtGui import QPixmap
@@ -63,6 +64,8 @@ class RegisterScreen(QWidget):
         self.username_input: QLineEdit = self._ui.findChild(QLineEdit, "usernameInput") or QLineEdit(self)
         self.name_input: QLineEdit = self._ui.findChild(QLineEdit, "nameInput") or QLineEdit(self)
         self.confirm_password_input: QLineEdit = self._ui.findChild(QLineEdit, "confirmPasswordInput") or QLineEdit(self)
+        add_password_visibility_toggle(self.password_input)
+        add_password_visibility_toggle(self.confirm_password_input)
 
         # Error label positioned directly above buttons
         self.error_label = QLabel(self._ui)

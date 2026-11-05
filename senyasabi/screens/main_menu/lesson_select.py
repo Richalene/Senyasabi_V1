@@ -11,7 +11,7 @@ from screens.startup import FittedForm
 
 ROOT = Path(__file__).resolve().parents[2]
 _UI_FILE = ROOT / "ui/designer/lesson_select.ui"
-_COMING_SOON_MODULES = {"months", "calendar", "actions"}
+_COMING_SOON_MODULES = {"months", "actions"}
 
 
 class LessonSelectWidget(QWidget):
@@ -109,6 +109,8 @@ class LessonSelectWidget(QWidget):
     def set_module(self, code: str):
         self.module_code = code.lower()
         is_coming_soon = self.module_code in _COMING_SOON_MODULES
+        if self.btn_expression is not None:
+            self.btn_expression.setVisible(self.module_code != "alphabet")
         for btn_act in (self.btn_quiz, self.btn_sprint, self.btn_quest, self.btn_detective):
             if btn_act is not None:
                 btn_act.setEnabled(not is_coming_soon)

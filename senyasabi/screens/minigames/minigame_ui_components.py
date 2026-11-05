@@ -7,6 +7,70 @@ from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLa
 ROOT = Path(__file__).resolve().parents[2]
 
 
+class PillButton(QPushButton):
+    def __init__(self, text, parent=None, *, background, foreground, hover, pressed,
+                 border=None, border_width=0):
+        super().__init__(text, parent)
+        self._background = QColor(background)
+        self._foreground = QColor(foreground)
+        self._hover = QColor(hover)
+        self._pressed = QColor(pressed)
+        self._border = QColor(border) if border else None
+        self._border_width = border_width
+        self.setAttribute(Qt.WidgetAttribute.WA_Hover, True)
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        rect = QRectF(self.rect()).adjusted(1, 1, -1, -1)
+        if self.isDown():
+            background = self._pressed
+        elif self.underMouse():
+            background = self._hover
+        else:
+            background = self._background
+        painter.setBrush(background)
+        if self._border and self._border_width:
+            painter.setPen(QPen(self._border, self._border_width))
+        else:
+            painter.setPen(Qt.PenStyle.NoPen)
+        painter.drawRoundedRect(rect, rect.height() / 2, rect.height() / 2)
+        painter.setPen(self._foreground)
+        painter.setFont(self.font())
+        painter.drawText(self.rect(), Qt.AlignmentFlag.AlignCenter, self.text())
+
+
+class PillBadge(QLabel):
+    def __init__(self, text="", parent=None, *, background, foreground,
+                 border=None, border_width=0):
+        super().__init__(text, parent)
+        self._background = QColor(background)
+        self._foreground = QColor(foreground)
+        self._border = QColor(border) if border else None
+        self._border_width = border_width
+
+    def set_colors(self, background, foreground, border=None, border_width=0):
+        self._background = QColor(background)
+        self._foreground = QColor(foreground)
+        self._border = QColor(border) if border else None
+        self._border_width = border_width
+        self.update()
+
+    def paintEvent(self, event):
+        painter = QPainter(self)
+        painter.setRenderHint(QPainter.RenderHint.Antialiasing)
+        rect = QRectF(self.rect()).adjusted(1, 1, -1, -1)
+        if self._border and self._border_width:
+            painter.setPen(QPen(self._border, self._border_width))
+        else:
+            painter.setPen(Qt.PenStyle.NoPen)
+        painter.setBrush(self._background)
+        painter.drawRoundedRect(rect, rect.height() / 2, rect.height() / 2)
+        painter.setPen(self._foreground)
+        painter.setFont(self.font())
+        painter.drawText(self.rect(), self.alignment(), self.text())
+
+
 class HowToPlayWidget(QWidget):
     """
     How-To Instructions overlay screen for minigames:
@@ -61,10 +125,12 @@ class MinigameScoreWidget(QWidget):
     continue_requested = Signal()
     close_requested = Signal()
     replay_requested = Signal()
+    BASE_WIDTH = 1920
+    BASE_HEIGHT = 1080
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.resize(1920, 1080)
+        self.resize(self.BASE_WIDTH, self.BASE_HEIGHT)
         self.setObjectName("minigameScoreWidget")
 
         # Background scores_bg.png
@@ -115,60 +181,65 @@ class MinigameScoreWidget(QWidget):
         self.lbl_score_val.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
         # Accuracy pill badge
-        self.badge_acc = QLabel(self)
-        self.badge_acc.setGeometry(740, 665, 230, 68)
+        self.badge_acc = PillBadge("", self, background="#BFD379", foreground="#2D4014")
+        self.badge_acc.setGeometry(800, 665, 280, 68)
         self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.badge_acc.setStyleSheet(
             "QLabel {"
             "  font-family: 'Segoe UI', sans-serif;"
             "  font-size: 24px;"
             "  font-weight: 700;"
-            "  color: #2D4014;"
-            "  background-color: #BFD379;"
-            "  border-radius: 34px;"
             "}"
         )
         self.badge_acc.setText("100% Accuracy")
 
         # Primary Continue Button
-        self.btn_next = QPushButton(self)
+        self.btn_next = PillButton(
+            "Continue  ➔", self, background="#8C9F3E", foreground="#FFFFFF",
+            hover="#9DB446", pressed="#788934",
+        )
         self.btn_next.setGeometry(170, 815, 340, 85)
         self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_next.setText("Continue  ➔")
         self.btn_next.setStyleSheet(
             "QPushButton {"
-            "  background-color: #8C9F3E;"
-            "  color: #FFFFFF;"
             "  font-family: 'Segoe UI', sans-serif;"
             "  font-size: 30px;"
             "  font-weight: 700;"
-            "  border-radius: 42px;"
-            "  border: none;"
             "}"
-            "QPushButton:hover { background-color: #9DB446; }"
-            "QPushButton:pressed { background-color: #788934; }"
         )
         self.btn_next.clicked.connect(self.continue_requested.emit)
 
         # Secondary Play Again Button
-        self.btn_replay = QPushButton(self)
+        self.btn_replay = PillButton(
+            "Play Again", self, background="#FFFDF0", foreground="#704833",
+            hover="#FFF8E7", pressed="#F5ECCE", border="#D5C9A9", border_width=3.5,
+        )
         self.btn_replay.setGeometry(540, 815, 270, 85)
         self.btn_replay.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_replay.setText("Play Again")
         self.btn_replay.setStyleSheet(
             "QPushButton {"
-            "  background-color: #FFFDF0;"
-            "  color: #704833;"
             "  font-family: 'Segoe UI', sans-serif;"
             "  font-size: 26px;"
             "  font-weight: 700;"
-            "  border-radius: 42px;"
-            "  border: 3.5px solid #D5C9A9;"
             "}"
-            "QPushButton:hover { background-color: #FFF8E7; border-color: #B8A783; }"
-            "QPushButton:pressed { background-color: #F5ECCE; }"
         )
         self.btn_replay.clicked.connect(self.replay_requested.emit)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        if self.width() <= 0 or self.height() <= 0:
+            return
+        sx = self.width() / float(self.BASE_WIDTH)
+        sy = self.height() / float(self.BASE_HEIGHT)
+        scale = min(sx, sy)
+
+        self.bg_label.setGeometry(0, 0, self.width(), self.height())
+        self.btn_close.setGeometry(int(1810 * sx), int(30 * sy), max(1, int(60 * scale)), max(1, int(60 * scale)))
+        self.title_banner.setGeometry(int(160 * sx), int(310 * sy), max(1, int(1020 * sx)), max(1, int(220 * sy)))
+        self.lbl_score_val.setGeometry(int(475 * sx), int(640 * sy), max(1, int(300 * sx)), max(1, int(140 * sy)))
+        self.badge_acc.setGeometry(int(800 * sx), int(665 * sy), max(1, int(280 * sx)), max(1, int(68 * sy)))
+        self.btn_next.setGeometry(int(170 * sx), int(815 * sy), max(1, int(340 * sx)), max(1, int(85 * sy)))
+        self.btn_replay.setGeometry(int(540 * sx), int(815 * sy), max(1, int(270 * sx)), max(1, int(85 * sy)))
 
     def set_score(self, score, total):
         self.lbl_score_val.setText(f"{score}/{total}")
@@ -176,24 +247,16 @@ class MinigameScoreWidget(QWidget):
         self.badge_acc.setText(f"{pct}% Accuracy")
         if pct >= 100:
             self.title_banner.setText("Excellent!")
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #2D4014; background-color: #BFD379; border-radius: 34px; }"
-            )
+            self.badge_acc.set_colors("#BFD379", "#2D4014")
         elif pct >= 80:
             self.title_banner.setText("Great Job!")
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFDE59; border-radius: 34px; }"
-            )
+            self.badge_acc.set_colors("#FFDE59", "#5C3B28")
         elif pct >= 50:
             self.title_banner.setText("Well Done!")
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #5C3B28; background-color: #FFDE59; border-radius: 34px; }"
-            )
+            self.badge_acc.set_colors("#FFDE59", "#5C3B28")
         else:
             self.title_banner.setText("Keep Going!")
-            self.badge_acc.setStyleSheet(
-                "QLabel { font-family: 'Segoe UI', sans-serif; font-size: 24px; font-weight: 700; color: #661D17; background-color: #FFB3A7; border-radius: 34px; }"
-            )
+            self.badge_acc.set_colors("#FFB3A7", "#661D17")
 
 
 class MinigameHeader(QWidget):
