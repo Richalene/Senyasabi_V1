@@ -9,7 +9,11 @@ from screens.main_menu.word_menu import _load_categories
 from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
 from screens.startup import FittedForm
 
-ROOT = Path(__file__).resolve().parents[2]
+try:
+    from backend.paths import get_base_dir
+    ROOT = get_base_dir()
+except ImportError:
+    ROOT = Path(__file__).resolve().parents[2]
 _UI_FILE = ROOT / "ui/designer/lesson_select.ui"
 _COMING_SOON_MODULES = {"months", "actions"}
 

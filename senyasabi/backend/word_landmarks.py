@@ -13,7 +13,11 @@ FEATURE_DIM = 172
 POSE_INDICES = [0, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16]
 FEATURE_ORDER = 'pose xyz+visibility, left hand xyz, right hand xyz, presence flags'
 NORMALIZATION = 'shoulder midpoint origin and shoulder-width scale'
-TASK_ROOT = Path(__file__).resolve().parents[1] / 'resources/models/mediapipe'
+try:
+    from .paths import get_base_dir
+    TASK_ROOT = get_base_dir() / 'resources/models/mediapipe'
+except ImportError:
+    TASK_ROOT = Path(__file__).resolve().parents[1] / 'resources/models/mediapipe'
 HAND_MODEL_PATH = TASK_ROOT / 'hand_landmarker.task'
 POSE_MODEL_PATH = TASK_ROOT / 'pose_landmarker_lite.task'
 

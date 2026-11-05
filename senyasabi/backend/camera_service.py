@@ -308,9 +308,18 @@ class CameraService:
             elif device.backend == 'qt':
                 capture = _QtCapture(device)
             else:
+                import sys
                 import cv2
                 idx = device.index if device.index is not None else 0
-                capture = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION)
+                if sys.platform == "win32":
+                    capture = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
+                    if not capture.isOpened():
+                        capture.release()
+                        capture = cv2.VideoCapture(idx)
+                elif sys.platform == "darwin":
+                    capture = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION)
+                else:
+                    capture = cv2.VideoCapture(idx)
 
             owned = _OwnedCapture(capture, owner)
             if not owned.isOpened():

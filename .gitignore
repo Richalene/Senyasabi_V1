@@ -86,6 +86,7 @@ dist
 
 .venv/
 .env
+.env.production
 _test_cache
 **/__pycache__/
 

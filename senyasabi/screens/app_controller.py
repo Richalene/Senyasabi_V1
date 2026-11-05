@@ -290,7 +290,7 @@ class AppController:
         self._show_screen(self.module_map)
 
     def open_module(self, code):
-        if code and code.lower() in ("calendar", "actions", "months"):
+        if code and code.lower() in ("number", "family", "communication", "days", "calendar", "actions", "months"):
             from screens.dialogs import ComingSoonDialog
             parent = getattr(self, "module_map", None) or getattr(self, "window", None)
             dlg = ComingSoonDialog(parent)
@@ -402,6 +402,11 @@ class AppController:
         self._show_screen(self.quiz)
 
     def shutdown(self):
+        try:
+            from backend import camera_ownership
+            camera_ownership.release_all()
+        except Exception:
+            pass
         self.login.loading.cancel()
         self.register.loading.cancel()
         if hasattr(self, "dashboard") and self.dashboard is not None:

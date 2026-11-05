@@ -5,7 +5,11 @@ from pathlib import Path
 from time import monotonic
 from .content_service import MODULE_CODES, fingerspell_text, get_words_for_module as module_words
 
-ROOT = Path(__file__).resolve().parents[1]
+try:
+    from .paths import get_base_dir
+    ROOT = get_base_dir()
+except ImportError:
+    ROOT = Path(__file__).resolve().parents[1]
 CONFIG = {
     "sprint": ("Sign Sprint", "Easy / Timed", 45),
     "quest": ("FingerSpell Quest", "Intermediate / Timed", 75),
