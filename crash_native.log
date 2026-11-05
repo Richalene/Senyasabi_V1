@@ -1673,6 +1673,7 @@ Extension modules: shiboken6.Shiboken, PySide6.QtCore, PySide6.QtGui, PySide6.Qt
 [2026-11-03 03:31:56] pid=36848 startup
 [2026-11-03 08:04:33] pid=31036 startup
 [2026-11-03 08:16:14] pid=36092 startup
+<<<<<<< Updated upstream
 [2026-11-03 10:37:53] pid=32540 startup
 [2026-11-03 10:39:26] pid=32540 atexit
 [2026-11-03 13:12:32] pid=19488 startup
@@ -1682,3 +1683,31 @@ Extension modules: shiboken6.Shiboken, PySide6.QtCore, PySide6.QtGui, PySide6.Qt
 [2026-11-03 13:29:21] pid=28020 startup
 [2026-11-03 14:31:26] pid=14888 startup
 [2026-11-03 15:48:16] pid=21584 startup
+=======
+[2026-11-03 09:20:04] pid=58976 startup
+[2026-11-03 09:21:53] pid=58976 aboutToQuit
+[2026-11-03 09:21:53] pid=58976 atexit
+[2026-11-03 09:21:59] pid=59479 startup
+[2026-11-03 09:23:44] pid=59479 aboutToQuit
+[2026-11-03 09:23:44] pid=59479 atexit
+[2026-11-03 09:58:46] pid=61624 startup
+[2026-11-03 09:59:27] pid=61624 aboutToQuit
+[2026-11-03 09:59:27] pid=61624 atexit
+[2026-11-03 10:05:54] pid=62115 startup
+[2026-11-03 10:06:02] pid=62115 aboutToQuit
+[2026-11-03 10:06:02] pid=62115 atexit
+[2026-11-03 10:06:18] pid=62624 startup
+[2026-11-03 10:07:00] pid=62624 aboutToQuit
+[2026-11-03 10:07:00] pid=62624 atexit
+[2026-11-03 10:07:03] pid=62991 startup
+[2026-11-03 10:07:45] pid=62991 aboutToQuit
+[2026-11-03 10:07:45] pid=62991 atexit
+[2026-11-03 10:11:52] pid=63531 startup
+[2026-11-03 10:12:28] pid=63531 aboutToQuit
+[2026-11-03 10:12:28] pid=63531 atexit
+[2026-11-05 12:32:29] pid=364 startup
+[2026-11-05 12:32:55] pid=17796 startup
+[2026-11-05 12:33:00] pid=17796 atexit
+[2026-11-05 12:33:05] pid=23840 startup
+[2026-11-05 12:39:53] pid=4324 startup
+>>>>>>> Stashed changes
