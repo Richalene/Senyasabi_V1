@@ -71,6 +71,7 @@ hidden_imports = [
     "argon2",
     "keyring",
     "keyring.backends.Windows",
+    "keyring.backends.macOS",
     "sqlalchemy",
     "sqlite3",
     "supabase",
@@ -220,7 +221,7 @@ exe = EXE(
     target_arch=None,
     codesign_identity=None,
     entitlements_file=None,
-    icon=str(senyasabi_root / "resources" / "img" / "ui" / "logo.png") if (senyasabi_root / "resources" / "img" / "ui" / "logo.png").exists() else None,
+    icon=str(senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png") if (senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png").exists() else None,
 )
 
 coll = COLLECT(
@@ -233,3 +234,19 @@ coll = COLLECT(
     upx_exclude=[],
     name="SenyaSabi_Demo",
 )
+
+# On macOS, generate a proper .app bundle with camera permission strings
+if sys.platform == "darwin":
+    app = BUNDLE(
+        coll,
+        name="SenyaSabi_Demo.app",
+        icon=str(senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png") if (senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png").exists() else None,
+        bundle_identifier="com.senyasabi.demo",
+        info_plist={
+            "NSCameraUsageDescription": "SenyaSabi requires camera access for sign language recognition during lessons and minigames.",
+            "NSMicrophoneUsageDescription": "SenyaSabi does not require microphone access.",
+            "CFBundleShortVersionString": "1.0.0",
+            "CFBundleVersion": "1.0.0",
+            "NSHighResolutionCapable": "True",
+        },
+    )
