@@ -103,3 +103,6 @@ cache/
 # Log files
 *.log
 **/*.log
+crash_native.log
+crash.log
+lifecycle.log

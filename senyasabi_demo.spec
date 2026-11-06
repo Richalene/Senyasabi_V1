@@ -14,7 +14,7 @@ if not senyasabi_root.exists():
 # Bundled data files specifically for Module 1 Demo
 datas = [
     # Demo configuration (.env.production as .env)
-    (str(senyasabi_root / ".env.production"), "."),
+    (str(senyasabi_root / ".env"), "."),
     
     # Core resources
     (str(senyasabi_root / "resources" / "data" / "senyasabi.db"), "resources/data"),
