@@ -7,10 +7,9 @@ session, content not cached locally) returns False and the dashboard keeps its c
 """
 import logging
 import uuid
-from datetime import date, datetime
+from datetime import date, datetime, timezone
 import threading
 import time
-import logging
 
 from backend import auth_service
 from backend.database import models as m
@@ -48,6 +47,10 @@ def _convert(model, row):
             elif py is date:
                 value = date.fromisoformat(value)
         out[attr.key] = value
+    if model is m.LessonProgress and out.get("client_updated_at") is None:
+        out["client_updated_at"] = out.get("updated_at") or out.get("last_accessed") or datetime.now(timezone.utc)
+    if "updated_at" in out and out["updated_at"] is None:
+        out["updated_at"] = datetime.now(timezone.utc)
     return out
 
 
@@ -72,16 +75,13 @@ def apply_snapshot(snapshot):
                     existing = db.get(m.LessonProgress, pk)
                     if existing and existing.status == "Completed" and converted.get("status") != "Completed":
                         converted["status"] = "Completed"
+                        converted["completed_at"] = existing.completed_at or datetime.now(timezone.utc)
                         converted["completion_percentage"] = max(
                             float(existing.completion_percentage or 0),
                             float(converted.get("completion_percentage") or 0)
                         )
-                if model is m.Streak:
-                    existing = db.get(m.Streak, converted["user_id"])
-                    new_last = converted.get("last_activity_date")
-                    if (existing and existing.last_activity_date
-                            and (new_last is None or existing.last_activity_date > new_last)):
-                        continue          # local is ahead; the server catches up after the upload
+                    if converted.get("status") == "Completed" and not converted.get("completed_at"):
+                        converted["completed_at"] = (existing.completed_at if existing else None) or datetime.now(timezone.utc)
                 db.merge(model(**converted))
             db.flush()
             counts[name] = len(rows)

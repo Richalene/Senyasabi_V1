@@ -18,7 +18,7 @@ from backend.minigame_service import ROOT, GameSession
 from screens.startup import FittedForm
 from .minigame_ui_components import (HowToPlayWidget, MinigameScoreWidget,
                                      MinigameHeader, LetterTile, CircularActionButton)
-from backend.media_service import alphabet_still
+
 
 class SignAvatarCard(QWidget):
     """
@@ -32,8 +32,12 @@ class SignAvatarCard(QWidget):
         self.is_paused = False
 
     def set_sign(self, letter):
-        path = alphabet_still(letter) if letter != " " else None
-        self.pixmap_sign = QPixmap(str(path)) if path else QPixmap()
+        if letter == " ":
+            self.pixmap_sign = QPixmap()
+        else:
+            from backend.media_service import alphabet_still
+            path = alphabet_still(letter) or (ROOT / "resources/VRM_SIGNS" / f"{letter.upper()}.png")
+            self.pixmap_sign = QPixmap(str(path)) if path and path.exists() else QPixmap()
         self.update()
 
     def set_paused(self, paused):
@@ -50,16 +54,38 @@ class SignAvatarCard(QWidget):
         painter.setBrush(QColor("#F9BD49"))
         painter.drawRoundedRect(card_rect, 40, 40)
 
-        # Draw sign avatar
+        # Draw sign avatar with centered zoom and fit
         if not self.pixmap_sign.isNull():
             target_rect = card_rect.adjusted(20, 20, -20, -20)
-            scaled = self.pixmap_sign.scaled(
-                int(target_rect.width()), int(target_rect.height()),
-                Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
-            )
-            x = target_rect.x() + (target_rect.width() - scaled.width()) / 2
-            y = target_rect.y() + (target_rect.height() - scaled.height()) / 2
+            from PySide6.QtGui import QPainterPath
+            clip_path = QPainterPath()
+            clip_path.addRoundedRect(target_rect, 30, 30)
+            painter.save()
+            painter.setClipPath(clip_path)
+
+            pw, ph = self.pixmap_sign.width(), self.pixmap_sign.height()
+            tw, th = target_rect.width(), target_rect.height()
+
+            if pw > ph * 1.2:
+                side = ph
+                src_x = (pw - side) // 2
+                cropped = self.pixmap_sign.copy(src_x, 0, side, side)
+                scaled = cropped.scaled(
+                    int(tw), int(th),
+                    Qt.AspectRatioMode.KeepAspectRatioByExpanding,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+            else:
+                scaled = self.pixmap_sign.scaled(
+                    int(tw), int(th),
+                    Qt.AspectRatioMode.KeepAspectRatio,
+                    Qt.TransformationMode.SmoothTransformation,
+                )
+
+            x = target_rect.x() + (tw - scaled.width()) / 2
+            y = target_rect.y() + (th - scaled.height()) / 2
             painter.drawPixmap(int(x), int(y), scaled)
+            painter.restore()
 
         # Draw Pause bars overlay if paused
         if self.is_paused:

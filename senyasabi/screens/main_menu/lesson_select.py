@@ -11,7 +11,7 @@ from screens.startup import FittedForm
 
 ROOT = Path(__file__).resolve().parents[2]
 _UI_FILE = ROOT / "ui/designer/lesson_select.ui"
-_COMING_SOON_MODULES = {"months", "calendar", "actions"}
+_COMING_SOON_MODULES = {"months", "actions"}
 
 
 class LessonSelectWidget(QWidget):

@@ -258,11 +258,14 @@ def get_dashboard_stats(user_id):
     # If rank is missing in local cache, fallback to remote user position lookup
     if defaults["leaderboard"]["rank_position"] is None and user_id is not None:
         try:
-            pos = get_api_client().get_user_leaderboard_position(user_id, "all_time")
-            if pos and isinstance(pos, dict):
-                r = pos.get("rank_position") or pos.get("rank")
-                if r is not None:
-                    defaults["leaderboard"]["rank_position"] = r
+            uuid.UUID(str(user_id))
+            client = get_api_client()
+            if getattr(client, "is_online", True):
+                pos = client.get_user_leaderboard_position(user_id, "all_time")
+                if pos and isinstance(pos, dict):
+                    r = pos.get("rank_position") or pos.get("rank")
+                    if r is not None:
+                        defaults["leaderboard"]["rank_position"] = r
         except Exception as exc:
             logger.debug("Dashboard rank position lookup fallback: %s", exc)
 

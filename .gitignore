@@ -97,4 +97,8 @@ _test_cache
 ext_models/
 scratch/
 
-# cache/
+cache/
+
+# Log files
+*.log
+**/*.log

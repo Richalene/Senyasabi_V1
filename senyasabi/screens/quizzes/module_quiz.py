@@ -617,7 +617,7 @@ class ModuleQuiz(GameCanvas):
             from backend import auth_service, sync_service, content_service
             user = auth_service.get_current_user()
             if user:
-                lesson_id = content_service.get_lesson_id(self.module_code)
+                quiz_id = content_service.get_quiz_id(self.module_code)
                 uid = user.get("user_id")
                 if uid and uid != "dev-session":
                     import uuid
@@ -626,13 +626,13 @@ class ModuleQuiz(GameCanvas):
                             uid = uuid.UUID(uid)
                         except ValueError:
                             uid = None
-                    if uid is not None and lesson_id is not None:
+                    if uid is not None and quiz_id is not None:
                         from datetime import datetime, timezone
                         now = datetime.now(timezone.utc)
-                        sync_service.get_sync_service().queue_quiz_attempt(
+                        sync_service.queue_quiz_attempt(
                             user_id=uid,
                             attempt_id=uuid.uuid4(),
-                            quiz_id=lesson_id,
+                            quiz_id=quiz_id,
                             started_at=now,
                             completed_at=now,
                             score=self.session.score,
