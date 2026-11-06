@@ -224,37 +224,54 @@ def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
                 logger.warning("Supabase client not available in direct mode")
             return None
 
+        # In distributed mode with Supabase direct, attach participant's JWT for RLS
+        from . import auth_service
+        token = auth_service.get_access_token()
+        orig_key = getattr(supabase, "supabase_key", None)
+        if token and hasattr(supabase, "postgrest"):
+            try:
+                supabase.postgrest.auth(token)
+            except Exception:
+                pass
+
         processed = 0
         succeeded = 0
         failed = 0
 
-        for item in sync_items:
-            processed += 1
+        try:
+            for item in sync_items:
+                processed += 1
 
-            try:
-                entity_type = item.get("entity_type")
-                data = item.get("data", {})
+                try:
+                    entity_type = item.get("entity_type")
+                    data = item.get("data", {})
 
-                if entity_type == "lesson_progress":
-                    success = _upsert_lesson_progress(supabase, user_id, data)
+                    if entity_type == "lesson_progress":
+                        success = _upsert_lesson_progress(supabase, user_id, data)
 
-                elif entity_type == "quiz_attempt":
-                    success = _upsert_quiz_attempt(supabase, user_id, data)
+                    elif entity_type == "quiz_attempt":
+                        success = _upsert_quiz_attempt(supabase, user_id, data)
 
-                elif entity_type == "minigame_attempt":
-                    success = _upsert_minigame_attempt(supabase, user_id, data)
+                    elif entity_type == "minigame_attempt":
+                        success = _upsert_minigame_attempt(supabase, user_id, data)
 
-                else:
-                    success = False
+                    else:
+                        success = False
 
-                if success:
-                    succeeded += 1
-                else:
+                    if success:
+                        succeeded += 1
+                    else:
+                        failed += 1
+
+                except Exception:
+                    logger.exception("Error processing sync item")
                     failed += 1
-
-            except Exception:
-                logger.exception("Error processing sync item")
-                failed += 1
+        finally:
+            if orig_key and hasattr(supabase, "postgrest"):
+                try:
+                    supabase.postgrest.auth(orig_key)
+                except Exception:
+                    pass
 
         return {
             "processed": processed,

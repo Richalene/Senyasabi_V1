@@ -267,7 +267,7 @@ class SignSprintGameView(QWidget):
             row_layout.setSpacing(15)
             row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
             for ch in w:
-                tile = LetterTile("", row_widget)
+                tile = LetterTile("", parent=row_widget)
                 row_layout.addWidget(tile)
                 self.tiles_list.append((tile, ch))
             self.tiles_layout.addWidget(row_widget)

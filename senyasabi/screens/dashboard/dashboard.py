@@ -19,10 +19,14 @@ from ui.generated.dashboard_ui import Ui_Dashboard
 from backend import auth_service, dashboard_service
 
 def _ensure_cherry_bomb_font():
-    font_path = os.path.join(
-        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-        "resources", "font", "CherryBombOne-Regular.ttf"
-    )
+    try:
+        from backend.paths import get_base_dir
+        font_path = str(get_base_dir() / "resources" / "font" / "CherryBombOne-Regular.ttf")
+    except ImportError:
+        font_path = os.path.join(
+            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+            "resources", "font", "CherryBombOne-Regular.ttf"
+        )
     if os.path.exists(font_path):
         QFontDatabase.addApplicationFont(font_path)
 
@@ -61,7 +65,11 @@ class StatisticsDashboardWindow(QWidget):
         _ensure_cherry_bomb_font()
         self.ui = Ui_Dashboard()
         self.ui.setupUi(self)
-        root = Path(__file__).resolve().parents[2]
+        try:
+            from backend.paths import get_base_dir
+            root = get_base_dir()
+        except ImportError:
+            root = Path(__file__).resolve().parents[2]
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/ui/dashboard_bg.png")))
             self.ui.imageBg.setScaledContents(True)
@@ -370,7 +378,11 @@ class DashboardWindow(QWidget):
         _ensure_cherry_bomb_font()
         self.ui = Ui_main()
         self.ui.setupUi(self)
-        root = Path(__file__).resolve().parents[2]
+        try:
+            from backend.paths import get_base_dir
+            root = get_base_dir()
+        except ImportError:
+            root = Path(__file__).resolve().parents[2]
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/home_bg.png")))
             self.ui.imageBg.setScaledContents(True)

@@ -11,8 +11,27 @@ _last_qt_tick = time.time()
 import cv2
 import faulthandler
 
+# In PyInstaller windowed/GUI mode (--windowed/console=False), sys.stdout and sys.stderr are None.
+# Redirect them to null or a log file so libraries and handlers don't crash.
+if sys.stderr is None:
+    try:
+        log_dir = Path.home() / ".senyasabi" / "logs"
+        log_dir.mkdir(parents=True, exist_ok=True)
+        sys.stderr = open(log_dir / "crash_native.log", "a", encoding="utf-8")
+    except Exception:
+        sys.stderr = open(os.devnull, "w", encoding="utf-8")
+
+if sys.stdout is None:
+    sys.stdout = open(os.devnull, "w", encoding="utf-8")
+
 # Enable faulthandler to catch low-level C/C++ segmentation faults (e.g., in OpenCV or MediaPipe)
-faulthandler.enable()
+try:
+    if sys.stderr is not None:
+        faulthandler.enable(file=sys.stderr)
+    else:
+        faulthandler.enable()
+except Exception:
+    pass
 
 def _watchdog_loop():
     global _last_qt_tick

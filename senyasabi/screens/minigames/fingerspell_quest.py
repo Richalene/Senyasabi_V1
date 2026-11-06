@@ -235,7 +235,7 @@ class FingerSpellQuestGameView(QWidget):
             row_layout.setSpacing(15)
             row_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
             for ch in w:
-                tile = LetterTile(ch, row_widget)
+                tile = LetterTile(ch, parent=row_widget)
                 row_layout.addWidget(tile)
                 self.tiles_list.append(tile)
             self.tiles_layout.addWidget(row_widget)

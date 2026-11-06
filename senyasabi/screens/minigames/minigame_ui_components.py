@@ -4,7 +4,11 @@ from PySide6.QtCore import Qt, Signal, QRectF, QSize
 from PySide6.QtGui import QPainter, QPixmap, QColor, QFont, QPen, QPainterPath
 from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout
 
-ROOT = Path(__file__).resolve().parents[2]
+try:
+    from backend.paths import get_base_dir
+    ROOT = get_base_dir()
+except ImportError:
+    ROOT = Path(__file__).resolve().parents[2]
 
 
 class PillButton(QPushButton):
@@ -306,10 +310,13 @@ class LetterTile(QLabel):
     - revealed: golden dashed border when round expires
     """
     def __init__(self, letter="", tile_size=100, parent=None):
+        if isinstance(tile_size, QWidget):
+            parent = tile_size
+            tile_size = 100
         super().__init__(parent)
         self.letter = letter.upper()
         self.state = "filled" if letter else "empty"
-        self.setFixedSize(tile_size, tile_size)
+        self.setFixedSize(int(tile_size), int(tile_size))
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText(self.letter)
         self.update_style()

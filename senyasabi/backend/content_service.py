@@ -19,7 +19,12 @@ from .recognition_labels import normalize_label
 
 logger = logging.getLogger(__name__)
 
-ROOT = Path(__file__).resolve().parents[1]
+try:
+    from .paths import get_base_dir
+    ROOT = get_base_dir()
+except ImportError:
+    ROOT = Path(__file__).resolve().parents[1]
+
 DATASET_PATH = config.DATA_DIR / "expected_dataset.md"
 LABELS_PATH = config.DATA_DIR / "105labels.json"
 

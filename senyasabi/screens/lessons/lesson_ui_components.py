@@ -7,7 +7,11 @@ from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout,
 from screens.camera_preview import RoundedCameraPreview
 from screens.minigames.minigame_ui_components import CircularActionButton, PillBadge, PillButton
 
-ROOT = Path(__file__).resolve().parents[2]
+try:
+    from backend.paths import get_base_dir
+    ROOT = get_base_dir()
+except ImportError:
+    ROOT = Path(__file__).resolve().parents[2]
 
 
 class _CircularAccuracyGauge(QWidget):
