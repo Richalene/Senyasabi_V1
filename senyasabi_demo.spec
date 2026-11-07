@@ -169,10 +169,9 @@ excludes = [
     "PySide6.QtPositioning",
     "PySide6.QtCharts",
     
-    # Unused ML & scientific libraries (~500 MB savings)
+    # Unused ML & scientific libraries
     "jax",
     "jaxlib",
-    "scipy",
     "matplotlib",
     "tensorboard",
     "boto3",
@@ -183,7 +182,6 @@ excludes = [
     "IPython",
     "jupyter",
     "tkinter",
-    "unittest",
     "pytest",
 ]
 

@@ -214,7 +214,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         
         self.layout_comp.set_target(
             f"Letter {letter.upper() if letter else '?'}",
-            category=f"ALPHABET LESSON {self._lesson_number}SIGN THIS LETTER",
+            category=f"ALPHABET LESSON {self._lesson_number} • SIGN THIS LETTER",
             progress=f"Letter {idx + 1} of {total}"
         )
         self.layout_comp.set_prediction("Waiting for hand...", status="waiting")
