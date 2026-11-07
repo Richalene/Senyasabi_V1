@@ -212,12 +212,12 @@ class ComingSoonDialog(QDialog):
         layout.addWidget(pill)
 
         # Title
-        title = QLabel("Building Bridges, One Sign at a Time.", container)
-        title.setWordWrap(True)
+        title = QLabel("Building\nBridges, One\nSign at a Time.", container)
         title.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
-            "font-size: 36px; "
+            "font-size: 38px; "
             "font-weight: 800; "
+            "line-height: 1.1; "
             "color: #1A1A1A; "
             "background: transparent;"
             "border: none;"

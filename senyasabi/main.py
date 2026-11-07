@@ -205,11 +205,21 @@ class SenyaSabiApplication(QApplication):
         if self.fullscreen:
             window.showFullScreen()
         else:
-            window.showMaximized()
+            # Force 1920x1080 resolution, centered on screen
+            screen = window.screen()
+            if screen:
+                available = screen.availableGeometry()
+                x = (available.width() - 1920) // 2
+                y = (available.height() - 1080) // 2
+                window.setGeometry(x, y, 1920, 1080)
+            else:
+                window.setGeometry(0, 0, 1920, 1080)
+            window.show()
 
     def _matches_presentation(self, window):
-        return window.isFullScreen() if self.fullscreen else window.isMaximized()
-
+        if self.fullscreen:
+            return window.isFullScreen()
+        return window.width() == 1920 and window.height() == 1080
 
 def main() -> int:
     # Setup logging first
