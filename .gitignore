@@ -87,6 +87,7 @@ dist
 .venv/
 .env
 .env.production
+.vscode
 _test_cache
 **/__pycache__/
 

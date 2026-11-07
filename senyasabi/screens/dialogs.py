@@ -226,14 +226,15 @@ class ComingSoonDialog(QDialog):
 
         # Subtitle
         desc = QLabel(
-            "We appreciate your patience as we continue building more features, "
-            "including complex and advanced learning courses.", container
+            "We appreciate your patience as we continue to work on a few features "
+            "and, eventually, more complex and advanced learning courses.", container
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
             "font-size: 16px; "
             "color: #555555; "
+            "line-height: 1.4; "
             "background: transparent;"
             "border: none;"
         )
