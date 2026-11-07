@@ -1,12 +1,13 @@
 import logging
 from PySide6.QtWidgets import QLineEdit, QMainWindow, QStackedWidget
-from PySide6.QtCore import Qt, QSize
+from PySide6.QtCore import Qt, QSize, QTimer
 from PySide6.QtGui import QColor, QPalette
 
 from screens.auth.login import LoginScreen
 from screens.auth.register import RegisterScreen
 from screens.startup import WelcomeScreen, LandingScreen
 from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+from screens.loading import LoadingOverlay
 from backend import auth_service
 from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 from backend.content_service import get_signs_for_module
@@ -54,6 +55,8 @@ class AppController:
 
         self.shell = MainWindowShell()
         self.stack = self.shell.stacked_widget
+        self.loading_overlay = LoadingOverlay(self.shell, cancel_on_hide=False)
+        self.loading_overlay.hide()
 
         self.welcome = WelcomeScreen()
         self.landing = LandingScreen()
@@ -112,9 +115,23 @@ class AppController:
         except Exception:
             logging.getLogger(__name__).exception("Post-login sync could not start")
 
-    def _show_screen(self, screen):
+    def _show_screen(self, screen, *args, **kwargs):
         if screen is None:
             return
+
+        # Show brief transition overlay over shell if shell is visible
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None and self.shell.isVisible():
+            try:
+                self.loading_overlay.setGeometry(self.shell.rect())
+                self.loading_overlay.frame = 0
+                self.loading_overlay.show()
+                self.loading_overlay.raise_()
+                self.loading_overlay.animation.start()
+                # Clear overlay once the new screen renders
+                QTimer.singleShot(150, self._hide_transition_overlay)
+            except Exception:
+                pass
+
         # Ensure screen is mounted in the stack
         if self.stack.indexOf(screen) == -1:
             self.stack.addWidget(screen)
@@ -140,6 +157,14 @@ class AppController:
                         window.hide()
                 except Exception:
                     pass
+
+    def _hide_transition_overlay(self):
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None:
+            try:
+                self.loading_overlay.animation.stop()
+                self.loading_overlay.hide()
+            except Exception:
+                pass
 
     def show_welcome(self):
         self._show_screen(self.welcome)
@@ -389,7 +414,15 @@ class AppController:
             screen = WordLessonWidget(words, model_code)
         self.active_lesson = screen
         screen.lesson_finished.connect(self._lesson_back)
+        if hasattr(screen, "layout_comp") and hasattr(screen.layout_comp, "results_widget") and screen.layout_comp.results_widget is not None:
+            screen.layout_comp.results_widget.next_lesson_requested.connect(
+                lambda next_number=number + 1: self._open_next_lesson(next_number)
+            )
         self._show_screen(screen)
+
+    def _open_next_lesson(self, number):
+        self._dispose_lesson()
+        self.open_module_lesson(number)
 
     def _dispose_lesson(self):
         screen, self.active_lesson = self.active_lesson, None
