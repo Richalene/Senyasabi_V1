@@ -93,6 +93,10 @@ class RegisterScreen(QWidget):
         if back_btn:
             back_btn.clicked.connect(self.back_requested)
 
+        for btn in self._ui.findChildren(QPushButton):
+            btn.setProperty("noHoverBounce", True)
+            print("no-bounce set on:", btn.objectName())
+
         self.loading = LoadingOverlay(self)
         self._fitted_form = FittedForm(self)
 
