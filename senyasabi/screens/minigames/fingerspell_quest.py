@@ -1,7 +1,7 @@
 """FingerSpell Quest screen redesigned to match the Figma mockup."""
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal, QThread
-from PySide6.QtGui import QPixmap
+from PySide6.QtGui import QGuiApplication, QPixmap
 from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QHBoxLayout,
                               QVBoxLayout, QStackedWidget)
 from backend.minigame_service import ROOT, GameSession, letters
@@ -30,6 +30,9 @@ class FingerSpellQuestGameView(QWidget):
     MATCH_FRAMES = 2
     LETTER_COOLDOWN_MS = 250
 
+    # Design size all absolute coordinates below are based on
+    BASE_W, BASE_H = 1920, 1080
+
     def __init__(self, session, engine_factory=None, parent=None):
         super().__init__(parent)
         self.session = session
@@ -37,7 +40,9 @@ class FingerSpellQuestGameView(QWidget):
         self.engine = None
         self._camera_dialog = None
         self.practice = None
-        self.resize(1920, 1080)
+        self._ready = False
+        self._last_scale = None
+        self.setMinimumSize(0, 0)
 
         # Background foliage
         self.bg_label = QLabel(self)
@@ -110,13 +115,13 @@ class FingerSpellQuestGameView(QWidget):
         self.camera_container.setStyleSheet(
             "QWidget { background-color: #79BAE8; border-radius: 40px; }"
         )
-        cam_layout = QVBoxLayout(self.camera_container)
-        cam_layout.setContentsMargins(15, 15, 15, 15)
+        self.cam_layout = QVBoxLayout(self.camera_container)
+        self.cam_layout.setContentsMargins(15, 15, 15, 15)
 
         # Real Camera Feed with Fallback placeholder (fill_crop=True fills the container without letterbox bars)
         self.camera = RoundedCameraPreview("Opening camera...", self.camera_container, radius=35, fill_crop=True)
         self.camera.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        cam_layout.addWidget(self.camera)
+        self.cam_layout.addWidget(self.camera)
 
         # Retry button if camera is off
         self.btn_retry_cam = QPushButton("Camera Options", self.card)
@@ -144,6 +149,73 @@ class FingerSpellQuestGameView(QWidget):
         self.tile_rows = []
         self.tiles_list = []
         self.current_letter_idx = 0
+
+        self._ready = True
+
+    # ------------------------------------------------------------------
+    # Responsive scaling
+    # ------------------------------------------------------------------
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._scale_layout()
+
+    def _scale_layout(self):
+        if not self._ready or self.width() < 2 or self.height() < 2:
+            return
+        s = max(0.1, min(self.width() / self.BASE_W, self.height() / self.BASE_H))
+        ox = (self.width() - self.BASE_W * s) / 2    # letterbox offsets
+        oy = (self.height() - self.BASE_H * s) / 2
+
+        def g(x, y, w, h):  # design coords -> scaled coords (relative to parent)
+            return int(x * s), int(y * s), max(1, int(w * s)), max(1, int(h * s))
+
+        # Background + header span the full widget
+        self.bg_label.setGeometry(0, 0, self.width(), self.height())
+        self.header.set_scale(s)
+        self.header.setGeometry(0, int(oy), self.width(), max(1, int(90 * s)))
+
+        # Main card (positioned in the centered 16:9 area)
+        x, y, w, h = g(50, 95, 1820, 935)
+        self.card.setGeometry(int(ox) + x, int(oy) + y, w, h)
+
+        # Everything inside the card
+        self.instruction_note.setGeometry(*g(100, 40, 800, 40))
+        self.tiles_container.setGeometry(*g(0, 310, 1000, 300))
+        self.bottom_controls.setGeometry(*g(100, 680, 500, 90))
+        self.camera_container.setGeometry(*g(1020, 100, 720, 720))
+        self.btn_retry_cam.setGeometry(*g(1020, 835, 200, 45))
+
+        self.checkmark_lbl.setFixedSize(max(1, int(55 * s)), max(1, int(55 * s)))
+        self.lbl_hourglass.setFixedSize(max(1, int(50 * s)), max(1, int(60 * s)))
+        self.btn_next.set_scale(s)
+
+        self.bottom_controls.layout().setSpacing(int(25 * s))
+        self.tiles_layout.setSpacing(int(20 * s))
+        m = int(15 * s)
+        self.cam_layout.setContentsMargins(m, m, m, m)
+
+        for row in self.tile_rows:
+            row.layout().setSpacing(int(15 * s))
+        for tile in self.tiles_list:
+            tile.set_scale(s)
+
+        # Stylesheets (font sizes / radius) only when the scale changes
+        if self._last_scale != s:
+            self._last_scale = s
+            self.card.setStyleSheet(
+                f"QWidget {{ background-color: #FAFFDC; border-radius: {int(40 * s)}px; }}")
+            self.camera_container.setStyleSheet(
+                f"QWidget {{ background-color: #79BAE8; border-radius: {int(40 * s)}px; }}")
+            self.instruction_note.setStyleSheet(
+                f"QLabel {{ font-family: 'Segoe UI'; font-size: {max(8, int(20 * s))}px; "
+                "font-style: italic; color: #8F8C78; background: transparent; }")
+            self.lbl_timer.setStyleSheet(
+                f"QLabel {{ font-family: 'Segoe UI'; font-size: {max(10, int(38 * s))}px; "
+                "font-weight: bold; font-style: italic; color: #704833; background: transparent; }")
+            self.btn_retry_cam.setStyleSheet(
+                "QPushButton { background: #526536; color: white; border-radius: 999px; "
+                f"font-weight: bold; font-size: {max(8, int(12 * s))}px; }} "
+                "QPushButton:hover { background: #687D43; }")
 
     def start_game(self):
         self.load_round()
@@ -240,6 +312,10 @@ class FingerSpellQuestGameView(QWidget):
                 self.tiles_list.append(tile)
             self.tiles_layout.addWidget(row_widget)
             self.tile_rows.append(row_widget)
+
+        # Scale the freshly built tiles to the current window size
+        self._last_scale = None
+        self._scale_layout()
 
         self.practice = CameraPracticeSession(
             targets=letters(self.session.word), confidence_threshold=0.0,
@@ -359,11 +435,17 @@ class FingerSpellQuest(QWidget):
 
     def __init__(self, parent=None, engine_factory=None, module_code=None, *, scope=None):
         super().__init__(parent)
-        self.resize(1920, 1080)
         self.scope = scope
         self.module_code = module_code
         self.session = GameSession("quest", rounds=5, module_code=module_code, scope=scope)
         self._engine_factory = engine_factory
+
+        # Fit to the screen instead of forcing 1920x1080
+        screen = QGuiApplication.primaryScreen().availableGeometry()
+        w = min(1920, int(screen.width() * 0.9))
+        h = min(1080, int(screen.height() * 0.9))
+        self.resize(w, h)
+        self.setMinimumSize(800, 450)
 
         self.stack = QStackedWidget(self)
         layout = QVBoxLayout(self)
@@ -389,6 +471,11 @@ class FingerSpellQuest(QWidget):
         self.score_view.close_requested.connect(self.back_requested.emit)
         self.score_view.replay_requested.connect(self.start_game)
         self.stack.addWidget(self.score_view)
+
+        # Make sure no page can hold the window open at a large size
+        self.stack.setMinimumSize(0, 0)
+        for page in (self.how_to, self.game_view, self.score_view):
+            page.setMinimumSize(0, 0)
 
         self._fitted_form = FittedForm(self)
 
@@ -465,7 +552,12 @@ class FingerSpellQuest(QWidget):
 
     @property
     def back_button(self):
-        return getattr(self.how_to, "btn_back", None) or getattr(self.how_to, "back_button", None)
+        btn = getattr(self.how_to, "btn_back", None) or getattr(self.how_to, "back_button", None)
+        if btn is not None and not self.rect().contains(btn.geometry()):
+            # How-to page hasn't been laid out at the current size yet
+            self.how_to.setGeometry(self.rect())
+            self.how_to._scale_layout()
+        return btn
 
     def start_game(self):
         self.stack.setCurrentWidget(self.game_view)
@@ -487,7 +579,6 @@ class FingerSpellQuest(QWidget):
 
     def stop(self):
         self.game_view.stop_activity()
-        getattr(self, "game_view", None)
 
     def hideEvent(self, event):
         self.stop()
