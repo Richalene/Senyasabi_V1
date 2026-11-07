@@ -272,7 +272,7 @@ def main() -> int:
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
     app.aboutToQuit.connect(lambda: _diag("aboutToQuit"))
-    controller.show_welcome()
+    controller.show_startup_splash()
     return app.exec()      
 
 

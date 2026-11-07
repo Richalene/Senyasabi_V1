@@ -166,6 +166,31 @@ class AppController:
             except Exception:
                 pass
 
+    def show_startup_splash(self):
+        """Display the animated loading screen as the startup splash before revealing the welcome screen."""
+        self._show_screen(self.welcome)
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None:
+            try:
+                self.loading_overlay.setGeometry(self.shell.rect())
+                self.loading_overlay.text.setText("Loading SenyaSabi...")
+                self.loading_overlay.frame = 0
+                self.loading_overlay.show()
+                self.loading_overlay.raise_()
+                self.loading_overlay.animation.start()
+                # Transition smoothly to the welcome screen after 1400ms
+                QTimer.singleShot(1400, self._finish_startup_splash)
+            except Exception:
+                pass
+
+    def _finish_startup_splash(self):
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None:
+            try:
+                self.loading_overlay.text.setText("Loading...")
+                self.loading_overlay.animation.stop()
+                self.loading_overlay.hide()
+            except Exception:
+                pass
+
     def show_welcome(self):
         self._show_screen(self.welcome)
 
