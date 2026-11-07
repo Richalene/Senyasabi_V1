@@ -152,10 +152,6 @@ class MinigameSelect(GameCanvas):
         self.game.back_requested.connect(self.game_back)
         self.stack.addWidget(self.game)
         self.stack.setCurrentWidget(self.game)
-        # Stacking a new page can hide it once during insertion. Start after
-        # navigation has made the selector visible, not during that hide cycle.
-        game = self.game
-        QTimer.singleShot(0, lambda: self.start_game(game))
 
     def start_game(self, game):
         if self.game is not game:
