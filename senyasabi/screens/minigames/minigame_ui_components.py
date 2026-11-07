@@ -95,23 +95,36 @@ class HowToPlayWidget(QWidget):
         self.bg_label.setPixmap(QPixmap(str(ROOT / "resources/img/games" / bg_image_name)))
         self.bg_label.setScaledContents(True)
 
-        # Transparent / styled buttons over 'Let's Go!' and 'Go Back'
-        self.btn_start = QPushButton(self)
-        self.btn_start.setGeometry(390, 810, 300, 110)
-        self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_start.setStyleSheet(
-            "QPushButton { background: transparent; border: none; border-radius: 40px; } "
-            "QPushButton:hover { background: rgba(255, 255, 255, 0.25); }"
+        # Buttons over 'Let's Go!' and 'Go Back'
+        # Both buttons are styled as cohesive green pill buttons matching the SenyaSabi UI theme
+        btn_style = (
+            "QPushButton {"
+            "  background-color: #C2D076;"
+            "  color: #FFFFFF;"
+            "  font-family: 'Segoe UI', Arial, sans-serif;"
+            "  font-size: 32px;"
+            "  font-weight: 700;"
+            "  border: none;"
+            "  border-radius: 44px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: #B1C065;"
+            "}"
+            "QPushButton:pressed {"
+            "  background-color: #9FAF54;"
+            "}"
         )
+
+        self.btn_start = QPushButton("Let's Go!", self)
+        self.btn_start.setGeometry(401, 840, 283, 88)
+        self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_start.setStyleSheet(btn_style)
         self.btn_start.clicked.connect(self.start_requested.emit)
 
-        self.btn_back = QPushButton(self)
-        self.btn_back.setGeometry(730, 810, 300, 110)
+        self.btn_back = QPushButton("Go Back", self)
+        self.btn_back.setGeometry(743, 840, 283, 88)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_back.setStyleSheet(
-            "QPushButton { background: transparent; border: none; border-radius: 40px; } "
-            "QPushButton:hover { background: rgba(0, 0, 0, 0.08); }"
-        )
+        self.btn_back.setStyleSheet(btn_style)
         self.btn_back.clicked.connect(self.back_requested.emit)
         self.back_button = self.btn_back
 
@@ -315,8 +328,9 @@ class LetterTile(QLabel):
             tile_size = 100
         super().__init__(parent)
         self.letter = letter.upper()
+        self.tile_size = int(tile_size)
         self.state = "filled" if letter else "empty"
-        self.setFixedSize(int(tile_size), int(tile_size))
+        self.setFixedSize(self.tile_size, self.tile_size)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText(self.letter)
         self.update_style()
@@ -335,74 +349,78 @@ class LetterTile(QLabel):
         self.update_style()
 
     def update_style(self):
+        font_size = max(18, int(self.tile_size * 0.42))
+        radius = max(8, int(self.tile_size * 0.20))
+        border_w = max(2, int(self.tile_size * 0.03))
+
         if self.state == "empty":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFFDF0;"
-                "  color: #3C2415;"
-                "  border: 3px solid #D5C9A9;"
-                "  border-radius: 20px;"
-                "}"
+                f"QLabel {{"
+                f"  background-color: #FFFDF0;"
+                f"  color: #3C2415;"
+                f"  border: {border_w}px solid #D5C9A9;"
+                f"  border-radius: {radius}px;"
+                f"}}"
             )
         elif self.state == "active":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFFFFF;"
-                "  color: #FFAE00;"
-                "  border: 3.5px solid #FFAE00;"
-                "  border-radius: 20px;"
-                "  font-family: 'Segoe UI', Arial, sans-serif;"
-                "  font-size: 42px;"
-                "  font-weight: 800;"
-                "}"
+                f"QLabel {{"
+                f"  background-color: #FFFFFF;"
+                f"  color: #FFAE00;"
+                f"  border: {border_w + 1}px solid #FFAE00;"
+                f"  border-radius: {radius}px;"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         elif self.state == "correct":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #BFD379;"
-                "  color: #1E330C;"
-                "  border: 3px solid #94AB45;"
-                "  border-radius: 20px;"
-                "  font-family: 'Segoe UI', Arial, sans-serif;"
-                "  font-size: 42px;"
-                "  font-weight: 800;"
-                "}"
+                f"QLabel {{"
+                f"  background-color: #BFD379;"
+                f"  color: #1E330C;"
+                f"  border: {border_w}px solid #94AB45;"
+                f"  border-radius: {radius}px;"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         elif self.state == "wrong":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFB3A7;"
-                "  color: #661D17;"
-                "  border: 3px solid #E06D5E;"
-                "  border-radius: 20px;"
-                "  font-family: 'Segoe UI', Arial, sans-serif;"
-                "  font-size: 42px;"
-                "  font-weight: 800;"
-                "}"
+                f"QLabel {{"
+                f"  background-color: #FFB3A7;"
+                f"  color: #661D17;"
+                f"  border: {border_w}px solid #E06D5E;"
+                f"  border-radius: {radius}px;"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         elif self.state == "revealed":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFE6A3;"
-                "  color: #5C3B28;"
-                "  border: 3px dashed #E09800;"
-                "  border-radius: 20px;"
-                "  font-family: 'Segoe UI', Arial, sans-serif;"
-                "  font-size: 42px;"
-                "  font-weight: 800;"
-                "}"
+                f"QLabel {{"
+                f"  background-color: #FFE6A3;"
+                f"  color: #5C3B28;"
+                f"  border: {border_w}px dashed #E09800;"
+                f"  border-radius: {radius}px;"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         else:  # filled
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFAE00;"
-                "  color: #2D1A0D;"
-                "  border: 3px solid #E69D00;"
-                "  border-radius: 20px;"
-                "  font-family: 'Segoe UI', Arial, sans-serif;"
-                "  font-size: 42px;"
-                "  font-weight: 800;"
-                "}"
+                f"QLabel {{"
+                f"  background-color: #FFAE00;"
+                f"  color: #2D1A0D;"
+                f"  border: {border_w}px solid #E69D00;"
+                f"  border-radius: {radius}px;"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
 
 

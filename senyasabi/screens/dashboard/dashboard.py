@@ -338,16 +338,33 @@ class StatisticsDashboardWindow(QWidget):
             self._leaderboard = LeaderboardWindow()
             self._leaderboard.back_requested.connect(self._back_from_leaderboard)
             self._leaderboard.logout_requested.connect(self.logout_requested.emit)
-        self._leaderboard.show()
-        self.hide()
+        from screens.app_controller import get_active_controller
+        controller = get_active_controller()
+        if controller is not None and hasattr(controller, "_show_screen"):
+            controller._show_screen(self._leaderboard)
+        else:
+            self._leaderboard.show()
+            self.hide()
 
     def _back_from_leaderboard(self):
-        self._leaderboard.hide()
-        self.show()
+        from screens.app_controller import get_active_controller
+        controller = get_active_controller()
+        if controller is not None and hasattr(controller, "_show_screen"):
+            controller._show_screen(self)
+        else:
+            if self._leaderboard is not None:
+                self._leaderboard.hide()
+            self.show()
 
     def _menu_from_leaderboard(self):
-        self._leaderboard.hide()
-        self._open_menu()
+        from screens.app_controller import get_active_controller
+        controller = get_active_controller()
+        if controller is not None and hasattr(controller, "show_main_menu"):
+            controller.show_main_menu()
+        else:
+            if self._leaderboard is not None:
+                self._leaderboard.hide()
+            self._open_menu()
 
     def closeEvent(self, event):
         self.loading.cancel()

@@ -1,5 +1,7 @@
 import logging
-from PySide6.QtWidgets import QLineEdit
+from PySide6.QtWidgets import QLineEdit, QMainWindow, QStackedWidget
+from PySide6.QtCore import Qt, QSize
+from PySide6.QtGui import QColor, QPalette
 
 from screens.auth.login import LoginScreen
 from screens.auth.register import RegisterScreen
@@ -17,6 +19,31 @@ _active_controller = None
 def get_active_controller():
     return _active_controller
 
+
+class MainWindowShell(QMainWindow):
+    """Persistent top-level host window managing a QStackedWidget for single-window navigation."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("SenyaSabi")
+        self.setMinimumSize(1024, 576)
+        self.resize(1920, 1080)
+
+        # Set default application background palette
+        palette = self.palette()
+        palette.setColor(QPalette.ColorRole.Window, QColor("#c5d27b"))
+        self.setPalette(palette)
+        self.setAutoFillBackground(True)
+
+        self.stacked_widget = QStackedWidget(self)
+        self.setCentralWidget(self.stacked_widget)
+
+    def closeEvent(self, event):
+        controller = get_active_controller()
+        if controller is not None:
+            controller.shutdown()
+        event.accept()
+
 class AppController:
     def __init__(self):
         global _active_controller
@@ -25,12 +52,20 @@ class AppController:
         if app is not None:
             app.setProperty("app_controller", self)
 
+        self.shell = MainWindowShell()
+        self.stack = self.shell.stacked_widget
+
         self.welcome = WelcomeScreen()
         self.landing = LandingScreen()
         self.login = LoginScreen()
         self.register = RegisterScreen()
         self.dashboard = StatisticsDashboardWindow()
         self.main_menu = DashboardWindow()
+
+        # Mount persistent screens into QStackedWidget
+        for persistent_screen in (self.welcome, self.landing, self.login, self.register,
+                                  self.main_menu, self.dashboard):
+            self.stack.addWidget(persistent_screen)
         self.minigames = None
         self.module_map = None
         self.module_lessons = None
@@ -78,21 +113,30 @@ class AppController:
             logging.getLogger(__name__).exception("Post-login sync could not start")
 
     def _show_screen(self, screen):
-        # Reuse each screen and show the destination before hiding the source.
-        screen.show()
-        windows = [self.welcome, self.landing, self.login, self.register,
-                   self.main_menu, self.dashboard, self.dashboard._leaderboard, self.minigames, self.module_map, self.module_lessons,
-                   self.quiz, self.active_lesson]
+        if screen is None:
+            return
+        # Ensure screen is mounted in the stack
+        if self.stack.indexOf(screen) == -1:
+            self.stack.addWidget(screen)
+        self.stack.setCurrentWidget(screen)
+        # Ensure MainWindowShell is presented if not already visible
+        if not self.shell.isVisible():
+            app = QApplication.instance()
+            if hasattr(app, "_present"):
+                app._present(self.shell)
+            else:
+                self.shell.show()
+
+        # Legacy cleanup for any standalone popup screens that were not migrated to stack
+        from shiboken6 import isValid
+        windows = [getattr(self.dashboard, "_leaderboard", None)]
         windows.extend(getattr(self.main_menu, name, None) for name in (
             "_alphabet_menu", "_lesson_select", "_learn_window", "_spell_cat",
             "_spell_words", "_spell_lesson", "_word_menu", "_word_lesson"))
-        from shiboken6 import isValid
         for window in windows:
-            if window is None:
-                continue
-            if window is not screen:
+            if window is not None and window is not screen:
                 try:
-                    if isValid(window):
+                    if isValid(window) and window.isWindow():
                         window.hide()
                 except Exception:
                     pass
@@ -358,16 +402,19 @@ class AppController:
             try:
                 from shiboken6 import isValid
                 if isValid(screen):
-                    logging.warning("[DIAG] AppController._dispose_lesson: before screen.close() / deleteLater()")
+                    logging.warning("[DIAG] AppController._dispose_lesson: before removeWidget / screen.close() / deleteLater()")
+                    if hasattr(self, "stack") and self.stack is not None:
+                        self.stack.removeWidget(screen)
                     screen.close()
                     screen.deleteLater()
-                    logging.warning("[DIAG] AppController._dispose_lesson: after screen.close() / deleteLater()")
+                    logging.warning("[DIAG] AppController._dispose_lesson: after removeWidget / screen.close() / deleteLater()")
             except Exception:
                 logging.exception("[DIAG] AppController._dispose_lesson: error")
             logging.warning("[DIAG] AppController._dispose_lesson: exit")
 
     def _lesson_back(self):
         logging.warning("[DIAG] AppController._lesson_back: enter")
+        self._dispose_lesson()
         try:
             self.main_menu.refresh_home_stats()
         except Exception:
@@ -394,8 +441,11 @@ class AppController:
         if self.quiz is not None and self.quiz.isVisible() and self.quiz.module_code == self.selected_module:
             return
         if self.quiz is not None:
+            if hasattr(self, "stack") and self.stack is not None:
+                self.stack.removeWidget(self.quiz)
             self.quiz.close()
             self.quiz.deleteLater()
+            self.quiz = None
         from screens.quizzes.module_quiz import ModuleQuiz
         self.quiz = ModuleQuiz(self.selected_module)
         self.quiz.back_requested.connect(self.show_module_choices)
@@ -423,6 +473,8 @@ class AppController:
                        self.login, self.register, self.landing, self.welcome):
             if screen is not None:
                 screen.close()
+        if hasattr(self, "shell") and self.shell is not None:
+            self.shell.close()
 
     def show_camera_settings(self):
         if auth_service.get_current_user() is None:
