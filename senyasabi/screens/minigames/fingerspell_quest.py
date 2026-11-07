@@ -482,6 +482,8 @@ class FingerSpellQuest(QWidget):
         return getattr(self.how_to, "btn_back", None) or getattr(self.how_to, "back_button", None)
 
     def start_game(self):
+        self.session = GameSession("quest", rounds=5, module_code=self.module_code, scope=self.scope)
+        self.game_view.session = self.session
         self.stack.setCurrentWidget(self.game_view)
         self.game_view.start_game()
 
