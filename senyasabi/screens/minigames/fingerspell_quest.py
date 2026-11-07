@@ -300,14 +300,31 @@ class FingerSpellQuestGameView(QWidget):
         self.tiles_list.clear()
 
         words = self.session.word.split()
+        max_w_len = max((len(w) for w in words), default=5)
+        # Dynamically scale tile size and spacing so longer words (e.g. TOMORROW) fit cleanly without overflow
+        if max_w_len <= 5:
+            tile_size = 100
+            spacing = 15
+        elif max_w_len <= 7:
+            tile_size = 96
+            spacing = 14
+        elif max_w_len <= 8:
+            tile_size = 88
+            spacing = 12
+        elif max_w_len <= 10:
+            tile_size = 76
+            spacing = 10
+        else:
+            tile_size = 66
+            spacing = 8
+
         for w in words:
             row_widget = QWidget(self.tiles_container)
             row_layout = QHBoxLayout(row_widget)
-            row_layout.setContentsMargins(0, 0, 0, 0)
-            row_layout.setSpacing(15)
-            row_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            row_layout.setSpacing(spacing)
+            row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
             for ch in w:
-                tile = LetterTile(ch, parent=row_widget)
+                tile = LetterTile(ch, tile_size=tile_size, parent=row_widget)
                 row_layout.addWidget(tile)
                 self.tiles_list.append(tile)
             self.tiles_layout.addWidget(row_widget)

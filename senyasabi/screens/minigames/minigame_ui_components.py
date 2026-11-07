@@ -109,52 +109,38 @@ class HowToPlayWidget(QWidget):
             self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
             self.setStyleSheet(f"#howToPlayWidget {{ background-color: {edge}; }}")
 
-        # Transparent / styled buttons over 'Let's Go!' and 'Go Back'
-        self.btn_start = QPushButton(self)
+        # Buttons over 'Let's Go!' and 'Go Back'
+        # Both buttons are styled as cohesive green pill buttons matching the SenyaSabi UI theme
+        btn_style = (
+            "QPushButton {"
+            "  background-color: #C2D076;"
+            "  color: #FFFFFF;"
+            "  font-family: 'Segoe UI', Arial, sans-serif;"
+            "  font-size: 32px;"
+            "  font-weight: 700;"
+            "  border: none;"
+            "  border-radius: 44px;"
+            "}"
+            "QPushButton:hover {"
+            "  background-color: #B1C065;"
+            "}"
+            "QPushButton:pressed {"
+            "  background-color: #9FAF54;"
+            "}"
+        )
+
+        self.btn_start = QPushButton("Let's Go!", self)
+        self.btn_start.setGeometry(401, 840, 283, 88)
         self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_start.setStyleSheet(btn_style)
         self.btn_start.clicked.connect(self.start_requested.emit)
 
-        self.btn_back = QPushButton(self)
+        self.btn_back = QPushButton("Go Back", self)
+        self.btn_back.setGeometry(743, 840, 283, 88)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_back.setStyleSheet(btn_style)
         self.btn_back.clicked.connect(self.back_requested.emit)
         self.back_button = self.btn_back
-
-        self._scale_layout()
-
-    def _apply_button_styles(self, s):
-        r = max(4, int(40 * s))
-        self.btn_start.setStyleSheet(
-            f"QPushButton {{ background: transparent; border: none; border-radius: {r}px; }} "
-            "QPushButton:hover { background: rgba(255, 255, 255, 0.25); }"
-        )
-        self.btn_back.setStyleSheet(
-            f"QPushButton {{ background: transparent; border: none; border-radius: {r}px; }} "
-            "QPushButton:hover { background: rgba(0, 0, 0, 0.08); }"
-        )
-
-    def _scale_layout(self):
-        w, h = self.width(), self.height()
-        if w < 2 or h < 2:
-            return
-        s = max(0.05, min(w / self.BASE_W, h / self.BASE_H))
-        ox = (w - self.BASE_W * s) / 2
-        oy = (h - self.BASE_H * s) / 2
-
-        def place(widget, x, y, bw, bh):
-            widget.setGeometry(int(ox + x * s), int(oy + y * s),
-                               max(1, int(bw * s)), max(1, int(bh * s)))
-
-        place(self.bg_label, 0, 0, self.BASE_W, self.BASE_H)
-        place(self.btn_start, 390, 810, 300, 110)
-        place(self.btn_back, 730, 810, 300, 110)
-
-        if self._last_scale != s:
-            self._last_scale = s
-            self._apply_button_styles(s)
-
-    def resizeEvent(self, event):
-        super().resizeEvent(event)
-        self._scale_layout()
 
 
 class MinigameScoreWidget(QWidget):
@@ -379,8 +365,10 @@ class LetterTile(QLabel):
         self._base_size = int(tile_size)
         self._scale = 1.0
         self.letter = letter.upper()
+        self.tile_size = int(tile_size)
         self.state = "filled" if letter else "empty"
-        self.setFixedSize(self._base_size, self._base_size)
+        # BOOKMARK
+        self.setFixedSize(self.tile_size, self.tile_size)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText(self.letter)
         self.update_style()
@@ -407,73 +395,78 @@ class LetterTile(QLabel):
         self.update_style()
 
     def update_style(self):
-        s = self._scale
-        bw = max(1, round(3 * s))
-        bw_active = max(1, round(3.5 * s))
-        radius = max(4, int(20 * s))
-        font = (
-            "  font-family: 'Segoe UI', Arial, sans-serif;"
-            f"  font-size: {max(8, int(42 * s))}px;"
-            "  font-weight: 800;"
-        )
+        font_size = max(18, int(self.tile_size * 0.42))
+        radius = max(8, int(self.tile_size * 0.20))
+        border_w = max(2, int(self.tile_size * 0.03))
+
         if self.state == "empty":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFFDF0;"
-                "  color: #3C2415;"
-                f"  border: {bw}px solid #D5C9A9;"
+                f"QLabel {{"
+                f"  background-color: #FFFDF0;"
+                f"  color: #3C2415;"
+                f"  border: {border_w}px solid #D5C9A9;"
                 f"  border-radius: {radius}px;"
-                "}"
+                f"}}"
             )
         elif self.state == "active":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFFFFF;"
-                "  color: #FFAE00;"
-                f"  border: {bw_active}px solid #FFAE00;"
+                f"QLabel {{"
+                f"  background-color: #FFFFFF;"
+                f"  color: #FFAE00;"
+                f"  border: {border_w + 1}px solid #FFAE00;"
                 f"  border-radius: {radius}px;"
-                f"{font}"
-                "}"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         elif self.state == "correct":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #BFD379;"
-                "  color: #1E330C;"
-                f"  border: {bw}px solid #94AB45;"
+                f"QLabel {{"
+                f"  background-color: #BFD379;"
+                f"  color: #1E330C;"
+                f"  border: {border_w}px solid #94AB45;"
                 f"  border-radius: {radius}px;"
-                f"{font}"
-                "}"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         elif self.state == "wrong":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFB3A7;"
-                "  color: #661D17;"
-                f"  border: {bw}px solid #E06D5E;"
+                f"QLabel {{"
+                f"  background-color: #FFB3A7;"
+                f"  color: #661D17;"
+                f"  border: {border_w}px solid #E06D5E;"
                 f"  border-radius: {radius}px;"
-                f"{font}"
-                "}"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         elif self.state == "revealed":
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFE6A3;"
-                "  color: #5C3B28;"
-                f"  border: {bw}px dashed #E09800;"
+                f"QLabel {{"
+                f"  background-color: #FFE6A3;"
+                f"  color: #5C3B28;"
+                f"  border: {border_w}px dashed #E09800;"
                 f"  border-radius: {radius}px;"
-                f"{font}"
-                "}"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
         else:  # filled
             self.setStyleSheet(
-                "QLabel {"
-                "  background-color: #FFAE00;"
-                "  color: #2D1A0D;"
-                f"  border: {bw}px solid #E69D00;"
+                f"QLabel {{"
+                f"  background-color: #FFAE00;"
+                f"  color: #2D1A0D;"
+                f"  border: {border_w}px solid #E69D00;"
                 f"  border-radius: {radius}px;"
-                f"{font}"
-                "}"
+                f"  font-family: 'Segoe UI', Arial, sans-serif;"
+                f"  font-size: {font_size}px;"
+                f"  font-weight: 800;"
+                f"}}"
             )
 
 

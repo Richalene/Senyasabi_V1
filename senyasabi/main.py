@@ -183,22 +183,13 @@ class SenyaSabiApplication(QApplication):
         if screen and event.type() == QEvent.Type.Show:
             if not getattr(receiver, "_presentation_ready", False):
                 receiver._presentation_ready = True
-                if not hasattr(receiver, "_fitted_form"):
-                    receiver._fitted_form = FittedForm(receiver)
                 palette = receiver.palette()
                 palette.setColor(QPalette.ColorRole.Window, QColor("#c5d27b"))
                 receiver.setPalette(palette)
                 receiver.setAutoFillBackground(True)
-            if not self._matches_presentation(receiver):
-                QTimer.singleShot(
-                    0,
-                    lambda window=receiver: self._present(window)
-                    if window.isVisible() and not self._matches_presentation(window) else None,
-                )
-        if screen and event.type() == QEvent.Type.Resize:
-            fitted = getattr(receiver, "_fitted_form", None)
-            if fitted is not None:
-                fitted.fit()
+                if receiver.isFullScreen() != self.fullscreen:
+                    QTimer.singleShot(0, lambda window=receiver: self._present(window)
+                                      if window.isVisible() else None)
         return result
 
     def _present(self, window):

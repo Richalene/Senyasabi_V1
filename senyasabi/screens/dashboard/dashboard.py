@@ -73,6 +73,23 @@ class StatisticsDashboardWindow(QWidget):
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/ui/dashboard_bg.png")))
             self.ui.imageBg.setScaledContents(True)
+
+        # Fix card background images with absolute paths for reliable rendering
+        img_ui = root / "resources/img/ui"
+        card_styles = {
+            self.ui.cardLessons: ("cardLessons", "db_lessoncomplete.png"),
+            self.ui.cardQuiz: ("cardQuiz", "db_totalquizscrs.png"),
+            self.ui.cardModule: ("cardModule", "db_module.png"),
+            self.ui.badgeCard: ("badgeCard", "db_badges.png"),
+            self.ui.cardMinigames: ("cardMinigames", "db_minigames.png"),
+            self.ui.btnLeaderboard: ("btnLeaderboard", "db_leaderboards.png"),
+        }
+        for widget, (selector, img_name) in card_styles.items():
+            img_path = (img_ui / img_name).as_posix()
+            widget.setStyleSheet(
+                f"#{selector} {{ background: transparent; border: none; "
+                f"border-image: url('{img_path}') 0 0 0 0 stretch stretch; }}"
+            )
         self.ui.titlePanel.hide()
         self.ui.btnBack = BackButton.replace(self.ui.btnBack)
         self.ui.streakPanel.hide()
@@ -338,16 +355,33 @@ class StatisticsDashboardWindow(QWidget):
             self._leaderboard = LeaderboardWindow()
             self._leaderboard.back_requested.connect(self._back_from_leaderboard)
             self._leaderboard.logout_requested.connect(self.logout_requested.emit)
-        self._leaderboard.show()
-        self.hide()
+        from screens.app_controller import get_active_controller
+        controller = get_active_controller()
+        if controller is not None and hasattr(controller, "_show_screen"):
+            controller._show_screen(self._leaderboard)
+        else:
+            self._leaderboard.show()
+            self.hide()
 
     def _back_from_leaderboard(self):
-        self._leaderboard.hide()
-        self.show()
+        from screens.app_controller import get_active_controller
+        controller = get_active_controller()
+        if controller is not None and hasattr(controller, "_show_screen"):
+            controller._show_screen(self)
+        else:
+            if self._leaderboard is not None:
+                self._leaderboard.hide()
+            self.show()
 
     def _menu_from_leaderboard(self):
-        self._leaderboard.hide()
-        self._open_menu()
+        from screens.app_controller import get_active_controller
+        controller = get_active_controller()
+        if controller is not None and hasattr(controller, "show_main_menu"):
+            controller.show_main_menu()
+        else:
+            if self._leaderboard is not None:
+                self._leaderboard.hide()
+            self._open_menu()
 
     def closeEvent(self, event):
         self.loading.cancel()
@@ -386,6 +420,41 @@ class DashboardWindow(QWidget):
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/home_bg.png")))
             self.ui.imageBg.setScaledContents(True)
+
+        # Fix button/card background images with absolute paths for reliable rendering
+        img_ui = root / "resources/img/ui"
+        home_styles = {
+            self.ui.btnStartLearning: (
+                f"QPushButton#btnStartLearning {{ background: transparent; border: none; "
+                f"border-image: url('{(img_ui / 'button_start.png').as_posix()}') 0 0 0 0 stretch stretch; }} "
+                f"QPushButton#btnStartLearning:hover {{ border-image: url('{(img_ui / 'button_start_hover.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
+            ),
+            self.ui.btnMinigames: (
+                f"QPushButton#btnMinigames {{ background: transparent; border: none; "
+                f"border-image: url('{(img_ui / 'button_mg.png').as_posix()}') 0 0 0 0 stretch stretch; }} "
+                f"QPushButton#btnMinigames:hover {{ border-image: url('{(img_ui / 'button_mg_hover.png').as_posix()}') 0 0 0 0 stretch stretch; }} "
+                f"QPushButton#btnMinigames QLabel#lblMinigamesText {{ color: #729b1e; }} "
+                f"QPushButton#btnMinigames:hover QLabel#lblMinigamesText {{ color: #5c3b28; }}"
+            ),
+            self.ui.btnLessonsCompleted: (
+                f"QPushButton#btnLessonsCompleted {{ background: transparent; border: none; "
+                f"border-image: url('{(img_ui / 'db_lessoncomplete.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
+            ),
+            self.ui.btnModule: (
+                f"QPushButton#btnModule {{ background: transparent; border: none; "
+                f"border-image: url('{(img_ui / 'db_module.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
+            ),
+            self.ui.btnLatestBadge: (
+                f"QPushButton#btnLatestBadge {{ background: transparent; border: none; "
+                f"border-image: url('{(img_ui / 'db_badges.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
+            ),
+            self.ui.btnLeaderboardRank: (
+                f"QPushButton#btnLeaderboardRank {{ background: transparent; border: none; "
+                f"border-image: url('{(img_ui / 'db_leaderboards.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
+            ),
+        }
+        for btn, style in home_styles.items():
+            btn.setStyleSheet(style)
         self.ui.streakCard.hide()
         self.ui.streakValue.setObjectName("replacedStreakValue")
         self.ui.btnHamburger.hide()
