@@ -1,4 +1,5 @@
-"""Media resolution and download-once SQLite cache."""
+"""Download-once media cache. Fetches via presigned URL, verifies SHA-256,
+records the file in SQLite media_cache. Cache hits never touch the network."""
 from dataclasses import dataclass, replace
 import hashlib
 import json
@@ -237,11 +238,7 @@ def _cached_path(media_id: int) -> Path | None:
 
 
 def _download(media_id: int) -> Path | None:
-    # Get media info from appropriate source
-    if CLIENT_MODE == "distributed":
-        info = _get_media_info_supabase(media_id)
-    else:
-        info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
+    info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
     
     if not info or not info.get("url"):
         return None                              # offline / not found
@@ -269,7 +266,7 @@ def _download(media_id: int) -> Path | None:
                     r.url,
                     r.text[:1000],
                 )
-                r.raise_for_status()
+            r.raise_for_status()
 
             for chunk in r.iter_content(CHUNK):
                 if chunk:

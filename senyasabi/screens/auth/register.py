@@ -94,8 +94,8 @@ class RegisterScreen(QWidget):
             back_btn.clicked.connect(self.back_requested)
 
         # Disable hover bounce on all register screen buttons
-        for btn in self._ui.findChildren(QPushButton):
-            btn.setProperty("noHoverBounce", True)
+        # for btn in self._ui.findChildren(QPushButton):
+        #     btn.setProperty("noHoverBounce", True)
 
         self.loading = LoadingOverlay(self)
         self._fitted_form = FittedForm(self)
