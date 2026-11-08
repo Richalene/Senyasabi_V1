@@ -214,7 +214,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
         
         self.layout_comp.set_target(
             f"Letter {letter.upper() if letter else '?'}",
-            category=f"ALPHABET LESSON {self._lesson_number}SIGN THIS LETTER",
+            category=f"ALPHABET LESSON {self._lesson_number} • SIGN THIS LETTER",
             progress=f"Letter {idx + 1} of {total}"
         )
         self.layout_comp.set_prediction("Waiting for hand...", status="waiting")
@@ -333,7 +333,18 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
         target_upper = target.upper()
 
-        if target_prob >= other_max_prob and target_prob > 0.03:
+        if target_upper in ("Z", "J"):
+            if target_prob >= other_max_prob and target_prob >= 0.40:
+                accuracy_pct = min(100, int(75 + min(target_prob, 0.90) * 25))
+                is_match = True
+            elif other_max_prob > 0 and (target_prob / other_max_prob) >= 0.70 and target_prob >= 0.35:
+                ratio = target_prob / other_max_prob
+                accuracy_pct = min(100, int(70 + (ratio - 0.70) / 0.30 * 30))
+                is_match = True
+            else:
+                accuracy_pct = 25
+                is_match = False
+        elif target_prob >= other_max_prob and target_prob > 0.03:
             accuracy_pct = min(100, 85 + int(min(target_prob, 0.70) / 0.70 * 15))
             is_match = True
         elif other_max_prob > 0 and (target_prob / other_max_prob) >= 0.35 and target_prob >= 0.08:
@@ -351,8 +362,12 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
         if event == Event.HOLDING:
             pct_progress = int(self._session.hold_progress * 100)
+            if target_upper in ("Z", "J"):
+                status_text = f"Trace the '{target_upper}' in the air! ({accuracy_pct}%)"
+            else:
+                status_text = f"Hold it! {pct_progress}% ({accuracy_pct}%)"
             self.layout_comp.set_prediction(
-                f"Hold it! {pct_progress}% ({accuracy_pct}%)",
+                status_text,
                 status="holding"
             )
         elif event == Event.CORRECT:
@@ -366,7 +381,8 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             )
             self.layout_comp.btn_next.set_green(True)
             self._feedback_action = "advance"
-            self._feedback_timer.start(1400)
+            feedback_delay = 2200 if target_upper in ("Z", "J") else 1400
+            self._feedback_timer.start(feedback_delay)
         else:
             if is_match:
                 self.layout_comp.set_prediction(
