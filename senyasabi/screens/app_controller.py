@@ -397,7 +397,7 @@ class AppController:
             screen.layout_comp.results_widget.next_lesson_requested.connect(
                 lambda next_number=number + 1: self._open_next_lesson(next_number)
             )
-        self._show_screen(screen, transition_direction="forward")
+        self._show_screen(screen)
 
     def _open_next_lesson(self, number):
         self._dispose_lesson()
