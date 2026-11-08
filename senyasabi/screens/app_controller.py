@@ -232,7 +232,6 @@ class AppController:
 
         # In distributed mode: Try FastAPI first, fall back to direct Supabase
         # In direct mode: Use direct Supabase
-        # In fastapi mode (development): Use FastAPI with service role
         if CLIENT_MODE == "direct":
             # Direct Supabase authentication
             screen.loading.run(
@@ -240,23 +239,6 @@ class AppController:
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
                 message="Signing you in…", controls=(screen._ui,))
         elif CLIENT_MODE == "distributed":
-            # Try FastAPI first (production with anon key)
-            def try_fastapi_auth():
-                try:
-                    return auth_service.authenticate_user(identifier, password, establish_session=False)
-                except auth_service.AuthError:
-                    raise
-                except Exception as e:
-                    # FastAPI unavailable, fall back to direct Supabase
-                    logger = logging.getLogger(__name__)
-                    logger.warning("FastAPI authentication failed, falling back to direct Supabase: %s", e)
-                    return auth_service.authenticate_with_supabase(identifier, password, establish_session=False)
-            
-            screen.loading.run(
-                try_fastapi_auth,
-                signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
-                message="Signing you in…", controls=(screen._ui,))
-        else:  # fastapi mode (development)
             screen.loading.run(
                 lambda: auth_service.authenticate_user(identifier, password, establish_session=False),
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),

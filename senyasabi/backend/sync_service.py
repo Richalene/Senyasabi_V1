@@ -446,7 +446,12 @@ class SyncService:
     def _local_synced_version(self) -> int:
         with session_scope() as db:
             if db.scalar(select(m.Module.module_id).limit(1)) is None:
-                return 0   # empty/rebuilt DB: ignore a stale marker
+                # Local database is empty! Reset the synced version back to 0
+                settings = self._settings()
+                settings.setValue(_SYNCED_VERSION_KEY, 0)
+                settings.sync()
+                return 0   
+        
         try:
             return max(0, int(str(self._settings().value(_SYNCED_VERSION_KEY, 0))))
         except (TypeError, ValueError):

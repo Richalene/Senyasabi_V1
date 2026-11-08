@@ -9,6 +9,7 @@ uses the FastAPI proxy with service role key.
 import inspect
 import logging
 import os
+from typing import cast
 from . import config
 from .config import SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 
@@ -36,7 +37,7 @@ def _ensure_httpx_proxy_compatibility():
                         kwargs["proxies"] = kwargs.pop("proxy")
                     return init(self, *args, **kwargs)
                 httpx.Client.__init__ = _compat_init
-                httpx.Client._proxy_compat_applied = True
+                setattr(httpx.Client, "_proxy_compat_applied", True)
     except Exception as exc:
         logger.debug("Proxy compatibility check skipped: %s", type(exc).__name__)
 
@@ -67,7 +68,7 @@ def _get_credentials() -> tuple[str | None, str | None]:
     if key is _UNSET or (key == _INITIAL_KEY and os.getenv("SUPABASE_ANON_KEY") is not None):
         key = os.getenv("SUPABASE_ANON_KEY") or getattr(config, "SUPABASE_ANON_KEY", None)
 
-    return url, key
+    return cast(str | None, url), cast(str | None, key)
 
 
 def get_supabase_client():
@@ -110,7 +111,7 @@ def get_supabase_client():
     if _supabase_client is None:
         try:
             _ensure_httpx_proxy_compatibility()
-            from supabase import create_client
+            from supabase._sync.client import create_client
             # Don't pass options to avoid proxy parameter incompatibility
             _supabase_client = create_client(url, anon_key)
             # Store URL for use in media service

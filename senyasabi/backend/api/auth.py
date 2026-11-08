@@ -115,6 +115,11 @@ def register(body: RegisterBody):
         "data": {"username": username, "display_name": display_name},
     })
     if resp.status_code >= 400:
+        logger.error(
+            "Supabase Auth error: status=%s, response=%s",
+            resp.status_code,
+            resp.text[:500],
+        )
         code = _error_code(resp)
         if code in ("user_already_exists", "email_exists"):
             raise HTTPException(409, "Email is already registered.")
@@ -144,6 +149,11 @@ def login(body: LoginBody):
 
     resp = _gotrue("/token?grant_type=password", {"email": email, "password": body.password})
     if resp.status_code >= 400:
+        logger.error(
+            "Supabase Auth failed | Status: %s | Response: %s",
+            resp.status_code,
+            resp.text[:500]
+        )
         code = _error_code(resp)
         if code == "email_not_confirmed":
             raise HTTPException(403, "Please confirm your email before signing in.")

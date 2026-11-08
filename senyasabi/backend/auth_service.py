@@ -16,14 +16,10 @@ from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError
 
 from .config import CLIENT_MODE
+from .api import auth_client as _http_client
+from .api import auth_client_distributed as _direct_client
+from .api.auth_client import AuthError, NetworkError
 
-# Import appropriate auth client based on mode
-if CLIENT_MODE == "distributed":
-    from .api import auth_client_distributed as auth_client
-    from .api.auth_client_distributed import AuthError, NetworkError
-else:
-    from .api import auth_client
-    from .api.auth_client import AuthError, NetworkError
 from .config import (
     OFFLINE_AUTH_LOCKOUT_MINUTES,
     OFFLINE_AUTH_MAX_DAYS,
@@ -51,6 +47,34 @@ MIN_PASSWORD_LENGTH = 8
 INVALID = "Invalid username/email or password."
 TOKEN_REFRESH_MARGIN = 60  # seconds
 
+class _AuthClient:
+    """fastapi: HTTP only. direct: Supabase only.
+    distributed: FastAPI first, Supabase only if FastAPI is unreachable."""
+
+    def _call(self, name, *args):
+        if CLIENT_MODE == "direct":
+            return getattr(_direct_client, name)(*args)
+        try:
+            return getattr(_http_client, name)(*args)
+        except NetworkError:
+            if CLIENT_MODE != "distributed":
+                raise
+            # Supabase's password grant needs an email; without one, let the caller go offline.
+            if name == "login" and "@" not in args[0]:
+                raise
+            return getattr(_direct_client, name)(*args)
+
+    def register(self, *a):
+        return self._call("register", *a)
+
+    def login(self, *a):
+        return self._call("login", *a)
+
+    def refresh(self, *a):
+        return self._call("refresh", *a)
+
+
+auth_client = _AuthClient()
 
 @dataclass(frozen=True)
 class User:
@@ -394,20 +418,11 @@ def authenticate_user(identifier, password, *, establish_session=True) -> dict:
     # Check local repository for existing offline-registered credentials
     local_user = _repository.find_by_identifier(identifier)
 
-    # In distributed mode, if identifier is username, look up email
+    # FastAPI resolves usernames itself; only the Supabase fallback needs an email.
     login_identifier = identifier
-    if "@" not in identifier:
-        if local_user and local_user.email:
-            login_identifier = local_user.email
-        elif CLIENT_MODE == "distributed":
-            try:
-                from .api.auth_client_distributed import get_user_by_username
-                user = get_user_by_username(identifier)
-                if user:
-                    login_identifier = user["email"]
-            except Exception:
-                pass
-
+    if "@" not in identifier and local_user and local_user.email:
+        login_identifier = local_user.email
+        
     try:
         data = auth_client.login(login_identifier, password)
     except AuthError as auth_err:
