@@ -212,12 +212,12 @@ class ComingSoonDialog(QDialog):
         layout.addWidget(pill)
 
         # Title
-        title = QLabel("Building Bridges, One Sign at a Time.", container)
-        title.setWordWrap(True)
+        title = QLabel("Building\nBridges, One\nSign at a Time.", container)
         title.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
-            "font-size: 36px; "
+            "font-size: 38px; "
             "font-weight: 800; "
+            "line-height: 1.1; "
             "color: #1A1A1A; "
             "background: transparent;"
             "border: none;"
@@ -226,14 +226,15 @@ class ComingSoonDialog(QDialog):
 
         # Subtitle
         desc = QLabel(
-            "We appreciate your patience as we continue building more features, "
-            "including complex and advanced learning courses.", container
+            "We appreciate your patience as we continue to work on a few features "
+            "and, eventually, more complex and advanced learning courses.", container
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
             "font-size: 16px; "
             "color: #555555; "
+            "line-height: 1.4; "
             "background: transparent;"
             "border: none;"
         )
@@ -586,23 +587,42 @@ class MenuCalloutPopup(QWidget):
     def _on_sign_out(self):
         self.close()
         self.sign_out_requested.emit()
-        win = self.anchor.window()
-        if hasattr(win, "logout_requested"):
-            win.logout_requested.emit()
-        elif hasattr(win, "logout"):
-            win.logout()
-        else:
-            from backend import auth_service
-            if hasattr(auth_service, 'logout_user'):
-                auth_service.logout_user()
-            elif hasattr(auth_service, 'clear_session'):
-                auth_service.clear_session()
+
+        from backend import auth_service
+        if auth_service.get_current_user() is None:
+            return
+
+        win = self.anchor.window() if self.anchor is not None else None
+        target = None
+        if win is not None and hasattr(win, "logout_requested"):
+            target = win
+        elif self.anchor is not None:
+            parent = self.anchor.parent()
+            while parent is not None:
+                if hasattr(parent, "logout_requested"):
+                    target = parent
+                    break
+                parent = parent.parent()
+
+        if target is not None:
+            target.logout_requested.emit()
+
+        if auth_service.get_current_user() is not None:
             app = QApplication.instance()
-            if app is not None:
-                for top in app.topLevelWidgets():
-                    if hasattr(top, "show_login"):
-                        top.show_login()
-                        break
+            controller = app.property("app_controller") if app is not None else None
+            if controller is None:
+                try:
+                    from screens.app_controller import get_active_controller
+                    controller = get_active_controller()
+                except Exception:
+                    controller = None
+
+            if controller is not None and hasattr(controller, "logout"):
+                controller.logout()
+            elif win is not None and hasattr(win, "logout"):
+                win.logout()
+            else:
+                auth_service.logout_user()
 
     def toggle_popup(self):
         if self.isVisible():

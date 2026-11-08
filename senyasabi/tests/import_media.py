@@ -13,7 +13,7 @@ load_dotenv()
 IMAGE_EXT = {".png", ".jpg", ".jpeg", ".webp", ".gif"}
 VIDEO_EXT = {".mp4", ".mov", ".webm", ".m4v"}
 BUCKET = os.environ["S3_BUCKET"]
-VERSION_NUMBER = 1
+VERSION_NUMBER = 15
 
 
 def get_engine():

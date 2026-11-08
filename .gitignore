@@ -86,6 +86,8 @@ dist
 
 .venv/
 .env
+.env.production
+.vscode
 _test_cache
 **/__pycache__/
 
@@ -97,4 +99,11 @@ _test_cache
 ext_models/
 scratch/
 
-# cache/
+cache/
+
+# Log files
+*.log
+**/*.log
+crash_native.log
+crash.log
+lifecycle.log
