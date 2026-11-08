@@ -198,7 +198,7 @@ def get_lesson_media(lesson_id, role=None) -> dict[str, int]:
     if role:
         query = query.where(LessonMedia.media_role == role)
     with session_scope() as db:
-        return {Path(name or "").stem.upper(): media_id for name, media_id in db.execute(query)}
+        return {Path(name or "").stem.split("_")[0].upper(): media_id for name, media_id in db.execute(query)}
 
 
 def fetch_lesson_images(lesson_id, role=None) -> dict[str, Path]:
@@ -244,7 +244,12 @@ def _download(media_id: int) -> Path | None:
         return None                              # offline / not found
 
     MEDIA_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    name = f"{media_id}_{Path(info.get('file_name') or 'media').name}"
+
+    import re
+
+    raw_filename = info.get('file_name') or 'media'
+    safe_filename = re.sub(r'[()\s]+', '_', raw_filename)
+    name = f"{media_id}_{safe_filename}"
     dest = MEDIA_CACHE_DIR / name
     sha = hashlib.sha256()
 

@@ -99,7 +99,7 @@ _test_cache
 ext_models/
 scratch/
 legacy
-cache/media
+cache
 
 # Log files
 *.log
