@@ -13327,3 +13327,85 @@ Thread 0x000026ec (most recent call first):
     self.lblLatestBadge.setVisible(False)
   File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 183, in notify
     return result
+
+[11:09:40] *** UI THREAD HUNG FOR 20.1s ***
+
+--- Thread 26100 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 24976 ---
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 257, in <module>
+    sys.exit(main())
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 249, in main
+    controller = AppController()
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\screens\app_controller.py", line 70, in __init__
+    self.stack.addWidget(persistent_screen)
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 193, in notify
+    return result
+
+[11:42:58] *** UI THREAD HUNG FOR 781.9s ***
+
+--- Thread 6956 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 27216 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6508 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\concurrent\futures\thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 32532 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 26100 ---
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\bolan\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 24976 ---
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 257, in <module>
+    sys.exit(main())
+  File "c:\Users\bolan\Downloads\inventory-management-system-master\inventory-management-system-master\Senyasabi_V1\senyasabi\main.py", line 253, in main
+    return app.exec()
