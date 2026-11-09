@@ -80,6 +80,7 @@ hidden_imports = [
     
     # Backend application modules
     "backend",
+    "backend.main",
     "backend.paths",
     "backend.config",
     "backend.api_client",
@@ -148,6 +149,11 @@ hidden_imports = [
     "screens.minigames.sign_sprint",
     "screens.minigames.sign_detective",
     "screens.quizzes.module_quiz",
+
+    "runpy",
+    "senyasabi",
+    "senyasabi.backend",
+    "senyasabi.backend.main",
 ]
 
 # Targeted exclusions to keep package well under 1 GB:
@@ -185,9 +191,14 @@ excludes = [
     "pytest",
 ]
 
+project_root = Path(SPECPATH).resolve()
+
 a = Analysis(
-    [str(senyasabi_root / "main.py")],
-    pathex=[str(senyasabi_root)],
+    [str(project_root / "launcher.py")],
+    pathex=[
+        str(project_root),
+        str(senyasabi_root),
+    ],
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
@@ -195,9 +206,6 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
-    win_no_prefer_redirects=False,
-    win_private_assemblies=False,
-    cipher=block_cipher,
     noarchive=False,
 )
 
