@@ -61,11 +61,14 @@ class CameraPracticeSession:
     targets: List[str]
     confidence_threshold: float = config.CONFIDENCE_THRESHOLD
     hold_frames: int = config.HOLD_FRAMES
+    grace_frames: int = 4
 
     index: int = field(default=0, init=False)
     score: int = field(default=0, init=False)
     state: SessionState = field(default=SessionState.WAITING, init=False)
     _hold: int = field(default=0, init=False)
+    _grace: int = field(default=0, init=False)
+    _confidences: List[float] = field(default_factory=list, init=False)
 
     # ---- queries --------------------------------------------------------
     @property
@@ -80,41 +83,81 @@ class CameraPracticeSession:
 
     @property
     def hold_progress(self) -> float:
-        """0.0–1.0, handy for driving a progress bar while holding a sign."""
+        """0.0-1.0, handy for driving a progress bar while holding a sign."""
         return min(self._hold / self.hold_frames, 1.0) if self.hold_frames else 0.0
 
     def is_done(self) -> bool:
         return self.state is SessionState.DONE
 
     def score_percent(self) -> int:
-        return int(self.score / self.total * 100) if self.total else 0
+        if not self.total:
+            return 0
+        try:
+            pct = int(round((self.score / self.total) * 100.0))
+        except Exception:
+            pct = 0
+        return max(0, min(100, pct))
+
+    def accuracy_percent(self) -> int:
+        """Overall lesson recognition accuracy (0-100), safe against empty/NaN data."""
+        if not self.total:
+            return 0
+        if self._confidences and len(self._confidences) == self.score and self.score > 0:
+            try:
+                import math
+                valid = [float(c) for c in self._confidences if c is not None and math.isfinite(float(c))]
+                if valid:
+                    avg_conf = sum(valid) / len(valid)
+                    completion_ratio = self.score / self.total
+                    pct = int(round(avg_conf * 100.0 * completion_ratio))
+                    return max(0, min(100, pct))
+            except Exception:
+                pass
+        return self.score_percent()
 
     # ---- input ------------------------------------------------------------
     def process_prediction(self, label: str, confidence: float) -> Event:
         """Call once per camera frame while state is WAITING."""
         if self.state is not SessionState.WAITING:
             return Event.NONE
-        if label == self.current_target and confidence >= self.confidence_threshold:
+        is_match = (label == self.current_target)
+        if not is_match and label is not None and self.current_target is not None:
+            import re
+            is_match = re.sub(r"[^A-Z0-9]", "", str(label).upper()) == re.sub(r"[^A-Z0-9]", "", str(self.current_target).upper())
+        if is_match and confidence >= self.confidence_threshold:
             self._hold += 1
+            self._grace = 0
             if self._hold >= self.hold_frames:
                 self.score += 1
+                try:
+                    import math
+                    val = float(confidence)
+                    if math.isfinite(val):
+                        self._confidences.append(max(0.0, min(1.0, val)))
+                except Exception:
+                    pass
                 self.state = SessionState.FEEDBACK
                 return Event.CORRECT
             return Event.HOLDING
         if self._hold > 0:
+            if self._grace < self.grace_frames:
+                self._grace += 1
+                return Event.HOLDING
             self._hold = 0
-            self.state = SessionState.FEEDBACK
-            return Event.WRONG
+            self._grace = 0
+            return Event.NONE
         return Event.NONE
 
     # ---- transitions (call these from your QTimer.singleShot callbacks) --
     def reset_waiting(self):
         self.state = SessionState.WAITING
         self._hold = 0
+        self._grace = 0
 
     def advance(self):
         self.index += 1
         self._hold = 0
+        self._grace = 0
         self.state = SessionState.DONE if self.index >= len(self.targets) else SessionState.WAITING
 
     def skip(self):
@@ -125,6 +168,8 @@ class CameraPracticeSession:
         self.score = 0
         self.state = SessionState.WAITING
         self._hold = 0
+        self._grace = 0
+        self._confidences.clear()
 
 
 @dataclass

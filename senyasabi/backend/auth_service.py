@@ -1,0 +1,634 @@
+"""Authentication boundary.
+
+Online:  desktop -> FastAPI /auth/* -> Supabase Auth (the password lives only there).
+Offline: argon2id verifier saved in SQLite (or injected UserRepository for tests).
+"""
+from dataclasses import asdict, dataclass
+from datetime import datetime, timedelta, timezone
+import re
+import time
+from typing import Protocol
+import uuid
+from uuid import uuid4
+import logging
+
+from argon2 import PasswordHasher, Type
+from argon2.exceptions import InvalidHashError, VerificationError
+
+from .config import CLIENT_MODE
+from .api import auth_client as _http_client
+from .api import auth_client_distributed as _direct_client
+from .api.auth_client import AuthError, NetworkError
+
+from .config import (
+    OFFLINE_AUTH_LOCKOUT_MINUTES,
+    OFFLINE_AUTH_MAX_DAYS,
+    OFFLINE_AUTH_MAX_FAILED_ATTEMPTS,
+    SUPABASE_URL,
+    SUPABASE_ANON_KEY,
+    PRODUCTION,
+)
+from .credential_store import get_credential_store
+from .database import repository as repo
+from .database.session import session_scope
+
+__all__ = [
+    "AuthError", "NetworkError", "User", "UserRepository",
+    "InMemoryUserRepository", "SQLiteUserRepository",
+    "register_user", "authenticate_user", "authenticate_offline",
+    "authenticate_with_supabase",
+    "establish_session", "logout_user", "get_current_user", "get_access_token",
+    "sync_user_info"
+]
+
+USERNAME_RE = re.compile(r"^[a-z0-9_.-]{3,30}$")
+EMAIL_RE = re.compile(r"^[^\s@]+@[^\s@]+\.[^\s@]+$")
+MIN_PASSWORD_LENGTH = 8
+INVALID = "Invalid username/email or password."
+TOKEN_REFRESH_MARGIN = 60  # seconds
+
+class _AuthClient:
+    """fastapi: HTTP only. direct: Supabase only.
+    distributed: FastAPI first, Supabase only if FastAPI is unreachable."""
+
+    def _call(self, name, *args):
+        if CLIENT_MODE == "direct":
+            return getattr(_direct_client, name)(*args)
+        try:
+            return getattr(_http_client, name)(*args)
+        except NetworkError:
+            if CLIENT_MODE != "distributed":
+                raise
+            # Supabase's password grant needs an email; without one, let the caller go offline.
+            if name == "login" and "@" not in args[0]:
+                raise
+            return getattr(_direct_client, name)(*args)
+
+    def register(self, *a):
+        return self._call("register", *a)
+
+    def login(self, *a):
+        return self._call("login", *a)
+
+    def refresh(self, *a):
+        return self._call("refresh", *a)
+
+
+auth_client = _AuthClient()
+
+@dataclass(frozen=True)
+class User:
+    user_id: str
+    username: str
+    email: str
+    password_hash: str
+    display_name: str
+    notifications_enabled: bool
+    dark_mode: bool
+    created_at: datetime
+    updated_at: datetime
+
+
+class UserRepository(Protocol):
+    def find_by_identifier(self, identifier: str) -> User | None: ...
+    def add(self, user: User) -> None: ...
+
+
+class InMemoryUserRepository:
+    def __init__(self):
+        self._users: dict[str, User] = {}
+
+    def find_by_identifier(self, identifier: str) -> User | None:
+        key = identifier.strip().casefold()
+        return next((user for user in self._users.values()
+                     if key in (user.username.casefold(), user.email.casefold())), None)
+
+    def add(self, user: User) -> None:
+        if self.find_by_identifier(user.username):
+            raise AuthError("Username is already registered.")
+        if self.find_by_identifier(user.email):
+            raise AuthError("Email is already registered.")
+        self._users[user.user_id] = user
+
+
+class SQLiteUserRepository:
+    """SQLite-backed user repository bridging local offline_auth and users tables."""
+
+    def find_by_identifier(self, identifier: str) -> User | None:
+        key = (identifier or "").strip()
+        if not key:
+            return None
+        try:
+            with session_scope() as db:
+                offline = repo.get_offline_auth_by_identifier(db, key)
+                if offline is not None and offline.user is not None:
+                    u = offline.user
+                    return User(
+                        user_id=str(u.user_id),
+                        username=u.username,
+                        email=u.email or "",
+                        password_hash=offline.password_verifier,
+                        display_name=u.display_name or u.username,
+                        notifications_enabled=True,
+                        dark_mode=False,
+                        created_at=u.updated_at or _utcnow(),
+                        updated_at=u.updated_at or _utcnow(),
+                    )
+                u = repo.get_user_by_username(db, key)
+                if u is None:
+                    return None
+                return User(
+                    user_id=str(u.user_id),
+                    username=u.username,
+                    email=u.email or "",
+                    password_hash="",
+                    display_name=u.display_name or u.username,
+                    notifications_enabled=True,
+                    dark_mode=False,
+                    created_at=u.updated_at or _utcnow(),
+                    updated_at=u.updated_at or _utcnow(),
+                )
+        except Exception:
+            return None
+
+    def add(self, user: User) -> None:
+        if self.find_by_identifier(user.username):
+            raise AuthError("Username is already registered.")
+        if self.find_by_identifier(user.email):
+            raise AuthError("Email is already registered.")
+        uid = uuid.UUID(str(user.user_id))
+        with session_scope() as db:
+            repo.upsert_user(db, uid, user.username, user.email, user.display_name)
+            repo.upsert_offline_auth(db, uid, user.password_hash, user.updated_at)
+
+
+_repository: UserRepository = SQLiteUserRepository()
+_hasher = PasswordHasher(type=Type.ID)
+_current_user: dict | None = None
+_session: dict | None = None  # {"access_token", "refresh_token", "expires_at"}; None when offline
+_pending_tokens: dict[str, dict] = {}  # user_id -> tokens from a background login awaiting establish_session()
+
+
+def _utcnow() -> datetime:
+    return datetime.now(timezone.utc)
+
+
+def _is_valid_uuid(value) -> bool:
+    try:
+        uuid.UUID(str(value))
+        return True
+    except (ValueError, TypeError, AttributeError):
+        return False
+
+
+def _public_user(user) -> dict:
+    if isinstance(user, User):
+        result = asdict(user)
+        del result["password_hash"]
+        return result
+    # SQLAlchemy model: user_id stays a uuid.UUID for Uuid columns
+    return {
+        "user_id": user.user_id,
+        "username": user.username,
+        "email": user.email,
+        "display_name": user.display_name or user.username,
+        "notifications_enabled": True,
+        "dark_mode": False,
+        "updated_at": user.updated_at,
+    }
+
+
+def _clear_session() -> None:
+    global _current_user, _session
+    _current_user = None
+    _session = None
+    _pending_tokens.clear()
+
+
+def _apply_tokens(user_id: uuid.UUID, tokens: dict) -> None:
+    global _session
+    _session = dict(tokens)
+    get_credential_store().store_refresh_token(str(user_id), tokens["refresh_token"])
+
+
+# ── registration ──────────────────────────────────────────────────────────────
+
+def authenticate_with_supabase(identifier: str, password: str, *, establish_session: bool = True) -> dict:
+    """Authenticate directly with Supabase using anon key (fallback mode).
+    
+    This calls Supabase auth endpoints directly, bypassing the FastAPI backend.
+    Used as a fallback in distributed mode when FastAPI is unavailable.
+    In normal distributed mode, authentication goes through FastAPI.
+    
+    Args:
+        identifier: Email address (Supabase auth requires email)
+        password: User password
+        establish_session: Whether to establish the session after authentication
+        
+    Returns:
+        User profile dict with session tokens
+        
+    Raises:
+        AuthError: If authentication fails
+        NetworkError: If Supabase is unreachable
+        RuntimeError: If Supabase configuration is missing
+    """
+    global _current_user
+    if establish_session:
+        _clear_session()
+    
+    identifier = (identifier or "").strip()
+    if not identifier or not password:
+        raise AuthError("Email and password are required.")
+    
+    # For Supabase auth, we need an email. If identifier doesn't contain @, 
+    # we need to look up the email from local SQLite first
+    if "@" not in identifier:
+        with session_scope() as db:
+            user = repo.get_user_by_username(db, identifier)
+            if not user:
+                raise AuthError("User not found. Please use your email to sign in.")
+            identifier = user.email or ""
+            if not identifier or "@" not in identifier:
+                raise AuthError("User has no email address. Please contact support.")
+    
+    # Validate Supabase configuration
+    if not SUPABASE_URL or not SUPABASE_ANON_KEY:
+        raise RuntimeError("Supabase URL and ANON_KEY must be configured for direct authentication.")
+    
+    # Validate HTTPS in production
+    if PRODUCTION and not SUPABASE_URL.startswith("https://"):
+        raise RuntimeError("HTTPS is required for Supabase in production mode.")
+    
+    import requests
+    
+    # Call Supabase auth endpoint directly
+    auth_url = f"{SUPABASE_URL}/auth/v1/token?grant_type=password"
+    headers = {
+        "apikey": SUPABASE_ANON_KEY,
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+    }
+    
+    payload = {
+        "email": identifier,
+        "password": password,
+    }
+    
+    try:
+        response = requests.post(auth_url, json=payload, headers=headers, timeout=10)
+    except requests.exceptions.Timeout:
+        raise NetworkError("Connection to Supabase timed out. Please check your internet connection.") from None
+    except requests.exceptions.ConnectionError:
+        raise NetworkError("Could not connect to Supabase. Please check your internet connection.") from None
+    except requests.exceptions.RequestException as e:
+        raise NetworkError(f"Network error connecting to Supabase: {str(e)}") from e
+    
+    if response.status_code >= 500:
+        raise NetworkError(f"Supabase server error: {response.status_code}")
+    
+    if response.status_code >= 400:
+        try:
+            error_data = response.json()
+            error_msg = error_data.get("error_description") or error_data.get("message", "Authentication failed")
+        except (ValueError, KeyError):
+            error_msg = "Authentication failed"
+        raise AuthError(error_msg)
+    
+    data = response.json()
+    
+    # Extract user data from Supabase response
+    user_data = data.get("user", {})
+    access_token = data.get("access_token")
+    refresh_token = data.get("refresh_token")
+    expires_in = data.get("expires_in", 3600)  # Default 1 hour
+    
+    if not access_token or not refresh_token:
+        raise AuthError("Invalid response from Supabase: missing tokens")
+    
+    # Convert to our internal format
+    user_id = user_data.get("id")
+    if not user_id:
+        raise AuthError("Invalid response from Supabase: missing user ID")
+    
+    # Store in SQLite for offline support
+    uid = uuid.UUID(user_id)
+    verifier = _hasher.hash(password)
+    
+    with session_scope() as db:
+        # Get user metadata
+        metadata = user_data.get("user_metadata", {})
+        username = metadata.get("username") or user_data.get("email", "").split("@")[0]
+        email = user_data.get("email", "")
+        display_name = metadata.get("display_name") or username
+        
+        user = repo.upsert_user(db, uid, username, email, display_name)
+        repo.upsert_offline_auth(db, uid, verifier, _utcnow())
+        public = _public_user(user)
+    
+    # Store tokens
+    tokens = {
+        "access_token": access_token,
+        "refresh_token": refresh_token,
+        "expires_at": time.time() + expires_in,
+    }
+    
+    if establish_session:
+        _current_user = dict(public)
+        _apply_tokens(uid, tokens)
+    else:
+        _pending_tokens[str(uid)] = dict(tokens)
+    
+    return dict(public)
+
+
+def register_user(username, email, password, display_name=None) -> dict:
+    username = (username or "").strip()
+    email = (email or "").strip()
+    if not username or not email or not password or not password.strip():
+        raise AuthError("Username, email and password are required.")
+    if "@" in username:
+        raise AuthError("Username cannot contain @.")
+    if not EMAIL_RE.fullmatch(email):
+        raise AuthError("Enter a valid email address.")
+    if _repository.find_by_identifier(username):
+        raise AuthError("Username is already registered.")
+    if _repository.find_by_identifier(email):
+        raise AuthError("Email is already registered.")
+
+    if isinstance(_repository, InMemoryUserRepository):
+        now = _utcnow()
+        user = User(
+            str(uuid4()), username, email, _hasher.hash(password),
+            (display_name or "").strip() or username, True, False, now, now,
+        )
+        _repository.add(user)
+        return _public_user(user)
+
+    norm_username = username.lower()
+    norm_email = repo.normalize_email(email)
+    if not USERNAME_RE.match(norm_username):
+        raise AuthError("Username must be 3-30 characters: letters, numbers, . _ -")
+    if len(password) < MIN_PASSWORD_LENGTH:
+        raise AuthError(f"Password must be at least {MIN_PASSWORD_LENGTH} characters.")
+    try:
+        # -> {"username", "email", "display_name", "needs_confirmation"}
+        return auth_client.register(norm_username, norm_email, password,
+                                    (display_name or "").strip() or None)
+    except NetworkError:
+        now = _utcnow()
+        uid = uuid4()
+        user = User(
+            str(uid), norm_username, norm_email, _hasher.hash(password),
+            (display_name or "").strip() or norm_username, True, False, now, now,
+        )
+        _repository.add(user)
+        return _public_user(user)
+
+
+# ── sign-in ───────────────────────────────────────────────────────────────────
+
+def authenticate_user(identifier, password, *, establish_session=True) -> dict:
+    """Verify credentials, optionally publishing the session for synchronous callers.
+
+    Background jobs must pass ``establish_session=False`` and let their live UI
+    callback publish the result. A cancelled job can then finish without
+    restoring a session after the learner has navigated away or logged out.
+    """
+    global _current_user
+    if establish_session:
+        _clear_session()
+    identifier = (identifier or "").strip()
+    if not identifier or not password:
+        raise AuthError("Username/email and password are required.")
+
+    if isinstance(_repository, InMemoryUserRepository):
+        user = _repository.find_by_identifier(identifier)
+        if user is None:
+            raise AuthError(INVALID)
+        try:
+            _hasher.verify(user.password_hash, password)
+        except (VerificationError, InvalidHashError):
+            raise AuthError(INVALID) from None
+        public_user = _public_user(user)
+        if establish_session:
+            _current_user = dict(public_user)
+        return public_user
+
+    # Check local repository for existing offline-registered credentials
+    local_user = _repository.find_by_identifier(identifier)
+
+    # FastAPI resolves usernames itself; only the Supabase fallback needs an email.
+    login_identifier = identifier
+    if "@" not in identifier and local_user and local_user.email:
+        login_identifier = local_user.email
+        
+    try:
+        data = auth_client.login(login_identifier, password)
+    except AuthError as auth_err:
+        # Check if this user was created offline and can be safely linked/registered remotely
+        if local_user and local_user.password_hash:
+            try:
+                _hasher.verify(local_user.password_hash, password)
+                # Verified locally: create remote Supabase identity and sign in
+                try:
+                    auth_client.register(
+                        local_user.username, local_user.email, password, local_user.display_name
+                    )
+                    data = auth_client.login(local_user.email, password)
+                except Exception as link_err:
+                    logging.getLogger(__name__).warning("Remote account link failed: %s; falling back to offline", link_err)
+                    return authenticate_offline(identifier, password, establish_session=establish_session)
+            except (VerificationError, InvalidHashError):
+                raise auth_err
+        else:
+            raise
+    except NetworkError:
+        return authenticate_offline(identifier, password, establish_session=establish_session)
+
+    # Migrate local records if user ID changed from temporary offline UUID to authenticated remote UUID
+    try:
+        remote_user_id = uuid.UUID(data["profile"]["user_id"])
+        if local_user and _is_valid_uuid(local_user.user_id):
+            local_uid = uuid.UUID(str(local_user.user_id))
+            if local_uid != remote_user_id:
+                with session_scope() as db:
+                    repo.migrate_local_user_id(db, local_uid, remote_user_id)
+    except Exception as exc:
+        logging.getLogger(__name__).warning("User ID migration check failed: %s", exc)
+
+    return _complete_online_login(data, password, establish_session=establish_session)
+
+
+def _complete_online_login(data: dict, password: str, *, establish_session=True) -> dict:
+    global _current_user
+    profile = data["profile"]
+    user_id = uuid.UUID(profile["user_id"])
+    verifier = _hasher.hash(password)  # refreshed every online login
+
+    with session_scope() as db:
+        user = repo.upsert_user(db, user_id, profile["username"],
+                                profile.get("email"), profile.get("display_name"))
+        repo.upsert_offline_auth(db, user_id, verifier, _utcnow())
+        public = _public_user(user)
+
+    if establish_session:
+        _current_user = dict(public)
+        _apply_tokens(user_id, data["session"])
+    else:
+        # Background login: hold the tokens until the live UI callback calls establish_session().
+        _pending_tokens[str(user_id)] = dict(data["session"])
+    return dict(public)
+
+
+def authenticate_offline(identifier, password, *, establish_session=True) -> dict:
+    """Verify against the local argon2 verifier. Throttling state must survive failures,
+    so errors are recorded inside the transaction and raised only after it commits."""
+    global _current_user
+    if establish_session:
+        _clear_session()
+    identifier = (identifier or "").strip()
+    if not identifier or not password:
+        raise AuthError("Username/email and password are required.")
+
+    now = _utcnow()
+    error: str | None = None
+    public: dict | None = None
+
+    with session_scope() as db:
+        offline = repo.get_offline_auth_by_identifier(db, identifier)
+        if offline is None:
+            error = "No offline credentials found. Please sign in online first."
+        elif offline.locked_until and offline.locked_until > now:
+            error = "Too many failed attempts. Try again later."
+        elif now - offline.last_online_login > timedelta(days=OFFLINE_AUTH_MAX_DAYS):
+            error = "Offline sign-in has expired. Connect to the internet and sign in again."
+        else:
+            try:
+                _hasher.verify(offline.password_verifier, password)
+            except (VerificationError, InvalidHashError):
+                offline.failed_attempts += 1
+                if offline.failed_attempts >= OFFLINE_AUTH_MAX_FAILED_ATTEMPTS:
+                    offline.locked_until = now + timedelta(minutes=OFFLINE_AUTH_LOCKOUT_MINUTES)
+                    offline.failed_attempts = 0
+                    error = (f"Too many failed attempts. "
+                             f"Locked for {OFFLINE_AUTH_LOCKOUT_MINUTES} minutes.")
+                else:
+                    error = INVALID
+            else:
+                offline.failed_attempts = 0
+                offline.locked_until = None
+                public = _public_user(offline.user)
+
+    if error:
+        raise AuthError(error)
+
+    if establish_session:
+        _current_user = dict(public)
+        _restore_session(public["user_id"])
+    return dict(public)
+
+
+def establish_session(user) -> dict:
+    """Publish a verified public user from a successful, still-active UI job."""
+    global _current_user
+    _current_user = {key: value for key, value in user.items()
+                     if key not in ("password", "password_hash")}
+    tokens = _pending_tokens.pop(str(_current_user.get("user_id")), None)
+    if tokens:
+        _apply_tokens(_current_user["user_id"], tokens)
+    return dict(_current_user)
+
+
+def _restore_session(user_id: uuid.UUID) -> None:
+    """Best effort: after an offline sign-in, use the keyring refresh token to go online."""
+    store = get_credential_store()
+    token = store.get_refresh_token(str(user_id))
+    if not token:
+        return
+    try:
+        data = auth_client.refresh(token)
+    except NetworkError as e:
+        logging.getLogger(__name__).debug("Failed to refresh token (network): %s", e)
+        return                                   # still offline; try again on next token request
+    except AuthError as e:
+        logging.getLogger(__name__).warning("Failed to refresh token (auth): %s", e)
+        store.delete_refresh_token(str(user_id))  # revoked/expired: password login needed
+        return
+    except Exception as e:
+        logging.getLogger(__name__).exception("Unexpected error refreshing token: %s", e)
+        return
+    _apply_tokens(user_id, data["session"])
+
+
+# ── session ───────────────────────────────────────────────────────────────────
+
+def get_access_token() -> str | None:
+    """Valid access token or None. Refreshes when close to expiry. api_client calls this."""
+    global _session
+    if _current_user is None:
+        logging.warning("No current user in auth_service")
+        return None
+    user_id = _current_user.get("user_id")
+    logging.info(
+        "Auth state: user_present=True, user_id_valid=%s, session_present=%s",
+        _is_valid_uuid(user_id),
+        _session is not None,
+    )
+    if isinstance(_repository, InMemoryUserRepository) or user_id == "dev-session":
+        return None
+    try:
+        uuid.UUID(str(user_id))
+    except (ValueError, TypeError, AttributeError):
+        return None
+    if _session is None:
+        _restore_session(_current_user["user_id"])  # offline login earlier; retry now
+        return _session["access_token"] if _session else None
+    if _session["expires_at"] - time.time() > TOKEN_REFRESH_MARGIN:
+        return _session["access_token"]
+    try:
+        data = auth_client.refresh(_session["refresh_token"])
+    except NetworkError:
+        return _session["access_token"] if _session["expires_at"] > time.time() else None
+    except AuthError:
+        get_credential_store().delete_refresh_token(str(_current_user["user_id"]))
+        _session = None
+        return None
+    _apply_tokens(_current_user["user_id"], data["session"])
+    logging.debug(
+        "Access-token check: has_user=%s, has_session=%s",
+        _current_user is not None,
+        _session is not None,
+    )
+    return _session["access_token"]
+
+
+def clear_session() -> None:
+    logout_user()
+
+
+def logout_user() -> None:
+    user = _current_user
+    had_session = _session is not None
+    _clear_session()
+    if user is not None and had_session:
+        get_credential_store().delete_refresh_token(str(user["user_id"]))
+
+
+def get_current_user() -> dict | None:
+    return dict(_current_user) if _current_user is not None else None
+
+def sync_user_info(user_id) -> None:
+    """Pull the signed-in learner's server data into SQLite. Blocking: call from a worker thread."""
+    try:
+        uid = uuid.UUID(str(user_id))
+    except ValueError:
+        return                                   # e.g. "dev-session"
+    current = _current_user
+    if current is None or str(current.get("user_id")) != str(uid):
+        return                                   # logged out or switched user meanwhile
+    from .progress_sync import pull_user_progress   # lazy: progress_sync imports auth_service
+    try:
+        pull_user_progress()
+    except Exception:
+        logging.getLogger(__name__).exception("Post-login sync failed")
