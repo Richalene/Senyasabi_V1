@@ -10,7 +10,14 @@ from typing import Protocol
 from ..config import SUPABASE_URL, SUPABASE_ANON_KEY
 from ..supabase_client import get_supabase_client
 
-from .auth_client import AuthError, NetworkError
+
+class AuthError(ValueError):
+    """Safe authentication/validation message for the UI."""
+
+
+class NetworkError(Exception):
+    """Server unreachable or failing (5xx) - the caller may fall back to offline."""
+
 
 def _ensure_supabase_client():
     """Ensure Supabase client is available."""

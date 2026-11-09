@@ -302,16 +302,24 @@ class AppController:
                            message="Creating your account…", controls=(screen._ui,))
 
     def logout(self):
-        self.login.loading.cancel()
-        self.register.loading.cancel()
-        if self.camera_settings is not None:
-            self.camera_settings.reject()
-        auth_service.logout_user()
-        self.main_menu.invalidate_home_stats()
-        self.selected_module = None
-        self.login.email_input.clear()
-        self.show_login()
-
+        if getattr(self, "_logging_out", False):
+            return
+        self._logging_out = True
+        try:
+            self.login.loading.cancel()
+            self.register.loading.cancel()
+            if self.camera_settings is not None:
+                self.camera_settings.reject()
+            self._dispose_lesson()
+            if self.minigames is not None:
+                self.minigames.return_menu()
+            auth_service.logout_user()
+            self.selected_module = None
+            self.login.email_input.clear()
+            self.show_login()
+        finally:
+            self._logging_out = False
+            
     def show_login(self):
         self._clear_passwords()
         self.login.error_label.clear()

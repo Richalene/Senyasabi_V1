@@ -311,3 +311,12 @@ Traceback (most recent call last):
 TypeError: requestPermission expected 3 arguments, got 2
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 310, in logout
+    self.main_menu.invalidate_home_stats()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardWindow' object has no attribute 'invalidate_home_stats'
+
+================================================
