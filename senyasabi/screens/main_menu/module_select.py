@@ -310,6 +310,13 @@ class ModuleSelectWidget(QWidget):
 
     def choose(self, code):
         self.clear_hover()
+        # Check if this module is coming soon
+        node = next((n for n in MODULE_NODES if n["module_code"] == code), None)
+        if node and node.get("coming_soon", False):
+            from screens.dialogs import ComingSoonDialog
+            dialog = ComingSoonDialog(self)
+            dialog.exec()
+            return
         self.module_chosen.emit(code)
 
     def hover_node(self, button, entered):
