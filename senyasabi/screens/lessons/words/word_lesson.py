@@ -171,8 +171,6 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
             self.video.setVisible(is_avail)
             if is_avail:
                 self.layout_comp.avatar_card.set_sign_pixmap(QPixmap())
-                self.video.show()
-                self.video.raise_()
                 if not self._is_paused:
                     self.video.play()
                 return
@@ -343,7 +341,7 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
             # Grade the user's accuracy on the TARGET sign
             if target_prob >= other_max_prob and target_prob > 0.05:
                 # Target is the #1 recognized sign (85% - 98%)
-                accuracy_pct = min(100, 85 + int(min(target_prob, 0.70) / 0.70 * 13))
+                accuracy_pct = min(98, 85 + int(min(target_prob, 0.70) / 0.70 * 13))
                 is_match = True
             elif other_max_prob > 0 and (target_prob / other_max_prob) >= 0.40 and target_prob >= 0.12:
                 # Target is a strong contender (65% - 84%)
@@ -571,9 +569,7 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
 
     def showEvent(self, event):
         super().showEvent(event)
-        if not self._resources_closed and self._engine is None and not self.loading.busy and not self._session.is_done():
-            self.start_camera()
-        elif not self._resources_closed and self._engine is not None and not self.loading.busy and not self._session.is_done():
+        if not self._resources_closed and self._engine is not None and not self.loading.busy and not self._session.is_done():
             if not self._is_paused:
                 self._camera_misses = 0
                 cap = getattr(self._engine, "_cap", None)

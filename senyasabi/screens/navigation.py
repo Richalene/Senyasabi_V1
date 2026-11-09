@@ -7,11 +7,7 @@ from PySide6.QtGui import QBitmap, QPainter, QPixmap, QRegion
 from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QWidget
 
 
-try:
-    from backend.paths import get_base_dir
-    ASSETS = get_base_dir() / "resources/img/ui"
-except ImportError:
-    ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
+ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
 
 
 class ConnectionStatusIndicator(QLabel):
@@ -62,18 +58,10 @@ class ConnectionStatusIndicator(QLabel):
         self.update()
 
 
-try:
-    from backend.paths import get_base_dir
-    ASSETS = get_base_dir() / "resources/img/ui"
-except ImportError:
-    ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
+ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
 
 
-try:
-    from backend.paths import get_base_dir
-    ASSETS = get_base_dir() / "resources/img/ui"
-except ImportError:
-    ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
+ASSETS = Path(__file__).resolve().parents[1] / "resources/img/ui"
 
 
 @lru_cache(maxsize=8)

@@ -57,6 +57,7 @@ class _CameraWorker(QObject):
     @Slot()
     def start(self):
         try:
+            print("1. Starting camera (Qt worker)", flush=True)
             from PySide6.QtMultimedia import QCamera, QMediaCaptureSession, QVideoSink
             self.camera = QCamera(self.device, self)
             self.session = QMediaCaptureSession(self)
@@ -66,6 +67,7 @@ class _CameraWorker(QObject):
             self.sink.videoFrameChanged.connect(self.frame)
             self.camera.errorOccurred.connect(self.failed)
             self.camera.start()
+            print("2. Camera started: True", flush=True)
         except Exception as error:
             log.exception('Camera initialization failed')
             self.capture.error = str(error)
@@ -76,6 +78,7 @@ class _CameraWorker(QObject):
         if self.capture.closed or not frame.isValid():
             return
         try:
+            print("3. Reading frame (Qt callback)", flush=True)
             import numpy as np
             from PySide6.QtGui import QImage
             
@@ -95,6 +98,7 @@ class _CameraWorker(QObject):
 
             rgb = np.frombuffer(buffer, dtype=np.uint8, count=h * bpl).reshape(h, bpl)  # type: ignore
             bgr = rgb[:, :w * 3].reshape(h, w, 3)[:, :, ::-1].copy()
+            print("4. Frame received", flush=True)
 
             try:
                 self.capture.frames.put_nowait(bgr)
@@ -159,7 +163,9 @@ class _QtCapture:
         if not self.isOpened():
             return False, None
         try:
+            print("3. Reading frame (Queue)", flush=True)
             frame = self.frames.get(timeout=.15)
+            print("4. Frame received", flush=True)
             return True, frame
         except Empty:
             return False, None
@@ -303,27 +309,22 @@ class CameraService:
         capture = None
         owned = None
         try:
+            print("1. Starting camera", flush=True)
             if self.capture_factory is not None:
                 capture = self.capture_factory(device)
             elif device.backend == 'qt':
                 capture = _QtCapture(device)
             else:
-                import sys
                 import cv2
                 idx = device.index if device.index is not None else 0
-                if sys.platform == "win32":
-                    capture = cv2.VideoCapture(idx, cv2.CAP_DSHOW)
-                    if not capture.isOpened():
-                        capture.release()
-                        capture = cv2.VideoCapture(idx)
-                elif sys.platform == "darwin":
-                    capture = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION)
-                else:
-                    capture = cv2.VideoCapture(idx)
+                print("1. Starting camera (OpenCV backend)", flush=True)
+                capture = cv2.VideoCapture(idx, cv2.CAP_AVFOUNDATION)
+                print("2. Camera started:", capture.isOpened(), flush=True)
 
             owned = _OwnedCapture(capture, owner)
             if not owned.isOpened():
                 raise CameraError(getattr(capture, 'error', None) or 'The selected camera could not be opened.')
+            print("2. Camera started (Owned):", capture.isOpened(), flush=True)
             return owned
         except Exception:
             if owned is not None:

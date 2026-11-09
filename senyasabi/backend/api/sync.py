@@ -75,8 +75,7 @@ async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_u
                 try:
                     handler = {"quiz_attempt": upsert_quiz_attempt,
                                "minigame_attempt": upsert_minigame_attempt,
-                               "lesson_progress": upsert_lesson_progress,
-                               "user": upsert_user}.get(item.entity_type)
+                               "lesson_progress": upsert_lesson_progress}.get(item.entity_type)
                     with db.begin_nested():       # savepoint: one bad item can't abort the batch
                         success = bool(handler and handler(db, user_id, item))
                     succeeded += success
@@ -100,32 +99,6 @@ async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_u
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error during sync upload: {str(e)}"
         )
-
-
-def upsert_user(db, user_id: str, item: SyncItem) -> bool:
-    """Upsert user metadata."""
-    data = item.data
-    display_name = data.get("display_name")
-    notifications_enabled = data.get("notifications_enabled")
-    dark_mode = data.get("dark_mode")
-    
-    result = db.execute(text("""
-        INSERT INTO public.users (user_id, display_name, notifications_enabled, dark_mode, updated_at)
-        VALUES (:user_id, :display_name, :notifications_enabled, :dark_mode, now())
-        ON CONFLICT (user_id) DO UPDATE SET
-            display_name = COALESCE(EXCLUDED.display_name, users.display_name),
-            notifications_enabled = COALESCE(EXCLUDED.notifications_enabled, users.notifications_enabled),
-            dark_mode = COALESCE(EXCLUDED.dark_mode, users.dark_mode),
-            updated_at = now()
-        RETURNING user_id
-    """), {
-        "user_id": user_id,
-        "display_name": display_name,
-        "notifications_enabled": notifications_enabled,
-        "dark_mode": dark_mode
-    })
-    
-    return result.rowcount > 0
 
 
 def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:

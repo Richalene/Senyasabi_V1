@@ -1,109 +1,16 @@
-QDialog#cameraSetupDialog {
-    background-color: #C2D076;
-    color: #4F3222;
-    font-family: 'Segoe UI', sans-serif;
-}
-QDialog#cameraSetupDialog QScrollArea,
-QDialog#cameraSetupDialog QStackedWidget,
-QDialog#cameraSetupDialog QScrollArea > QWidget,
-QDialog#cameraSetupDialog QStackedWidget > QWidget {
-    background: transparent;
-    border: none;
-}
-QLabel {
-    color: #4F3222;
-    background: transparent;
-}
-QLabel[class="pageTitle"] {
-    font-family: 'Cherry Bomb One', 'Segoe UI', cursive, sans-serif;
-    font-size: 34px;
-    font-weight: bold;
-    color: #55331B;
-}
-QLabel[class="bodyText"] {
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 17px;
-    color: #55331B;
-    padding: 2px 4px;
-}
-QLabel#cameraPreview {
-    background-color: #FAFFDC;
-    border: 3.5px solid #8FA552;
-    border-radius: 28px;
-    padding: 10px;
-}
-QPushButton {
-    background-color: #FFFDF0;
-    color: #4F3222;
-    border: 2px solid #D5C9A9;
-    border-radius: 25px;
-    min-height: 48px;
-    padding: 8px 20px;
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 16px;
-    font-weight: 700;
-}
-QPushButton:hover {
-    background-color: #FFF3BD;
-    border-color: #B5A67C;
-}
-QPushButton:pressed {
-    background-color: #EADBA8;
-}
-QPushButton[class="primaryButton"] {
-    background-color: #8C9F3E;
-    color: #FFFFFF;
-    border: none;
-}
-QPushButton[class="primaryButton"]:hover {
-    background-color: #9DB446;
-}
-QPushButton[class="primaryButton"]:pressed {
-    background-color: #788934;
-}
-QPushButton:disabled {
-    background-color: #CAD5A5;
-    color: #8C9670;
-    border: none;
-}
-QPushButton[class="quietButton"] {
-    background: transparent;
-    border: none;
-    color: #6B4E38;
-    font-size: 15px;
-    font-weight: 600;
-    text-decoration: underline;
-    min-height: 28px;
-}
-QPushButton[class="quietButton"]:hover {
-    color: #3D2515;
-}
-QComboBox {
-    background-color: #FFFDF0;
-    color: #4F3222;
-    border: 2.5px solid #D5C9A9;
-    border-radius: 22px;
-    padding: 8px 18px;
-    min-height: 44px;
-    font-family: 'Segoe UI', sans-serif;
-    font-size: 16px;
-    font-weight: 600;
-}
-QComboBox:focus, QComboBox:hover {
-    border-color: #FFAE00;
-}
-QComboBox::drop-down {
-    subcontrol-origin: padding;
-    subcontrol-position: top right;
-    width: 36px;
-    border-left: none;
-}
-QComboBox QAbstractItemView {
-    background-color: #FFFDF0;
-    color: #4F3222;
-    selection-background-color: #FFDE59;
-    selection-color: #4F3222;
-    border: 2px solid #D5C9A9;
-    border-radius: 12px;
-    padding: 6px;
-}
+QDialog#cameraSetupDialog { background: #c5d27b; color: #704833; font-family: "Segoe UI"; font-size: 15px; }
+QDialog#cameraSetupDialog QScrollArea, QDialog#cameraSetupDialog QStackedWidget,
+QDialog#cameraSetupDialog QScrollArea > QWidget, QDialog#cameraSetupDialog QStackedWidget > QWidget { background: transparent; border: none; }
+QLabel { color: #704833; background: transparent; }
+QLabel[class="pageTitle"] { font-size: 26px; font-weight: 700; }
+QLabel[class="bodyText"] { font-size: 18px; padding: 8px; }
+QLabel#cameraPreview { background: #fff9e9; border: 2px solid #8fa552; border-radius: 20px; padding: 8px; }
+QPushButton { background: #fff9e9; color: #704833; border: 1px solid #a39b68; border-radius: 16px; min-height: 28px; padding: 7px 14px; font-weight: 600; }
+QPushButton:hover { background: #fff0b8; border-color: #80984d; }
+QPushButton:pressed { background: #eadba8; }
+QPushButton[class="primaryButton"] { background: #526536; color: #fff9e9; border-color: #526536; }
+QPushButton[class="primaryButton"]:hover { background: #687d43; }
+QPushButton:disabled { background: #b9be98; color: #6d735a; border-color: #b9be98; }
+QPushButton[class="quietButton"] { background: transparent; border: none; font-size: 12px; min-height: 18px; }
+QComboBox, QLineEdit { background: #fff9e9; color: #704833; border: 1px solid #a39b68; border-radius: 12px; padding: 8px 12px; min-height: 24px; }
+QComboBox QAbstractItemView { background: #fff9e9; color: #704833; selection-background-color: #e8d99e; }

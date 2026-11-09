@@ -107,7 +107,6 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 class LeaderboardWindow(QWidget):
     back_requested = Signal()
-    logout_requested = Signal()
     _scores_changed = Signal()
 
     def __init__(self, parent=None):
@@ -155,10 +154,6 @@ class LeaderboardWindow(QWidget):
         self.header = SenyaSabiHeader(self)
         self.header.anchor_to_canvas(self.size())
         install_page_menu(self, header=self.header)
-        if self.header.menu_button is not None and hasattr(self.header.menu_button, "menu"):
-            menu = self.header.menu_button.menu()
-            if hasattr(menu, "sign_out_action"):
-                menu.sign_out_action.triggered.connect(self.logout_requested.emit)
         self.ui.lblCurrentStreak = self.header.streak_label
         self.ui.btnMenu = self.header.menu_button
 

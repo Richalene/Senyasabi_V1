@@ -21,12 +21,6 @@ class DashboardTests(unittest.TestCase):
 
     def setUp(self):
         auth_service.logout_user()
-        p1 = patch("backend.progress_sync.pull_user_progress", return_value=False)
-        p1.start()
-        self.addCleanup(p1.stop)
-        p2 = patch("backend.supabase_client.get_supabase_client", return_value=None)
-        p2.start()
-        self.addCleanup(p2.stop)
         self.window = StatisticsDashboardWindow()
 
     def tearDown(self):

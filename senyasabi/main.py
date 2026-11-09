@@ -11,27 +11,44 @@ _last_qt_tick = time.time()
 import cv2
 import faulthandler
 
-# In PyInstaller windowed/GUI mode (--windowed/console=False), sys.stdout and sys.stderr are None.
-# Redirect them to null or a log file so libraries and handlers don't crash.
-if sys.stderr is None:
-    try:
-        log_dir = Path.home() / ".senyasabi" / "logs"
-        log_dir.mkdir(parents=True, exist_ok=True)
-        sys.stderr = open(log_dir / "crash_native.log", "a", encoding="utf-8")
-    except Exception:
-        sys.stderr = open(os.devnull, "w", encoding="utf-8")
-
-if sys.stdout is None:
-    sys.stdout = open(os.devnull, "w", encoding="utf-8")
-
 # Enable faulthandler to catch low-level C/C++ segmentation faults (e.g., in OpenCV or MediaPipe)
-try:
-    if sys.stderr is not None:
-        faulthandler.enable(file=sys.stderr)
-    else:
-        faulthandler.enable()
-except Exception:
-    pass
+faulthandler.enable()
+
+def run_camera_loop(device_index=0):
+    print("1. Starting camera", flush=True)
+    
+    # Use CAP_AVFOUNDATION since you are on macOS
+    cap = cv2.VideoCapture(device_index, cv2.CAP_AVFOUNDATION)
+    print("2. Camera started:", cap.isOpened(), flush=True)
+
+    if not cap.isOpened():
+        print("Error: Could not open camera.", flush=True)
+        return
+
+    try:
+        while cap.isOpened():
+            print("3. Reading frame", flush=True)
+            ok, frame = cap.read()
+
+            if not ok:
+                print("Frame read failed", flush=True)
+                break
+
+            print("4. Frame received", flush=True)
+
+            # --- UNCOMMENT & WRAP YOUR MODEL INFERENCE HERE ---
+            # print("5. Starting model inference", flush=True)
+            # result = self.model.process(frame)  # Replace with your actual model call
+            # print("6. Inference completed", flush=True)
+
+            # Optional: break early during testing if you just want to check if it crashes on startup
+            # break
+
+    except Exception as e:
+        print(f"Exception caught in loop: {e}", flush=True)
+    finally:
+        cap.release()
+        print("Camera released.", flush=True)
 
 def _watchdog_loop():
     global _last_qt_tick
@@ -183,34 +200,33 @@ class SenyaSabiApplication(QApplication):
         if screen and event.type() == QEvent.Type.Show:
             if not getattr(receiver, "_presentation_ready", False):
                 receiver._presentation_ready = True
+                if not hasattr(receiver, "_fitted_form"):
+                    receiver._fitted_form = FittedForm(receiver)
                 palette = receiver.palette()
                 palette.setColor(QPalette.ColorRole.Window, QColor("#c5d27b"))
                 receiver.setPalette(palette)
                 receiver.setAutoFillBackground(True)
-                if receiver.isFullScreen() != self.fullscreen:
-                    QTimer.singleShot(0, lambda window=receiver: self._present(window)
-                                      if window.isVisible() else None)
+            if not self._matches_presentation(receiver):
+                QTimer.singleShot(
+                    0,
+                    lambda window=receiver: self._present(window)
+                    if window.isVisible() and not self._matches_presentation(window) else None,
+                )
+        if screen and event.type() == QEvent.Type.Resize:
+            fitted = getattr(receiver, "_fitted_form", None)
+            if fitted is not None:
+                fitted.fit()
         return result
 
     def _present(self, window):
         if self.fullscreen:
             window.showFullScreen()
         else:
-            # Force 1920x1080 resolution, centered on screen
-            screen = window.screen()
-            if screen:
-                available = screen.availableGeometry()
-                x = (available.width() - 1920) // 2
-                y = (available.height() - 1080) // 2
-                window.setGeometry(x, y, 1920, 1080)
-            else:
-                window.setGeometry(0, 0, 1920, 1080)
-            window.show()
+            window.showMaximized()
 
     def _matches_presentation(self, window):
-        if self.fullscreen:
-            return window.isFullScreen()
-        return window.width() == 1920 and window.height() == 1080
+        return window.isFullScreen() if self.fullscreen else window.isMaximized()
+
 
 def main() -> int:
     # Setup logging first
@@ -249,7 +265,7 @@ def main() -> int:
     controller = AppController()
     app.aboutToQuit.connect(controller.shutdown)
     app.aboutToQuit.connect(lambda: _diag("aboutToQuit"))
-    controller.show_startup_splash()
+    controller.show_welcome()
     return app.exec()      
 
 

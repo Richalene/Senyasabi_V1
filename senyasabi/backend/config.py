@@ -22,19 +22,11 @@ except ImportError:
         return False
 
 BACKEND_DIR = Path(__file__).resolve().parent      # .../senyasabi/backend
-try:
-    from .paths import get_base_dir
-    BASE_DIR = get_base_dir()
-except ImportError:
-    BASE_DIR = BACKEND_DIR.parent
+BASE_DIR = BACKEND_DIR.parent                      # .../senyasabi
 
 # Explicit .env location first, then the default upward search as a fallback.
 load_dotenv(BASE_DIR / ".env")
 load_dotenv()
-
-# Demo Mode (Module 1: Alphabet only)
-DEMO_MODE = os.getenv("SENYASABI_DEMO_MODE", "true").lower() in ("1", "true", "yes")
-DEMO_ALLOWED_MODULES = ["alphabet"]
 
 DATA_DIR = BASE_DIR / "resources" / "data"
 VRM_SIGNS_DIR = BASE_DIR / "resources" / "VRM_SIGNS"

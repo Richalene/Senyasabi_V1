@@ -45,7 +45,7 @@ TABLE_COLUMNS = {
         "sign_id", "sign_code", "label", "recognition_label",
     ),
     "media_files": (
-        "media_id", "file_name", "object_key", "media_type", "width", "height",
+        "media_id", "file_name", "media_type", "width", "height",
         "duration_seconds", "file_size", "checksum",
     ),
     "lesson_signs": ("lesson_id", "sign_id", "display_order"),
@@ -74,10 +74,13 @@ def _remove_orphaned_snapshot_rows(tables: dict) -> None:
     """Remove associations whose required parent is absent from the snapshot."""
 
     module_ids = {r["module_id"] for r in tables["modules"]}
+    lesson_ids = {r["lesson_id"] for r in tables["lessons"]}
     sign_ids = {r["sign_id"] for r in tables["signs"]}
     media_ids = {r["media_id"] for r in tables["media_files"]}
+    quiz_ids = {r["quiz_id"] for r in tables["quizzes"]}
+    minigame_ids = {r["minigame_id"] for r in tables["minigames"]}
 
-    # 1. Filter parent tables first
+    # First, remove children whose parent modules are not in the snapshot.
     tables["lessons"] = [
         r for r in tables["lessons"]
         if r["parent_module"] in module_ids
@@ -93,12 +96,10 @@ def _remove_orphaned_snapshot_rows(tables: dict) -> None:
         if r["module_id"] in module_ids
     ]
 
-    # 2. RE-COMPUTE ID sets after filtering parents!
+    # Recalculate lesson IDs after filtering.
     lesson_ids = {r["lesson_id"] for r in tables["lessons"]}
-    quiz_ids = {r["quiz_id"] for r in tables["quizzes"]}
-    minigame_ids = {r["minigame_id"] for r in tables["minigames"]}
 
-    # 3. Filter every association table against the updated parent IDs
+    # Filter every association table against all its required parents.
     tables["lesson_signs"] = [
         r for r in tables["lesson_signs"]
         if r["lesson_id"] in lesson_ids
@@ -270,18 +271,13 @@ def _apply_snapshot(snapshot: dict) -> dict:
             }
             pk_cols = [col.key for col in model.__mapper__.primary_key]
 
-            if table == "quiz_signs":
-                for record in records:
-                    if not db.get(m.Quiz, record["quiz_id"]) or not db.get(m.Sign, record["sign_id"]):
-                        print(f"Orphaned quiz_sign found! quiz_id={record['quiz_id']}, sign_id={record['sign_id']}")
-
             for record in records:
                 data = {
                     key: value
                     for key, value in record.items()
                     if key in mapped_columns
                     and key not in ("updated_at", "content_version_id")
-                }  
+                }
 
                 data["content_version_id"] = local_version_id
                 data["is_deleted"] = False
@@ -291,15 +287,6 @@ def _apply_snapshot(snapshot: dict) -> dict:
                     data["checksum"] = (
                         bytes.fromhex(checksum_hex) if checksum_hex else None
                     )
-
-                    # Ensure object_key is populated safely (handle alternative naming or fallback)
-                    if not data.get("object_key"):
-                        data["object_key"] = (
-                            record.get("object_key") 
-                            or record.get("object_path") 
-                            or record.get("file_path") 
-                            or f"media/{record.get('file_name', 'unknown')}"
-                        )
 
                 if "config" in mapped_columns:
                     data["config"] = record.get("config") or {}

@@ -10,16 +10,19 @@ import time
 from typing import Protocol
 import uuid
 from uuid import uuid4
-import logging
 
 from argon2 import PasswordHasher, Type
 from argon2.exceptions import InvalidHashError, VerificationError
 
 from .config import CLIENT_MODE
-from .api import auth_client as _http_client
-from .api import auth_client_distributed as _direct_client
-from .api.auth_client import AuthError, NetworkError
 
+# Import appropriate auth client based on mode
+if CLIENT_MODE == "distributed":
+    from .api import auth_client_distributed as auth_client
+    from .api.auth_client_distributed import AuthError, NetworkError
+else:
+    from .api import auth_client
+    from .api.auth_client import AuthError, NetworkError
 from .config import (
     OFFLINE_AUTH_LOCKOUT_MINUTES,
     OFFLINE_AUTH_MAX_DAYS,
@@ -38,7 +41,6 @@ __all__ = [
     "register_user", "authenticate_user", "authenticate_offline",
     "authenticate_with_supabase",
     "establish_session", "logout_user", "get_current_user", "get_access_token",
-    "sync_user_info"
 ]
 
 USERNAME_RE = re.compile(r"^[a-z0-9_.-]{3,30}$")
@@ -47,6 +49,7 @@ MIN_PASSWORD_LENGTH = 8
 INVALID = "Invalid username/email or password."
 TOKEN_REFRESH_MARGIN = 60  # seconds
 
+<<<<<<< HEAD
 class _AuthClient:
     """fastapi: HTTP only. direct: Supabase only.
     distributed: FastAPI first, Supabase only if FastAPI is unreachable."""
@@ -75,6 +78,8 @@ class _AuthClient:
 
 
 auth_client = _AuthClient()
+=======
+>>>>>>> parent of 762ea3c3 (Merge branch 'loue' into lyn)
 
 @dataclass(frozen=True)
 class User:
@@ -134,7 +139,7 @@ class SQLiteUserRepository:
                         created_at=u.updated_at or _utcnow(),
                         updated_at=u.updated_at or _utcnow(),
                     )
-                u = repo.get_user_by_username(db, key)
+                u = repo.get_user_by_email(db, key) if "@" in key else repo.get_user_by_username(db, key)
                 if u is None:
                     return None
                 return User(
@@ -171,14 +176,6 @@ _pending_tokens: dict[str, dict] = {}  # user_id -> tokens from a background log
 
 def _utcnow() -> datetime:
     return datetime.now(timezone.utc)
-
-
-def _is_valid_uuid(value) -> bool:
-    try:
-        uuid.UUID(str(value))
-        return True
-    except (ValueError, TypeError, AttributeError):
-        return False
 
 
 def _public_user(user) -> dict:
@@ -377,9 +374,8 @@ def register_user(username, email, password, display_name=None) -> dict:
                                     (display_name or "").strip() or None)
     except NetworkError:
         now = _utcnow()
-        uid = uuid4()
         user = User(
-            str(uid), norm_username, norm_email, _hasher.hash(password),
+            str(uuid4()), norm_username, norm_email, _hasher.hash(password),
             (display_name or "").strip() or norm_username, True, False, now, now,
         )
         _repository.add(user)
@@ -415,48 +411,23 @@ def authenticate_user(identifier, password, *, establish_session=True) -> dict:
             _current_user = dict(public_user)
         return public_user
 
-    # Check local repository for existing offline-registered credentials
-    local_user = _repository.find_by_identifier(identifier)
-
-    # FastAPI resolves usernames itself; only the Supabase fallback needs an email.
+    # In distributed mode, if identifier is username, we need to look up email
     login_identifier = identifier
-    if "@" not in identifier and local_user and local_user.email:
-        login_identifier = local_user.email
-        
+    if CLIENT_MODE == "distributed" and "@" not in identifier:
+        try:
+            from .api.auth_client_distributed import get_user_by_username
+            # Try to get email from username
+            user = get_user_by_username(identifier)
+            if user:
+                login_identifier = user["email"]
+        except Exception:
+            # Fall through to existing logic (will try offline)
+            pass
+
     try:
         data = auth_client.login(login_identifier, password)
-    except AuthError as auth_err:
-        # Check if this user was created offline and can be safely linked/registered remotely
-        if local_user and local_user.password_hash:
-            try:
-                _hasher.verify(local_user.password_hash, password)
-                # Verified locally: create remote Supabase identity and sign in
-                try:
-                    auth_client.register(
-                        local_user.username, local_user.email, password, local_user.display_name
-                    )
-                    data = auth_client.login(local_user.email, password)
-                except Exception as link_err:
-                    logging.getLogger(__name__).warning("Remote account link failed: %s; falling back to offline", link_err)
-                    return authenticate_offline(identifier, password, establish_session=establish_session)
-            except (VerificationError, InvalidHashError):
-                raise auth_err
-        else:
-            raise
     except NetworkError:
         return authenticate_offline(identifier, password, establish_session=establish_session)
-
-    # Migrate local records if user ID changed from temporary offline UUID to authenticated remote UUID
-    try:
-        remote_user_id = uuid.UUID(data["profile"]["user_id"])
-        if local_user and _is_valid_uuid(local_user.user_id):
-            local_uid = uuid.UUID(str(local_user.user_id))
-            if local_uid != remote_user_id:
-                with session_scope() as db:
-                    repo.migrate_local_user_id(db, local_uid, remote_user_id)
-    except Exception as exc:
-        logging.getLogger(__name__).warning("User ID migration check failed: %s", exc)
-
     return _complete_online_login(data, password, establish_session=establish_session)
 
 
@@ -567,14 +538,8 @@ def get_access_token() -> str | None:
     """Valid access token or None. Refreshes when close to expiry. api_client calls this."""
     global _session
     if _current_user is None:
-        logging.warning("No current user in auth_service")
         return None
     user_id = _current_user.get("user_id")
-    logging.info(
-        "Auth state: user_present=True, user_id_valid=%s, session_present=%s",
-        _is_valid_uuid(user_id),
-        _session is not None,
-    )
     if isinstance(_repository, InMemoryUserRepository) or user_id == "dev-session":
         return None
     try:
@@ -595,11 +560,6 @@ def get_access_token() -> str | None:
         _session = None
         return None
     _apply_tokens(_current_user["user_id"], data["session"])
-    logging.debug(
-        "Access-token check: has_user=%s, has_session=%s",
-        _current_user is not None,
-        _session is not None,
-    )
     return _session["access_token"]
 
 
@@ -617,18 +577,3 @@ def logout_user() -> None:
 
 def get_current_user() -> dict | None:
     return dict(_current_user) if _current_user is not None else None
-
-def sync_user_info(user_id) -> None:
-    """Pull the signed-in learner's server data into SQLite. Blocking: call from a worker thread."""
-    try:
-        uid = uuid.UUID(str(user_id))
-    except ValueError:
-        return                                   # e.g. "dev-session"
-    current = _current_user
-    if current is None or str(current.get("user_id")) != str(uid):
-        return                                   # logged out or switched user meanwhile
-    from .progress_sync import pull_user_progress   # lazy: progress_sync imports auth_service
-    try:
-        pull_user_progress()
-    except Exception:
-        logging.getLogger(__name__).exception("Post-login sync failed")

@@ -11,14 +11,14 @@ class _AnswerProxy:
 """Sign Sprint screen redesigned to match the Figma mockup."""
 from pathlib import Path
 from PySide6.QtCore import Qt, QTimer, Signal, QRectF
-from PySide6.QtGui import QGuiApplication, QPixmap, QPainter, QColor, QFont
+from PySide6.QtGui import QPixmap, QPainter, QColor, QFont
 from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QHBoxLayout,
-                            QVBoxLayout, QGridLayout, QStackedWidget)
+                              QVBoxLayout, QGridLayout, QStackedWidget)
 from backend.minigame_service import ROOT, GameSession
 from screens.startup import FittedForm
 from .minigame_ui_components import (HowToPlayWidget, MinigameScoreWidget,
-                                    MinigameHeader, LetterTile, CircularActionButton)
-
+                                     MinigameHeader, LetterTile, CircularActionButton)
+from backend.media_service import alphabet_still
 
 class SignAvatarCard(QWidget):
     """
@@ -32,12 +32,8 @@ class SignAvatarCard(QWidget):
         self.is_paused = False
 
     def set_sign(self, letter):
-        if letter == " ":
-            self.pixmap_sign = QPixmap()
-        else:
-            from backend.media_service import alphabet_still
-            path = alphabet_still(letter) or (ROOT / "resources/VRM_SIGNS" / f"{letter.upper()}.png")
-            self.pixmap_sign = QPixmap(str(path)) if path and path.exists() else QPixmap()
+        path = alphabet_still(letter) if letter != " " else None
+        self.pixmap_sign = QPixmap(str(path)) if path else QPixmap()
         self.update()
 
     def set_paused(self, paused):
@@ -54,38 +50,16 @@ class SignAvatarCard(QWidget):
         painter.setBrush(QColor("#F9BD49"))
         painter.drawRoundedRect(card_rect, 40, 40)
 
-        # Draw sign avatar with centered zoom and fit
+        # Draw sign avatar
         if not self.pixmap_sign.isNull():
             target_rect = card_rect.adjusted(20, 20, -20, -20)
-            from PySide6.QtGui import QPainterPath
-            clip_path = QPainterPath()
-            clip_path.addRoundedRect(target_rect, 30, 30)
-            painter.save()
-            painter.setClipPath(clip_path)
-
-            pw, ph = self.pixmap_sign.width(), self.pixmap_sign.height()
-            tw, th = target_rect.width(), target_rect.height()
-
-            if pw > ph * 1.2:
-                side = ph
-                src_x = (pw - side) // 2
-                cropped = self.pixmap_sign.copy(src_x, 0, side, side)
-                scaled = cropped.scaled(
-                    int(tw), int(th),
-                    Qt.AspectRatioMode.KeepAspectRatioByExpanding,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-            else:
-                scaled = self.pixmap_sign.scaled(
-                    int(tw), int(th),
-                    Qt.AspectRatioMode.KeepAspectRatio,
-                    Qt.TransformationMode.SmoothTransformation,
-                )
-
-            x = target_rect.x() + (tw - scaled.width()) / 2
-            y = target_rect.y() + (th - scaled.height()) / 2
+            scaled = self.pixmap_sign.scaled(
+                int(target_rect.width()), int(target_rect.height()),
+                Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            )
+            x = target_rect.x() + (target_rect.width() - scaled.width()) / 2
+            y = target_rect.y() + (target_rect.height() - scaled.height()) / 2
             painter.drawPixmap(int(x), int(y), scaled)
-            painter.restore()
 
         # Draw Pause bars overlay if paused
         if self.is_paused:
@@ -110,17 +84,14 @@ class SignSprintGameView(QWidget):
     back_requested = Signal()
     close_clicked = Signal()
     game_finished = Signal(int, int)  # score, total
-
-    # Design size all absolute coordinates below are based on
-    BASE_W, BASE_H = 1920, 1080
+    BASE_WIDTH = 1920
+    BASE_HEIGHT = 1080
 
     def __init__(self, session, parent=None):
         super().__init__(parent)
         self.session = session
-        self._ready = False
-        self._last_scale = None
+        self.resize(self.BASE_WIDTH, self.BASE_HEIGHT)
         self.setFocusPolicy(Qt.FocusPolicy.StrongFocus)
-        self.setMinimumSize(0, 0)
 
         # Background foliage
         self.bg_label = QLabel(self)
@@ -211,74 +182,37 @@ class SignSprintGameView(QWidget):
         self.is_paused = False
         self.tile_rows = []
         self.tiles_list = []
+        self._scale_layout()
 
-        self._ready = True
-
-    # ------------------------------------------------------------------
-    # Responsive scaling
-    # ------------------------------------------------------------------
     def resizeEvent(self, event):
         super().resizeEvent(event)
         self._scale_layout()
 
-    @staticmethod
-    def _scale_fixed(widget, s):
-        """Scale a fixed-size widget from its original design size."""
-        base = getattr(widget, "_base_fixed", None)
-        if base is None:
-            if widget.minimumSize() == widget.maximumSize() and widget.minimumWidth() > 0:
-                base = widget._base_fixed = (widget.minimumWidth(), widget.minimumHeight())
-            else:
-                return
-        widget.setFixedSize(max(1, int(base[0] * s)), max(1, int(base[1] * s)))
-
     def _scale_layout(self):
-        if not self._ready or self.width() < 2 or self.height() < 2:
+        if self.width() <= 0 or self.height() <= 0:
             return
-        s = max(0.1, min(self.width() / self.BASE_W, self.height() / self.BASE_H))
-        ox = (self.width() - self.BASE_W * s) / 2    # letterbox offsets
-        oy = (self.height() - self.BASE_H * s) / 2
+        sx = self.width() / float(self.BASE_WIDTH)
+        sy = self.height() / float(self.BASE_HEIGHT)
+        scale = min(sx, sy)
 
-        def g(x, y, w, h):  # design coords -> scaled coords (relative to parent)
-            return int(x * s), int(y * s), max(1, int(w * s)), max(1, int(h * s))
-
-        # Background + header span the full widget
         self.bg_label.setGeometry(0, 0, self.width(), self.height())
-        self.header.setGeometry(0, int(oy), self.width(), max(1, int(90 * s)))
+        self.header.setGeometry(0, 0, self.width(), max(60, int(90 * sy)))
+        self.card.setGeometry(int(50 * sx), int(95 * sy), max(1, int(1820 * sx)), max(1, int(935 * sy)))
+        self.avatar.setGeometry(int(70 * sx), int(70 * sy), max(1, int(650 * scale)), max(1, int(650 * scale)))
+        self.avatar.setFixedSize(max(120, int(650 * scale)), max(120, int(650 * scale)))
+        self.instruction_note.setGeometry(int(780 * sx), int(835 * sy), max(1, int(900 * sx)), max(1, int(40 * sy)))
+        self.controls_widget.setGeometry(int(1000 * sx), int(70 * sy), max(1, int(700 * sx)), max(1, int(90 * sy)))
+        self.tiles_container.setGeometry(int(780 * sx), int(220 * sy), max(1, int(960 * sx)), max(1, int(580 * sy)))
+        self.mascot_correct.setGeometry(int(1580 * sx), int(680 * sy), max(1, int(240 * sx)), max(1, int(240 * sy)))
 
-        # Main card (positioned in the centered 16:9 area)
-        x, y, w, h = g(50, 95, 1820, 935)
-        self.card.setGeometry(int(ox) + x, int(oy) + y, w, h)
-
-        # Everything inside the card
-        self.avatar.setFixedSize(max(1, int(650 * s)), max(1, int(650 * s)))
-        self.avatar.move(int(70 * s), int(70 * s))
-        self.instruction_note.setGeometry(*g(780, 835, 900, 40))
-        self.controls_widget.setGeometry(*g(1000, 70, 700, 90))
-        self.tiles_container.setGeometry(*g(780, 220, 960, 580))
-        self.mascot_correct.setGeometry(*g(1580, 680, 240, 240))
-
-        self.controls_widget.layout().setSpacing(int(25 * s))
-        for btn in (self.btn_pause, self.btn_replay, self.btn_next):
-            self._scale_fixed(btn, s)
-        self.lbl_hourglass.setFixedSize(max(1, int(50 * s)), max(1, int(60 * s)))
-
-        for row in self.tile_rows:
-            row.layout().setSpacing(int(15 * s))
-        for tile, _ in self.tiles_list:
-            self._scale_fixed(tile, s)
-
-        # Stylesheets (font sizes / radius) only when the scale changes
-        if self._last_scale != s:
-            self._last_scale = s
-            self.card.setStyleSheet(
-                f"QWidget {{ background-color: #FAFFDC; border-radius: {int(40 * s)}px; }}")
-            self.instruction_note.setStyleSheet(
-                f"QLabel {{ font-family: 'Segoe UI'; font-size: {max(8, int(20 * s))}px; "
-                "font-style: italic; color: #8F8C78; background: transparent; }")
-            self.lbl_timer.setStyleSheet(
-                f"QLabel {{ font-family: 'Segoe UI'; font-size: {max(10, int(38 * s))}px; "
-                "font-weight: bold; font-style: italic; color: #704833; background: transparent; }")
+    def fit_sequence(self):
+        w_scale = self.width() / self.BASE_WIDTH
+        h_scale = self.height() / self.BASE_HEIGHT
+        if hasattr(self, "game_view") and hasattr(self.game_view, "controls_widget"):
+            self.game_view.controls_widget.setGeometry(
+                int(200 * w_scale), int(70 * h_scale),
+                max(1, int(500 * w_scale)), max(1, int(90 * h_scale))
+            )
 
     def start_game(self):
         self.load_round()
@@ -307,15 +241,11 @@ class SignSprintGameView(QWidget):
             row_layout.setSpacing(15)
             row_layout.setAlignment(Qt.AlignmentFlag.AlignLeft)
             for ch in w:
-                tile = LetterTile("", parent=row_widget)
+                tile = LetterTile("", row_widget)
                 row_layout.addWidget(tile)
                 self.tiles_list.append((tile, ch))
             self.tiles_layout.addWidget(row_widget)
             self.tile_rows.append(row_widget)
-
-        # Scale the freshly built tiles to the current window size
-        self._last_scale = None
-        self._scale_layout()
 
         self.sequence_timer.setInterval(self.session.sequence_interval)
         self.sequence_timer.start()
@@ -465,16 +395,10 @@ class SignSprint(QWidget):
 
     def __init__(self, parent=None, module_code=None, *, scope=None):
         super().__init__(parent)
+        self.resize(1920, 1080)
         self.scope = scope
         self.module_code = module_code
         self.session = GameSession("sprint", rounds=5, module_code=module_code, scope=scope)
-
-        # Fit to the screen instead of forcing 1920x1080
-        screen = QGuiApplication.primaryScreen().availableGeometry()
-        w = min(1920, int(screen.width() * 0.9))
-        h = min(1080, int(screen.height() * 0.9))
-        self.resize(w, h)
-        self.setMinimumSize(800, 450)
 
         self.stack = QStackedWidget(self)
         layout = QVBoxLayout(self)
@@ -501,11 +425,6 @@ class SignSprint(QWidget):
         self.score_view.replay_requested.connect(self.start_game)
         self.stack.addWidget(self.score_view)
 
-        # Make sure no page can hold the window open at a large size
-        self.stack.setMinimumSize(0, 0)
-        for page in (self.how_to, self.game_view, self.score_view):
-            page.setMinimumSize(0, 0)
-
     def pause(self):
         self.game_view.toggle_pause()
 
@@ -515,6 +434,17 @@ class SignSprint(QWidget):
 
     def replay(self):
         self.game_view.replay()
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self.stack.resize(self.size())
+        self.how_to.resize(self.size())
+        self.score_view.resize(self.size())
+        try:
+            self.game_view.resize(self.size())
+            self.game_view._scale_layout()
+        except Exception:
+            pass
 
     @property
     def image(self):
@@ -575,7 +505,16 @@ class SignSprint(QWidget):
         return btn
 
     def fit_sequence(self):
-        self.game_view._scale_layout()
+        w_scale = self.width() / 1920
+        h_scale = self.height() / 1080
+        if hasattr(self, "game_view") and hasattr(self.game_view, "controls_widget"):
+            self.game_view.controls_widget.setGeometry(
+                int(200 * w_scale), int(70 * h_scale),
+                max(1, int(500 * w_scale)), max(1, int(90 * h_scale))
+            )
+        size = max(120, min(280, int(min(self.width(), self.height()) * 0.32)))
+        if hasattr(self, "game_view") and hasattr(self.game_view, "avatar"):
+            self.game_view.avatar.setFixedSize(size, size)
 
     def start_game(self):
         self.session = GameSession("sprint", rounds=5, module_code=self.module_code, scope=self.scope)
@@ -596,10 +535,11 @@ class SignSprint(QWidget):
         except Exception as e:
             import logging
             logging.getLogger(__name__).warning("Failed to record minigame score: %s", e)
-
+            
     def stop(self):
         self.game_view.countdown_timer.stop()
         self.game_view.sequence_timer.stop()
+        getattr(self, "game_view", None)
 
     def hideEvent(self, event):
         self.stop()

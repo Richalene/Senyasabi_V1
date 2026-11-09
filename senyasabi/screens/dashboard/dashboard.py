@@ -4,7 +4,9 @@ import sys
 
 import math
 import os
-from PySide6.QtCore import Qt, Signal, QPointF, QRectF
+import re
+from PySide6.QtCore import (QEasingCurve, QEvent, QObject, Qt, Signal, QPoint,
+                            QPointF, QRect, QRectF, QVariantAnimation)
 from PySide6.QtGui import (
     QPixmap, QCloseEvent, QFontDatabase, QPainter,
     QColor, QPen, QBrush, QPolygonF, QFont
@@ -19,14 +21,10 @@ from ui.generated.dashboard_ui import Ui_Dashboard
 from backend import auth_service, dashboard_service
 
 def _ensure_cherry_bomb_font():
-    try:
-        from backend.paths import get_base_dir
-        font_path = str(get_base_dir() / "resources" / "font" / "CherryBombOne-Regular.ttf")
-    except ImportError:
-        font_path = os.path.join(
-            os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
-            "resources", "font", "CherryBombOne-Regular.ttf"
-        )
+    font_path = os.path.join(
+        os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))),
+        "resources", "font", "CherryBombOne-Regular.ttf"
+    )
     if os.path.exists(font_path):
         QFontDatabase.addApplicationFont(font_path)
 
@@ -51,6 +49,120 @@ class _DataStatus(QWidget):
         self.hide()
 
 
+class _BounceHover(QObject):
+    _FONT_SIZE = re.compile(r"(font-size\s*:\s*)(\d+(?:\.\d+)?)(px|pt)", re.IGNORECASE)
+
+    def __init__(self, button, window):
+        super().__init__(button)
+        self.button = button
+        button.setProperty("hoverBounceHandled", True)
+        self.window = window
+        self.animation = None
+        self.baseline = None
+        self.current_scale = 1.0
+        button.installEventFilter(self)
+        window.installEventFilter(self)
+
+    def eventFilter(self, watched, event):
+        if watched is self.button:
+            if event.type() == QEvent.Type.Enter:
+                self._animate(True)
+            elif event.type() == QEvent.Type.Leave:
+                self._animate(False)
+        elif watched is self.window and event.type() == QEvent.Type.Resize:
+            self._stop_animation()
+            self._restore_baseline()
+            self.baseline = None
+            self.current_scale = 1.0
+        return super().eventFilter(watched, event)
+
+    @staticmethod
+    def _scaled_rect(rect, factor):
+        width = max(1, round(rect.width() * factor))
+        height = max(1, round(rect.height() * factor))
+        center = rect.center()
+        return QRect(
+            round(center.x() - width / 2), round(center.y() - height / 2),
+            width, height,
+        )
+
+    @classmethod
+    def _scaled_font_style(cls, style, factor):
+        return cls._FONT_SIZE.sub(
+            lambda match: (
+                f"{match.group(1)}{float(match.group(2)) * factor:.1f}{match.group(3)}"
+            ),
+            style,
+        )
+
+    def _restore_baseline(self):
+        if self.baseline is None:
+            return
+        button_rect, children = self.baseline
+        self.button.setGeometry(button_rect)
+        for child, rect, style in children:
+            child.setGeometry(rect)
+            child.setStyleSheet(style)
+
+    def _stop_animation(self):
+        animation, self.animation = self.animation, None
+        if animation is not None:
+            animation.stop()
+            animation.deleteLater()
+
+    def _animate(self, entering):
+        self._stop_animation()
+        if entering and self.baseline is None:
+            children = self.button.findChildren(
+                QLabel, options=Qt.FindChildOption.FindDirectChildrenOnly
+            )
+            self.baseline = (
+                self.button.geometry(),
+                [(child, child.geometry(), child.styleSheet()) for child in children],
+            )
+        if self.baseline is None:
+            return
+
+        button_rect, children = self.baseline
+        animation = QVariantAnimation(self.button)
+        animation.setDuration(330 if entering else 185)
+        animation.setStartValue(self.current_scale)
+        if entering:
+            animation.setKeyValueAt(0.42, 1.15)
+            animation.setEndValue(1.065)
+            animation.setEasingCurve(QEasingCurve.Type.OutCubic)
+        else:
+            animation.setEndValue(1.0)
+            animation.setEasingCurve(QEasingCurve.Type.OutBack)
+
+        def apply_scale(value):
+            factor = float(value)
+            scaled_button = self._scaled_rect(button_rect, factor)
+            self.button.setGeometry(scaled_button)
+            offset = QPoint(button_rect.x() - scaled_button.x(),
+                            button_rect.y() - scaled_button.y())
+            for child, rect, style in children:
+                child.setGeometry(rect.translated(offset))
+                child.setStyleSheet(self._scaled_font_style(style, factor))
+            self.current_scale = factor
+
+        animation.valueChanged.connect(apply_scale)
+        self.animation = animation
+
+        def finish():
+            if self.animation is not animation:
+                return
+            self.animation = None
+            if self.current_scale <= 1.0:
+                self._restore_baseline()
+                self.baseline = None
+                self.current_scale = 1.0
+            animation.deleteLater()
+
+        animation.finished.connect(finish)
+        animation.start()
+
+
 def _session_user_id():
     user = auth_service.get_current_user()
     return user.get("user_id") if user else None
@@ -58,38 +170,16 @@ def _session_user_id():
 
 class StatisticsDashboardWindow(QWidget):
     """Statistics view; all dashboard data comes through dashboard_service."""
-    logout_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
         _ensure_cherry_bomb_font()
         self.ui = Ui_Dashboard()
         self.ui.setupUi(self)
-        try:
-            from backend.paths import get_base_dir
-            root = get_base_dir()
-        except ImportError:
-            root = Path(__file__).resolve().parents[2]
+        root = Path(__file__).resolve().parents[2]
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/ui/dashboard_bg.png")))
             self.ui.imageBg.setScaledContents(True)
-
-        # Fix card background images with absolute paths for reliable rendering
-        img_ui = root / "resources/img/ui"
-        card_styles = {
-            self.ui.cardLessons: ("cardLessons", "db_lessoncomplete.png"),
-            self.ui.cardQuiz: ("cardQuiz", "db_totalquizscrs.png"),
-            self.ui.cardModule: ("cardModule", "db_module.png"),
-            self.ui.badgeCard: ("badgeCard", "db_badges.png"),
-            self.ui.cardMinigames: ("cardMinigames", "db_minigames.png"),
-            self.ui.btnLeaderboard: ("btnLeaderboard", "db_leaderboards.png"),
-        }
-        for widget, (selector, img_name) in card_styles.items():
-            img_path = (img_ui / img_name).as_posix()
-            widget.setStyleSheet(
-                f"#{selector} {{ background: transparent; border: none; "
-                f"border-image: url('{img_path}') 0 0 0 0 stretch stretch; }}"
-            )
         self.ui.titlePanel.hide()
         self.ui.btnBack = BackButton.replace(self.ui.btnBack)
         self.ui.streakPanel.hide()
@@ -100,10 +190,6 @@ class StatisticsDashboardWindow(QWidget):
         self.header = SenyaSabiHeader(self)
         self.header.anchor_to_canvas(self.size())
         install_page_menu(self, header=self.header)
-        if self.header.menu_button is not None and hasattr(self.header.menu_button, "menu"):
-            menu = self.header.menu_button.menu()
-            if hasattr(menu, "sign_out_action"):
-                menu.sign_out_action.triggered.connect(self.logout_requested.emit)
         self.ui.lblCurrentStreak = self.header.streak_label
         self.ui.btnMenu = self.header.menu_button
         self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
@@ -354,34 +440,16 @@ class StatisticsDashboardWindow(QWidget):
             from screens.dashboard.leaderboard import LeaderboardWindow
             self._leaderboard = LeaderboardWindow()
             self._leaderboard.back_requested.connect(self._back_from_leaderboard)
-            self._leaderboard.logout_requested.connect(self.logout_requested.emit)
-        from screens.app_controller import get_active_controller
-        controller = get_active_controller()
-        if controller is not None and hasattr(controller, "_show_screen"):
-            controller._show_screen(self._leaderboard)
-        else:
-            self._leaderboard.show()
-            self.hide()
+        self._leaderboard.show()
+        self.hide()
 
     def _back_from_leaderboard(self):
-        from screens.app_controller import get_active_controller
-        controller = get_active_controller()
-        if controller is not None and hasattr(controller, "_show_screen"):
-            controller._show_screen(self)
-        else:
-            if self._leaderboard is not None:
-                self._leaderboard.hide()
-            self.show()
+        self._leaderboard.hide()
+        self.show()
 
     def _menu_from_leaderboard(self):
-        from screens.app_controller import get_active_controller
-        controller = get_active_controller()
-        if controller is not None and hasattr(controller, "show_main_menu"):
-            controller.show_main_menu()
-        else:
-            if self._leaderboard is not None:
-                self._leaderboard.hide()
-            self._open_menu()
+        self._leaderboard.hide()
+        self._open_menu()
 
     def closeEvent(self, event):
         self.loading.cancel()
@@ -412,49 +480,18 @@ class DashboardWindow(QWidget):
         _ensure_cherry_bomb_font()
         self.ui = Ui_main()
         self.ui.setupUi(self)
-        try:
-            from backend.paths import get_base_dir
-            root = get_base_dir()
-        except ImportError:
-            root = Path(__file__).resolve().parents[2]
+        self.ui.btnStartLearning.setGeometry(930, 180, 400, 198)
+        self.ui.lblStartLearningText.setGeometry(20, 22, 360, 154)
+        self.ui.lblStartLearningText.setStyleSheet(
+            'font-family: "Cherry Bomb One", "Segoe UI"; font-size: 40px; '
+            'color: #5c3b28; background: transparent;'
+        )
+        self.ui.btnMinigames.setGeometry(1330, 196, 400, 182)
+        self.ui.lblMinigamesText.setGeometry(20, 20, 360, 142)
+        root = Path(__file__).resolve().parents[2]
         if hasattr(self.ui, "imageBg"):
             self.ui.imageBg.setPixmap(QPixmap(str(root / "resources/img/home_bg.png")))
             self.ui.imageBg.setScaledContents(True)
-
-        # Fix button/card background images with absolute paths for reliable rendering
-        img_ui = root / "resources/img/ui"
-        home_styles = {
-            self.ui.btnStartLearning: (
-                f"QPushButton#btnStartLearning {{ background: transparent; border: none; "
-                f"border-image: url('{(img_ui / 'button_start.png').as_posix()}') 0 0 0 0 stretch stretch; }} "
-                f"QPushButton#btnStartLearning:hover {{ border-image: url('{(img_ui / 'button_start_hover.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
-            ),
-            self.ui.btnMinigames: (
-                f"QPushButton#btnMinigames {{ background: transparent; border: none; "
-                f"border-image: url('{(img_ui / 'button_mg.png').as_posix()}') 0 0 0 0 stretch stretch; }} "
-                f"QPushButton#btnMinigames:hover {{ border-image: url('{(img_ui / 'button_mg_hover.png').as_posix()}') 0 0 0 0 stretch stretch; }} "
-                f"QPushButton#btnMinigames QLabel#lblMinigamesText {{ color: #729b1e; }} "
-                f"QPushButton#btnMinigames:hover QLabel#lblMinigamesText {{ color: #5c3b28; }}"
-            ),
-            self.ui.btnLessonsCompleted: (
-                f"QPushButton#btnLessonsCompleted {{ background: transparent; border: none; "
-                f"border-image: url('{(img_ui / 'db_lessoncomplete.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
-            ),
-            self.ui.btnModule: (
-                f"QPushButton#btnModule {{ background: transparent; border: none; "
-                f"border-image: url('{(img_ui / 'db_module.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
-            ),
-            self.ui.btnLatestBadge: (
-                f"QPushButton#btnLatestBadge {{ background: transparent; border: none; "
-                f"border-image: url('{(img_ui / 'db_badges.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
-            ),
-            self.ui.btnLeaderboardRank: (
-                f"QPushButton#btnLeaderboardRank {{ background: transparent; border: none; "
-                f"border-image: url('{(img_ui / 'db_leaderboards.png').as_posix()}') 0 0 0 0 stretch stretch; }}"
-            ),
-        }
-        for btn, style in home_styles.items():
-            btn.setStyleSheet(style)
         self.ui.streakCard.hide()
         self.ui.streakValue.setObjectName("replacedStreakValue")
         self.ui.btnHamburger.hide()
@@ -497,20 +534,18 @@ class DashboardWindow(QWidget):
         self._loading_user_id = None
         self._render_home_stats(dashboard_service.DefaultDashboardRepository().get_dashboard_stats(None))
         self._fitted_form = FittedForm(self)
-        try:
-            from screens.hover_bounce import install_hover_bounce
-            for btn in (
+        self._hover_bounces = [
+            _BounceHover(button, self)
+            for button in (
                 self.ui.btnStartLearning,
                 self.ui.btnMinigames,
                 self.ui.btnLessonsCompleted,
                 self.ui.btnModule,
                 self.ui.btnLatestBadge,
                 self.ui.btnLeaderboardRank,
-            ):
-                install_hover_bounce(btn)
-        except Exception:
-            pass
-        self.loading = LoadingOverlay(self)
+            )
+        ]
+        self.loading = LoadingOverlay(self, cancel_on_hide=False)
 
     def refresh_home_stats(self):
         user = auth_service.get_current_user() or {}
@@ -557,11 +592,18 @@ class DashboardWindow(QWidget):
         self.ui.lblLeaderboardRank.setText(f"#{rank}" if rank else "Unranked")
 
     def showEvent(self, event):
-        self.refresh_home_stats()
+        user = auth_service.get_current_user() or {}
+        user_id = user.get("user_id")
+        display_name = user.get("display_name") or user.get("username") or "Learner"
+        self.ui.welcomeLabel.setText(f"Welcome Back, {display_name}!")
+        if self._displayed_user_id != user_id:
+            self.refresh_home_stats()
         super().showEvent(event)
 
+    def invalidate_home_stats(self):
+        self._displayed_user_id = object()
+
     def hideEvent(self, event):
-        self.loading.cancel()
         super().hideEvent(event)
 
     def closeEvent(self, event):

@@ -6,7 +6,7 @@ from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxL
                               QScrollArea, QGridLayout, QLineEdit, QApplication)
 from backend.minigame_service import ROOT, CONFIG, GameSession
 from screens.navigation import BackButton, install_page_menu
-
+from backend.media_service import alphabet_still
 
 def style(widget, name):
     widget.setProperty("class", name)
@@ -47,9 +47,8 @@ class SignImage(QLabel):
     def __init__(self, letter, size=120):
         super().__init__()
         style(self, "signImageCard")
-        from backend.media_service import alphabet_still
-        path = alphabet_still(letter) or (ROOT / "resources/VRM_SIGNS" / f"{letter}.png")
-        self.source = QPixmap(str(path)) if path and path.exists() else QPixmap()
+        path = alphabet_still(letter)
+        self.source = QPixmap(str(path)) if path else QPixmap()
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setFixedSize(size, size)
         self.refresh()

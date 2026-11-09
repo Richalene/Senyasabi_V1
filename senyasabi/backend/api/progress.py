@@ -22,7 +22,6 @@ def _own(user_id_in_path: str, token_user_id: str) -> str:
     return token_user_id
 
 _SNAPSHOT_QUERIES = {
-    "users": "SELECT user_id, username, email, display_name, notifications_enabled, dark_mode, created_at, updated_at FROM public.users WHERE user_id = :u",
     "lesson_progress": "SELECT user_id, lesson_id, completion_percentage, status, last_accessed, completed_at, "
                        "time_spent_seconds, client_updated_at, updated_at FROM public.lesson_progress WHERE user_id = :u",
     "quiz_attempts": "SELECT attempt_id, user_id, quiz_id, started_at, completed_at, score, max_score, percentage, "

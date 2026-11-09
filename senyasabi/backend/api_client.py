@@ -20,16 +20,6 @@ from .config import FASTAPI_HOST, FASTAPI_PORT, CLIENT_MODE, API_BASE_URL, SUPAB
 
 log = logging.getLogger(__name__)
 
-
-def _current_client_mode() -> str:
-    """Get active client mode from env or config."""
-    import os
-    env_mode = os.getenv("SYSTEM_MODE") or os.getenv("SENYASABI_CLIENT_MODE")
-    if env_mode:
-        return env_mode.lower()
-    from . import config
-    return getattr(config, "CLIENT_MODE", CLIENT_MODE).lower()
-
 OFFLINE_TIMEOUT = 4            # one quick probe while offline
 OFFLINE_PROBE_INTERVAL = 15    # seconds between probes while offline
 
@@ -147,29 +137,15 @@ class APIClient:
         
     def check_online(self) -> bool:
         """
-        Check if the API or Supabase is accessible.
+        Check if the API is accessible.
         
         Returns:
             True if online, False otherwise
         """
-        mode = _current_client_mode()
-        ok = False
-        if mode in ("direct", "supabase"):
-            from .supabase_client import is_supabase_available
-            ok = is_supabase_available()
-        elif mode == "distributed":
-            try:
-                ok = requests.get(f"{self.config.base_url}/health", timeout=2).status_code == 200
-            except requests.exceptions.RequestException:
-                ok = False
-            if not ok:
-                from .supabase_client import is_supabase_available
-                ok = is_supabase_available()
-        else:
-            try:
-                ok = requests.get(f"{self.config.base_url}/health", timeout=5).status_code == 200
-            except requests.exceptions.RequestException:
-                ok = False
+        try:
+            ok = requests.get(f"{self.config.base_url}/health", timeout=5).status_code == 200
+        except requests.exceptions.RequestException:
+            ok = False
         _set_online(ok)
         return ok
 
@@ -372,10 +348,6 @@ class APIClient:
         """
         Get leaderboard.
         
-        In direct mode: Query Supabase leaderboard_cache
-        In distributed mode: Try FastAPI first, fall back to direct Supabase
-        In fastapi mode: Query FastAPI backend
-        
         Args:
             board_code: Leaderboard type (all_time, weekly, monthly)
             limit: Maximum entries
@@ -383,46 +355,9 @@ class APIClient:
         Returns:
             Leaderboard or None
         """
-        mode = _current_client_mode()
-        if mode in ("direct", "supabase"):
-            return self._get_leaderboard_from_supabase(board_code, limit)
-        elif mode == "distributed":
-            result = self._request("GET", f"/api/v1/leaderboard?board_code={board_code}&limit={limit}")
-            if result is not None:
-                return result
-            return self._get_leaderboard_from_supabase(board_code, limit)
-        else:  # fastapi mode
-            return self._request("GET", f"/api/v1/leaderboard?board_code={board_code}&limit={limit}")
-
-    def _get_leaderboard_from_supabase(self, board_code: str = "all_time", limit: int = 100) -> Optional[Dict]:
-        """Fetch cached leaderboard directly from Supabase (fallback mode)."""
-        from .supabase_client import get_supabase_client
-        supabase = get_supabase_client()
-        if supabase is None:
-            return None
-        try:
-            response = (
-                supabase.table("leaderboard_cache")
-                .select("user_id,display_name,total_score,rank_position,current_streak,badge_count")
-                .eq("board_code", board_code)
-                .order("rank_position", desc=False)
-                .order("display_name", desc=False)
-                .limit(limit)
-                .execute()
-            )
-            if response and hasattr(response, "data") and response.data is not None:
-                return {
-                    "board_code": board_code,
-                    "limit": limit,
-                    "entries": response.data,
-                    "cached": True,
-                }
-            return None
-        except Exception as exc:
-            log.warning("Supabase leaderboard query failed: %s", type(exc).__name__)
-            return None
-
-    def get_user_leaderboard_position(self, user_id: Any, board_code: str = "all_time") -> Optional[Dict]:
+        return self._request("GET", f"/api/v1/leaderboard?board_code={board_code}&limit={limit}")
+    
+    def get_user_leaderboard_position(self, user_id: int, board_code: str = "all_time") -> Optional[Dict]:
         """
         Get user's leaderboard position.
         
@@ -433,38 +368,7 @@ class APIClient:
         Returns:
             User position or None
         """
-        mode = _current_client_mode()
-        if mode in ("direct", "supabase"):
-            return self._get_user_position_from_supabase(user_id, board_code)
-        elif mode == "distributed":
-            result = self._request("GET", f"/api/v1/leaderboard/user/{user_id}?board_code={board_code}")
-            if result is not None:
-                return result
-            return self._get_user_position_from_supabase(user_id, board_code)
-        else:  # fastapi mode
-            return self._request("GET", f"/api/v1/leaderboard/user/{user_id}?board_code={board_code}")
-
-    def _get_user_position_from_supabase(self, user_id: Any, board_code: str = "all_time") -> Optional[Dict]:
-        """Fetch user's leaderboard position directly from Supabase (fallback mode)."""
-        from .supabase_client import get_supabase_client
-        supabase = get_supabase_client()
-        if supabase is None:
-            return None
-        try:
-            response = (
-                supabase.table("leaderboard_cache")
-                .select("user_id,display_name,total_score,rank_position,current_streak,badge_count")
-                .eq("board_code", board_code)
-                .eq("user_id", str(user_id))
-                .limit(1)
-                .execute()
-            )
-            if response and hasattr(response, "data") and response.data:
-                return response.data[0]
-            return None
-        except Exception as exc:
-            log.warning("Supabase user position query failed: %s", type(exc).__name__)
-            return None
+        return self._request("GET", f"/api/v1/leaderboard/user/{user_id}?board_code={board_code}")
     
     # User methods
     def get_user_profile(self) -> Optional[Dict]:

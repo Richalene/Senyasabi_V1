@@ -54,7 +54,7 @@ EXPECTED_DATASET_PATH = config.DATA_DIR / "expected_dataset.md"
 LABELS_PATH = config.DATA_DIR / "105labels.json"
 MINIGAMES_PATH = config.DATA_DIR / "minigames.json"
 
-CONTENT_VERSION_NUMBER = 15
+CONTENT_VERSION_NUMBER = 1
 EXPECTED_MODULE_COUNT = 7
 QUIZ_PASSING_SCORE = 70
 MEDIA_ROLE = "demonstration"

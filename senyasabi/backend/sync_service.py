@@ -12,7 +12,6 @@ import json
 from datetime import datetime, timezone
 import logging
 import uuid
-from typing import Any, cast
 
 from .database.session import session_scope
 from .database.repository import (
@@ -23,7 +22,6 @@ from .database.repository import (
     get_sync_queue_stats,
     get_content_version_by_number,
     create_or_update_lesson_progress,
-    rebuild_user_statistics,
     upsert_quiz_attempt,
     upsert_minigame_attempt,
 )
@@ -69,24 +67,6 @@ class SyncService:
     def __init__(self, settings=None) -> None:
         self.client_version = "1.0.0"
         self._qsettings = settings   # QSettings; created lazily so tests can inject one
-
-    def queue_user_update(
-        self,
-        user_id: uuid.UUID,
-        display_name: str | None = None,
-        notifications_enabled: bool | None = None,
-        dark_mode: bool | None = None,
-    ) -> uuid.UUID:
-        """Queue user metadata update for synchronization."""
-        sync_id = uuid.uuid4()
-        payload = {
-            "display_name": display_name,
-            "notifications_enabled": notifications_enabled,
-            "dark_mode": dark_mode,
-        }
-        with session_scope() as db:
-            enqueue_sync(db, sync_id, user_id, cast(Any, "user"), str(user_id), payload, "upsert")
-        return sync_id
 
     def queue_quiz_attempt(
         self,
@@ -144,10 +124,6 @@ class SyncService:
                 operation="upsert",
             )
             sync_id = item.sync_id
-            try:
-                rebuild_user_statistics(db, user_id)
-            except Exception as e:
-                _log.warning("Could not rebuild statistics after quiz attempt: %s", e)
 
         return sync_id
     
@@ -201,10 +177,6 @@ class SyncService:
                 operation="upsert",
             )
             sync_id = item.sync_id
-            try:
-                rebuild_user_statistics(db, user_id)
-            except Exception as e:
-                _log.warning("Could not rebuild statistics after minigame attempt: %s", e)
         return sync_id
 
     def queue_lesson_progress(
@@ -253,10 +225,6 @@ class SyncService:
                 payload=payload, operation="upsert",
             )
             sync_id = item.sync_id
-            try:
-                rebuild_user_statistics(db, user_id)
-            except Exception as e:
-                _log.warning("Could not rebuild statistics after lesson progress: %s", e)
         return sync_id
     
     # Backward-compatible alias for the old name
@@ -308,51 +276,25 @@ class SyncService:
         """
         from .config import CLIENT_MODE
         
-        # In distributed mode: try FastAPI first, fall back to Supabase
+        # In distributed mode, use Supabase directly
         if CLIENT_MODE == "distributed":
-            result = self._send_to_fastapi(item)
-            if result:
-                return True
-            # FastAPI failed, try Supabase as fallback
-            logger.info("FastAPI sync failed, trying Supabase fallback")
             return self._send_to_supabase(item)
         
-        # In direct mode: use Supabase directly
-        if CLIENT_MODE == "direct":
-            return self._send_to_supabase(item)
-        
-        # In fastapi mode: use FastAPI backend
+        # In fastapi mode, use FastAPI backend
         return self._send_to_fastapi(item)
     
-
     def _send_to_fastapi(self, item: SyncQueue) -> bool:
-        """Send one sync item to FastAPI using the current access token."""
-        import json
-        import requests
-
-        from .config import FASTAPI_HOST, FASTAPI_PORT, API_BASE_URL
-        from . import auth_service
-
-        token = auth_service.get_access_token()
-        logger.debug("Sync upload token available: %s", bool(token))
-
-        if not token:
-            logger.debug(
-                "Skipping sync upload: no access token available "
-                "(entity_type=%s, entity_id=%s). Item remains queued.",
-                item.entity_type,
-                item.entity_id,
-            )
-            return False
-
+        """Send sync item to the FastAPI backend."""
         payload = json.loads(item.payload)
-
-        url = (
-            f"{API_BASE_URL.rstrip('/')}/api/v1/sync/upload"
-            if API_BASE_URL
-            else f"http://{FASTAPI_HOST}:{FASTAPI_PORT}/api/v1/sync/upload"
-        )
-
+        from .config import FASTAPI_HOST, FASTAPI_PORT
+        from . import auth_service
+        
+        token = auth_service.get_access_token()
+        headers = {"Content-Type": "application/json"}
+        if token:
+            headers["Authorization"] = f"Bearer {token}"
+            
+        url = f"http://{FASTAPI_HOST}:{FASTAPI_PORT}/api/v1/sync/upload"
         req_body = {
             "user_id": str(item.user_id),
             "sync_items": [
@@ -364,44 +306,16 @@ class SyncService:
                 }
             ],
         }
-        logger.info(
-            "Sync request: token_present=%s, endpoint=%s",
-            bool(token),
-            url,
-        )
         try:
-            resp = requests.post(
-                url,
-                json=req_body,
-                headers={"Authorization": f"Bearer {token}"},
-                timeout=5,
-            )
-
+            import requests
+            resp = requests.post(url, json=req_body, headers=headers, timeout=5)
             if resp.status_code == 200:
                 data = resp.json()
-                succeeded = data.get("succeeded", 0)
-                logger.info("FastAPI sync response: %s", data)
-                return succeeded > 0
-
-            if resp.status_code in (401, 403):
-                logger.warning(
-                    "Sync authentication rejected: HTTP %s. "
-                    "Check token validity and FastAPI authentication. "
-                    "Response: %s",
-                    resp.status_code,
-                    resp.text[:500],
-                )
-                return False
-
-            logger.warning(
-                "Sync upload failed: HTTP %s: %s",
-                resp.status_code,
-                resp.text[:500],
-            )
+                return data.get("succeeded", 0) > 0
+            logger.warning("Sync upload returned status %s: %s", resp.status_code, resp.text)
             return False
-
-        except requests.exceptions.RequestException as exc:
-            logger.warning("Sync upload request failed: %s", exc)
+        except Exception as exc:
+            logger.warning("Sync upload network error: %s", exc)
             return False
     
     def _send_to_supabase(self, item: SyncQueue) -> bool:
@@ -418,16 +332,13 @@ class SyncService:
         
         try:
             result = upload_sync(str(item.user_id), sync_items)
-            if result and isinstance(result, dict):
-                succeeded = result.get("succeeded", 0)
-                logger.info("Supabase sync succeeded: %s items, response: %s", succeeded, result)
-                return succeeded > 0
-            logger.debug("Supabase sync skipped or returned no response (likely unauthenticated)")
+            if result:
+                return result.get("succeeded", 0) > 0
             return False
         except Exception as exc:
-            logger.debug("Supabase sync upload error: %s", exc)
+            logger.warning("Supabase sync upload error: %s", exc)
             return False
-        
+
     def get_sync_status(self, user_id: uuid.UUID) -> dict:
         """Get sync queue statistics for a user."""
         with session_scope() as db:
@@ -446,14 +357,9 @@ class SyncService:
     def _local_synced_version(self) -> int:
         with session_scope() as db:
             if db.scalar(select(m.Module.module_id).limit(1)) is None:
-                # Local database is empty! Reset the synced version back to 0
-                settings = self._settings()
-                settings.setValue(_SYNCED_VERSION_KEY, 0)
-                settings.sync()
-                return 0   
-        
+                return 0   # empty/rebuilt DB: ignore a stale marker
         try:
-            return max(0, int(str(self._settings().value(_SYNCED_VERSION_KEY, 0))))
+            return max(0, int(self._settings().value(_SYNCED_VERSION_KEY, 0)))
         except (TypeError, ValueError):
             return 0
 
@@ -690,16 +596,6 @@ class SyncService:
 # Singleton instance
 _sync_service = SyncService()
 
-def queue_user_update(
-    user_id: uuid.UUID,
-    display_name: str | None = None,
-    notifications_enabled: bool | None = None,
-    dark_mode: bool | None = None,
-) -> uuid.UUID:
-    """Queue user metadata update for synchronization."""
-    return _sync_service.queue_user_update(
-        user_id, display_name, notifications_enabled, dark_mode
-    )
 
 def queue_quiz_attempt(
     user_id: uuid.UUID,

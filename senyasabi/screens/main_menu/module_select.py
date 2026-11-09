@@ -16,11 +16,7 @@ from screens.main_menu.word_menu import _load_categories
 from screens.navigation import BackButton, install_page_menu
 from backend.content_service import ALPHABET, get_modules
 
-try:
-    from backend.paths import get_base_dir
-    ROOT = get_base_dir()
-except ImportError:
-    ROOT = Path(__file__).resolve().parents[2]
+ROOT = Path(__file__).resolve().parents[2]
 # Positions are canvas fractions, independent of desktop resolution.
 # Trajectory along horizontal branch leading to golden walnut cache matching reference mockup
 POSITIONS = (
@@ -49,36 +45,32 @@ MODULE_NODES: list[dict[str, str | int | float | bool]] = [
     dict(
         module_code="number",
         title="Numbers",
-        description="Lesson coming soon",
-        count=0,
-        coming_soon=True,
+        description="Learn FSL words and phrases",
+        count=len(get_words_for_module("number")),
         x=POSITIONS[0][0],
         y=POSITIONS[0][1],
     ),
     dict(
         module_code="family",
         title="Family Members",
-        description="Lesson coming soon",
-        count=0,
-        coming_soon=True,
+        description="Learn FSL words and phrases",
+        count=len(get_words_for_module("family")),
         x=POSITIONS[1][0],
         y=POSITIONS[1][1],
     ),
     dict(
         module_code="communication",
         title="Basic Communication",
-        description="Lesson coming soon",
-        count=0,
-        coming_soon=True,
+        description="Covers Greetings and Survival",
+        count=len(get_words_for_module("communication")),
         x=POSITIONS[2][0],
         y=POSITIONS[2][1],
     ),
     dict(
         module_code="days",
         title="Days of the Week",
-        description="Lesson coming soon",
-        count=0,
-        coming_soon=True,
+        description="Learn FSL words and phrases",
+        count=len(get_words_for_module("days")),
         x=POSITIONS[3][0],
         y=POSITIONS[3][1],
     ),
