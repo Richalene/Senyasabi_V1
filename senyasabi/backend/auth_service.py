@@ -59,10 +59,10 @@ class _AuthClient:
         except NetworkError:
             if CLIENT_MODE != "distributed":
                 raise
-            # Supabase's password grant needs an email; without one, let the caller go offline.
-            if name == "login" and "@" not in args[0]:
-                raise
-            return getattr(_direct_client, name)(*args)
+            # Allow fallback to direct Supabase for both login and register
+            if name in ("login", "register"):
+                return getattr(_direct_client, name)(*args)
+            raise
 
     def register(self, *a):
         return self._call("register", *a)
