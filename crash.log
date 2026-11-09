@@ -291,3 +291,12 @@ Traceback (most recent call last):
 KeyboardInterrupt
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 309, in logout
+    self.main_menu.invalidate_home_stats()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardWindow' object has no attribute 'invalidate_home_stats'
+
+================================================

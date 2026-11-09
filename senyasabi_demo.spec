@@ -66,6 +66,7 @@ hidden_imports = [
     "keras",
     "sklearn",
     "sklearn.preprocessing",
+    "matplotlib",
     
     # Security, Keyring, and DB
     "argon2",
@@ -80,7 +81,6 @@ hidden_imports = [
     
     # Backend application modules
     "backend",
-    "backend.main",
     "backend.paths",
     "backend.config",
     "backend.api_client",
@@ -149,11 +149,6 @@ hidden_imports = [
     "screens.minigames.sign_sprint",
     "screens.minigames.sign_detective",
     "screens.quizzes.module_quiz",
-
-    "runpy",
-    "senyasabi",
-    "senyasabi.backend",
-    "senyasabi.backend.main",
 ]
 
 # Targeted exclusions to keep package well under 1 GB:
@@ -178,7 +173,6 @@ excludes = [
     # Unused ML & scientific libraries
     "jax",
     "jaxlib",
-    "matplotlib",
     "tensorboard",
     "boto3",
     "botocore",
@@ -191,14 +185,9 @@ excludes = [
     "pytest",
 ]
 
-project_root = Path(SPECPATH).resolve()
-
 a = Analysis(
-    [str(project_root / "launcher.py")],
-    pathex=[
-        str(project_root),
-        str(senyasabi_root),
-    ],
+    [str(senyasabi_root / "main.py")],
+    pathex=[str(senyasabi_root)],
     binaries=[],
     datas=datas,
     hiddenimports=hidden_imports,
@@ -206,6 +195,9 @@ a = Analysis(
     hooksconfig={},
     runtime_hooks=[],
     excludes=excludes,
+    win_no_prefer_redirects=False,
+    win_private_assemblies=False,
+    cipher=block_cipher,
     noarchive=False,
 )
 
@@ -226,7 +218,7 @@ exe = EXE(
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
-    entitlements_file=None,
+    entitlements_file="entitlements.plist",
     icon=str(senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png") if (senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png").exists() else None,
 )
 
@@ -250,9 +242,8 @@ if sys.platform == "darwin":
         bundle_identifier="com.senyasabi.demo",
         info_plist={
             "NSCameraUsageDescription": "SenyaSabi requires camera access for sign language recognition during lessons and minigames.",
-            "NSMicrophoneUsageDescription": "SenyaSabi does not require microphone access.",
             "CFBundleShortVersionString": "1.0.0",
             "CFBundleVersion": "1.0.0",
-            "NSHighResolutionCapable": "True",
+            "NSHighResolutionCapable": True,
         },
     )
