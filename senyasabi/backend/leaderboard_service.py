@@ -53,7 +53,9 @@ class SyncedLeaderboardRepository:
                     entries[entry["user_id"]] = entry
                 else:
                     cached_entry.update(username=entry["username"],
-                                        total_score=entry["total_score"])
+                                        total_score=max(cached_entry.get("total_score", 0), entry.get("total_score", 0)),
+                                        current_streak=max(cached_entry.get("current_streak", 0), entry.get("current_streak", 0)),
+                                        badges_unlocked=max(cached_entry.get("badges_unlocked", 0), entry.get("badges_unlocked", 0)))
             merged = _rank_entries(list(entries.values()))
 
             # Check if cache is stale and trigger background refresh
@@ -126,16 +128,29 @@ class SyncedLeaderboardRepository:
                     for user_id, score in query.group_by(model.user_id).all():
                         scores[str(user_id)] = scores.get(str(user_id), 0) + int(score or 0)
 
-                if not scores:
+                users = db.query(User).all()
+                if not users:
                     return None
 
-                users = db.query(User).filter(User.user_id.in_(
-                    [uuid.UUID(user_id) for user_id in scores])).all()
-                entries = [
-                    _entry(user.user_id, user.display_name or user.username, scores[str(user.user_id)], 0)
-                    for user in users
-                ]
-                return _rank_entries(entries)
+                entries = []
+                for user in users:
+                    if user.username and user.username.startswith("lb-"):
+                        continue
+                    streak = 0
+                    if hasattr(user, "streak") and user.streak:
+                        streak = user.streak.current_streak or 0
+                    badges = len(user.badges) if hasattr(user, "badges") and user.badges else 0
+                    entries.append(
+                        _entry(
+                            user.user_id,
+                            user.display_name or user.username,
+                            scores.get(str(user.user_id), 0),
+                            0,
+                            streak,
+                            badges,
+                        )
+                    )
+                return _rank_entries(entries) if entries else None
         except Exception as error:
             _log.warning("Local leaderboard read failed: %s", error)
             return None
@@ -259,6 +274,12 @@ def get_leaderboard(user_id=_CURRENT_USER, board_code="all_time", force_refresh=
     ]
     try:
         entries = _repository.get_leaderboard(board_code, force_refresh=force_refresh)
+    except LeaderboardUnavailable as error:
+        if user_id and str(user_id).startswith("mock-"):
+            _log.warning("Leaderboard unavailable for mock user: %s", error)
+            entries = []
+        else:
+            raise
     except (OSError, ConnectionError, TimeoutError) as error:
         _log.warning("Leaderboard unavailable: %s", error)
         entries = []
@@ -282,3 +303,14 @@ def refresh_leaderboard(board_code="all_time"):
     if board_code not in BOARD_CODES:
         raise ValueError(f"Unknown leaderboard: {board_code}")
     _repository._fetch_background(board_code)
+
+
+def refresh_leaderboard_if_stale(board_code="all_time"):
+    """Refresh the leaderboard from the server only if the local cache is stale (> 5 min).
+
+    Returns immediately; if stale, background fetch is scheduled.
+    """
+    if board_code not in BOARD_CODES:
+        raise ValueError(f"Unknown leaderboard: {board_code}")
+    if _repository._is_cache_stale(board_code):
+        _repository._fetch_background(board_code)

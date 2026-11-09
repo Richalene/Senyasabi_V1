@@ -71,6 +71,11 @@ class SQLiteDashboardRepository(DefaultDashboardRepository):
             return self._get_default_stats()
 
         with session_scope() as db:
+            try:
+                from .database.repository import rebuild_user_statistics
+                rebuild_user_statistics(db, uid)
+            except Exception:
+                pass
             # Get user statistics
             stats = get_user_statistics(db, uid)
             if stats is None:
@@ -249,6 +254,21 @@ def get_dashboard_stats(user_id):
             defaults[key].update({name: item for name, item in value.items() if item is not None})
         elif key in defaults and value is not None:
             defaults[key] = value
+
+    # If rank is missing in local cache, fallback to remote user position lookup
+    if defaults["leaderboard"]["rank_position"] is None and user_id is not None:
+        try:
+            uuid.UUID(str(user_id))
+            client = get_api_client()
+            if getattr(client, "is_online", True):
+                pos = client.get_user_leaderboard_position(user_id, "all_time")
+                if pos and isinstance(pos, dict):
+                    r = pos.get("rank_position") or pos.get("rank")
+                    if r is not None:
+                        defaults["leaderboard"]["rank_position"] = r
+        except Exception as exc:
+            logger.debug("Dashboard rank position lookup fallback: %s", exc)
+
     return defaults
 
 

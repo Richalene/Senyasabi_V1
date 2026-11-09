@@ -40,11 +40,14 @@ class WaitConfirmDialog(QDialog):
 
         # Main backdrop container
         container = QWidget(self)
+        container.setObjectName("waitConfirmContainer")
         container.setGeometry(0, 0, 760, 420)
         container.setStyleSheet(
-            "background-color: #FFFDF0; "
-            "border: 4px solid #D6DFA0; "
-            "border-radius: 40px;"
+            "QWidget#waitConfirmContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #D6DFA0; "
+            "  border-radius: 40px;"
+            "}"
         )
 
         shadow = QGraphicsDropShadowEffect(container)
@@ -89,6 +92,7 @@ class WaitConfirmDialog(QDialog):
             "font-size: 26px; "
             "color: #4F3222; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(lbl_msg)
         layout.addSpacing(6)
@@ -171,11 +175,14 @@ class ComingSoonDialog(QDialog):
         self.resize(760, 480)
 
         container = QWidget(self)
+        container.setObjectName("comingSoonContainer")
         container.setGeometry(0, 0, 760, 480)
         container.setStyleSheet(
-            "background-color: #FFFDF0; "
-            "border: 4px solid #D6DFA0; "
-            "border-radius: 40px;"
+            "QWidget#comingSoonContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #D6DFA0; "
+            "  border-radius: 40px;"
+            "}"
         )
 
         shadow = QGraphicsDropShadowEffect(container)
@@ -205,28 +212,31 @@ class ComingSoonDialog(QDialog):
         layout.addWidget(pill)
 
         # Title
-        title = QLabel("Building Bridges, One Sign at a Time.", container)
-        title.setWordWrap(True)
+        title = QLabel("Building\nBridges, One\nSign at a Time.", container)
         title.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
-            "font-size: 36px; "
+            "font-size: 38px; "
             "font-weight: 800; "
+            "line-height: 1.1; "
             "color: #1A1A1A; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(title)
 
         # Subtitle
         desc = QLabel(
-            "We appreciate your patience as we continue building more features, "
-            "including complex and advanced learning courses.", container
+            "We appreciate your patience as we continue to work on a few features "
+            "and, eventually, more complex and advanced learning courses.", container
         )
         desc.setWordWrap(True)
         desc.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; "
             "font-size: 16px; "
             "color: #555555; "
+            "line-height: 1.4; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(desc)
         layout.addSpacing(10)
@@ -251,6 +261,14 @@ class ComingSoonDialog(QDialog):
         )
         btn_back.clicked.connect(self.accept)
         layout.addWidget(btn_back)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        parent = self.parentWidget()
+        if parent:
+            top = parent.window()
+            if top:
+                self.move(top.geometry().center() - self.rect().center())
 
 
 
@@ -569,23 +587,42 @@ class MenuCalloutPopup(QWidget):
     def _on_sign_out(self):
         self.close()
         self.sign_out_requested.emit()
-        win = self.anchor.window()
-        if hasattr(win, "logout_requested"):
-            win.logout_requested.emit()
-        elif hasattr(win, "logout"):
-            win.logout()
-        else:
-            from backend import auth_service
-            if hasattr(auth_service, 'logout_user'):
-                auth_service.logout_user()
-            elif hasattr(auth_service, 'clear_session'):
-                auth_service.clear_session()
+
+        from backend import auth_service
+        if auth_service.get_current_user() is None:
+            return
+
+        win = self.anchor.window() if self.anchor is not None else None
+        target = None
+        if win is not None and hasattr(win, "logout_requested"):
+            target = win
+        elif self.anchor is not None:
+            parent = self.anchor.parent()
+            while parent is not None:
+                if hasattr(parent, "logout_requested"):
+                    target = parent
+                    break
+                parent = parent.parent()
+
+        if target is not None:
+            target.logout_requested.emit()
+
+        if auth_service.get_current_user() is not None:
             app = QApplication.instance()
-            if app is not None:
-                for top in app.topLevelWidgets():
-                    if hasattr(top, "show_login"):
-                        top.show_login()
-                        break
+            controller = app.property("app_controller") if app is not None else None
+            if controller is None:
+                try:
+                    from screens.app_controller import get_active_controller
+                    controller = get_active_controller()
+                except Exception:
+                    controller = None
+
+            if controller is not None and hasattr(controller, "logout"):
+                controller.logout()
+            elif win is not None and hasattr(win, "logout"):
+                win.logout()
+            else:
+                auth_service.logout_user()
 
     def toggle_popup(self):
         if self.isVisible():
@@ -613,11 +650,14 @@ class ErrorDialog(QDialog):
 
         # Main backdrop container
         container = QWidget(self)
+        container.setObjectName("errorDialogContainer")
         container.setGeometry(0, 0, 680, 400)
         container.setStyleSheet(
-            "background-color: #FFFDF0; "
-            "border: 4px solid #E57373; "
-            "border-radius: 40px;"
+            "QWidget#errorDialogContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #E57373; "
+            "  border-radius: 40px;"
+            "}"
         )
 
         shadow = QGraphicsDropShadowEffect(container)
@@ -662,6 +702,7 @@ class ErrorDialog(QDialog):
             "font-size: 18px; "
             "color: #4F3222; "
             "background: transparent;"
+            "border: none;"
         )
         layout.addWidget(lbl_msg)
 

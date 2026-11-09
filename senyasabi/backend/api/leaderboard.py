@@ -42,6 +42,7 @@ SELECT user_id::text AS user_id, display_name, total_score, current_streak, badg
        RANK() OVER (ORDER BY total_score DESC)::INT AS rank_position
   FROM scores
  WHERE total_score > 0
+ WHERE total_score >= 0
  ORDER BY rank_position, lower(display_name), user_id
  LIMIT :limit
 """
@@ -51,8 +52,11 @@ def _should_refresh_cache(fetched_at) -> bool:
     """Check if cache is stale and needs refresh."""
     if fetched_at is None:
         return True
-    from datetime import datetime, timedelta
-    cache_age = (datetime.utcnow() - fetched_at).total_seconds()
+    from datetime import datetime, timezone
+    now = datetime.now(timezone.utc)
+    if getattr(fetched_at, "tzinfo", None) is None:
+        fetched_at = fetched_at.replace(tzinfo=timezone.utc)
+    cache_age = (now - fetched_at).total_seconds()
     return cache_age > CACHE_TTL_SECONDS
 
 
@@ -67,9 +71,9 @@ async def _refresh_cache_background(board_code: str):
         print(f"Background cache refresh failed for {board_code}: {e}")
 
 
+@router.get("")
 @router.get("/")
-async def get_leaderboard(board_code: str = "all_time", limit: int = 100,
-                          _user_id: str = Depends(get_current_user_id)):
+async def get_leaderboard(board_code: str = "all_time", limit: int = 100):
     """
     Get the leaderboard from cache immediately, with background refresh if stale.
 
@@ -183,8 +187,39 @@ async def get_user_leaderboard_position(user_id: str, board_code: str = "all_tim
     if board_code not in PERIODS:
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Unknown board_code")
 
+    import uuid
+    try:
+        valid_uuid_str = str(uuid.UUID(str(user_id)))
+    except (ValueError, TypeError, AttributeError):
+        return {
+            "user_id": str(user_id),
+            "board_code": board_code,
+            "rank": None,
+            "message": "User not found or no score recorded"
+        }
+
     try:
         with get_postgres_session() as db:
+            # Check cached leaderboard first
+            cached_row = db.execute(text("""
+                SELECT user_id::text AS user_id, display_name, total_score,
+                       current_streak, badge_count, rank_position
+                FROM public.leaderboard_cache
+                WHERE board_code = :board_code AND user_id = :user_id
+                LIMIT 1
+            """), {"board_code": board_code, "user_id": valid_uuid_str}).mappings().first()
+
+            if cached_row:
+                return {
+                    "user_id": valid_uuid_str,
+                    "board_code": board_code,
+                    "rank": cached_row["rank_position"],
+                    "display_name": cached_row["display_name"],
+                    "total_score": cached_row["total_score"],
+                    "current_streak": cached_row["current_streak"],
+                    "badge_count": cached_row["badge_count"]
+                }
+
             result = db.execute(text("""
                 WITH scores AS (
                     SELECT u.user_id,
@@ -200,23 +235,28 @@ async def get_user_leaderboard_position(user_id: str, board_code: str = "all_tim
                            COALESCE((SELECT s.current_streak FROM public.streaks s WHERE s.user_id = u.user_id), 0) AS current_streak,
                            (SELECT COUNT(*) FROM public.user_badges ub WHERE ub.user_id = u.user_id)::INT AS badge_count
                       FROM public.users u
+                ),
+                ranked AS (
+                    SELECT user_id::text AS user_id, display_name, total_score, current_streak, badge_count,
+                           RANK() OVER (ORDER BY total_score DESC)::INT AS rank_position
+                      FROM scores
+                     WHERE total_score > 0
                 )
-                SELECT user_id::text AS user_id, display_name, total_score, current_streak, badge_count,
-                       RANK() OVER (ORDER BY total_score DESC)::INT AS rank_position
-                  FROM scores
+                SELECT user_id, display_name, total_score, current_streak, badge_count, rank_position
+                  FROM ranked
                  WHERE user_id = :user_id
-            """), {"user_id": user_id, "period": PERIODS[board_code]}).mappings().first()
+            """), {"user_id": valid_uuid_str, "period": PERIODS[board_code]}).mappings().first()
 
             if not result:
                 return {
-                    "user_id": user_id,
+                    "user_id": valid_uuid_str,
                     "board_code": board_code,
                     "rank": None,
                     "message": "User not found or no score recorded"
                 }
 
             return {
-                "user_id": user_id,
+                "user_id": valid_uuid_str,
                 "board_code": board_code,
                 "rank": result["rank_position"],
                 "display_name": result["display_name"],
@@ -226,7 +266,11 @@ async def get_user_leaderboard_position(user_id: str, board_code: str = "all_tim
             }
 
     except Exception as e:
-        raise HTTPException(
-            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            detail=f"Error fetching user position: {str(e)}"
-        )
+        import logging
+        logging.getLogger(__name__).warning("Error fetching user position for %s: %s", user_id, e)
+        return {
+            "user_id": str(user_id),
+            "board_code": board_code,
+            "rank": None,
+            "message": "User not found or no score recorded"
+        }

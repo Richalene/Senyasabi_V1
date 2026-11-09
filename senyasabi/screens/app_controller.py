@@ -1,25 +1,73 @@
 import logging
-from PySide6.QtCore import QTimer
-from PySide6.QtWidgets import QApplication, QLineEdit
+from PySide6.QtWidgets import QLineEdit, QMainWindow, QStackedWidget
+from PySide6.QtCore import Qt, QSize, QTimer
+from PySide6.QtGui import QColor, QPalette
 
 from screens.auth.login import LoginScreen
 from screens.auth.register import RegisterScreen
 from screens.startup import WelcomeScreen, LandingScreen
 from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+from screens.loading import LoadingOverlay
 from backend import auth_service
 from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
+import threading
+from PySide6.QtWidgets import QApplication
 
+_active_controller = None
+
+def get_active_controller():
+    return _active_controller
+
+class MainWindowShell(QMainWindow):
+    """Persistent top-level host window managing a QStackedWidget for single-window navigation."""
+
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setWindowTitle("SenyaSabi")
+        self.setMinimumSize(1024, 576)
+        self.resize(1920, 1080)
+
+        # Set default application background palette
+        palette = self.palette()
+        palette.setColor(QPalette.ColorRole.Window, QColor("#c5d27b"))
+        self.setPalette(palette)
+        self.setAutoFillBackground(True)
+
+        self.stacked_widget = QStackedWidget(self)
+        self.setCentralWidget(self.stacked_widget)
+
+    def closeEvent(self, event):
+        controller = get_active_controller()
+        if controller is not None:
+            controller.shutdown()
+        event.accept()
 
 class AppController:
     def __init__(self):
+        global _active_controller
+        _active_controller = self
+        app = QApplication.instance()
+        if app is not None:
+            app.setProperty("app_controller", self)
+
+        self.shell = MainWindowShell()
+        self.stack = self.shell.stacked_widget
+        self.loading_overlay = LoadingOverlay(self.shell, cancel_on_hide=False)
+        self.loading_overlay.hide()
+
         self.welcome = WelcomeScreen()
         self.landing = LandingScreen()
         self.login = LoginScreen()
         self.register = RegisterScreen()
         self.dashboard = StatisticsDashboardWindow()
         self.main_menu = DashboardWindow()
+
+        # Mount persistent screens into QStackedWidget
+        for persistent_screen in (self.welcome, self.landing, self.login, self.register,
+                                  self.main_menu, self.dashboard):
+            self.stack.addWidget(persistent_screen)
         self.minigames = None
         self.module_map = None
         self.module_lessons = None
@@ -48,38 +96,103 @@ class AppController:
         self.landing.ui.btnGetStarted.clicked.connect(self.show_register)
         self.landing.ui.btnLogin.clicked.connect(self.show_login)
 
-    def _show_screen(self, screen, *, transition_direction=None):
-        # Set the native presentation before showing a hidden top-level window.
-        app = QApplication.instance()
-        present = getattr(app, "_present", None)
-        matches_presentation = getattr(app, "_matches_presentation", None)
-        if (present is not None and matches_presentation is not None
-                and not matches_presentation(screen)):
-            present(screen)
-        else:
-            screen.show()
-        windows = [self.welcome, self.landing, self.login, self.register,
-                   self.main_menu, self.dashboard, self.dashboard._leaderboard, self.minigames, self.module_map, self.module_lessons,
-                   self.quiz, self.active_lesson]
+    def _post_login_sync(self, user):
+        """Warm the local SQLite caches without blocking the UI. Never fails the login."""
+        try:
+            from backend import leaderboard_service
+            for board in ("all_time", "weekly", "monthly"):
+                leaderboard_service.refresh_leaderboard(board)   # already runs on a worker
+
+            def _background_pull():
+                try:
+                    auth_service.sync_user_info(user["user_id"])
+                except Exception:
+                    pass
+                try:
+                    from backend import progress_sync
+                    progress_sync.pull_user_progress()
+                except Exception as err:
+                    logging.getLogger(__name__).warning("Post-login progress pull failed: %s", err)
+
+            threading.Thread(target=_background_pull, daemon=True, name="post-login-sync").start()
+        except Exception:
+            logging.getLogger(__name__).exception("Post-login sync could not start")
+
+    def _show_screen(self, screen, *args, **kwargs):
+        if screen is None:
+            return
+
+        # Show brief transition overlay over shell if shell is visible
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None and self.shell.isVisible():
+            try:
+                self.loading_overlay.setGeometry(self.shell.rect())
+                self.loading_overlay.frame = 0
+                self.loading_overlay.show()
+                self.loading_overlay.raise_()
+                self.loading_overlay.animation.start()
+                # Clear overlay once the new screen renders
+                QTimer.singleShot(150, self._hide_transition_overlay)
+            except Exception:
+                pass
+
+        # Ensure screen is mounted in the stack
+        if self.stack.indexOf(screen) == -1:
+            self.stack.addWidget(screen)
+        self.stack.setCurrentWidget(screen)
+        # Ensure MainWindowShell is presented if not already visible
+        if not self.shell.isVisible():
+            app = QApplication.instance()
+            if hasattr(app, "_present"):
+                app._present(self.shell)
+            else:
+                self.shell.show()
+
+        # Legacy cleanup for any standalone popup screens that were not migrated to stack
+        from shiboken6 import isValid
+        windows = [getattr(self.dashboard, "_leaderboard", None)]
         windows.extend(getattr(self.main_menu, name, None) for name in (
             "_alphabet_menu", "_lesson_select", "_learn_window", "_spell_cat",
             "_spell_words", "_spell_lesson", "_word_menu", "_word_lesson"))
-        from shiboken6 import isValid
         for window in windows:
-            if window is None:
-                continue
-            if window is not screen:
+            if window is not None and window is not screen:
                 try:
-                    if isValid(window):
+                    if isValid(window) and window.isWindow():
                         window.hide()
                 except Exception:
                     pass
-        if screen is self.module_map and transition_direction:
-            QTimer.singleShot(
-                0,
-                lambda: screen.play_intro(transition_direction)
-                if screen.isVisible() else None,
-            )
+
+    def _hide_transition_overlay(self):
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None:
+            try:
+                self.loading_overlay.animation.stop()
+                self.loading_overlay.hide()
+            except Exception:
+                pass
+
+    def show_startup_splash(self):
+        """Display the animated loading screen as the startup splash before revealing the welcome screen."""
+        self._show_screen(self.welcome)
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None:
+            try:
+                self.loading_overlay.setGeometry(self.shell.rect())
+                self.loading_overlay.text.setText("Loading SenyaSabi...")
+                self.loading_overlay.frame = 0
+                self.loading_overlay.show()
+                self.loading_overlay.raise_()
+                self.loading_overlay.animation.start()
+                # Transition smoothly to the welcome screen after 1400ms
+                QTimer.singleShot(1400, self._finish_startup_splash)
+            except Exception:
+                pass
+
+    def _finish_startup_splash(self):
+        if hasattr(self, "loading_overlay") and self.loading_overlay is not None:
+            try:
+                self.loading_overlay.text.setText("Loading...")
+                self.loading_overlay.animation.stop()
+                self.loading_overlay.hide()
+            except Exception:
+                pass
 
     def show_welcome(self):
         self._show_screen(self.welcome)
@@ -114,11 +227,11 @@ class AppController:
             auth_service.establish_session(user)
             from backend.score_service import flush_pending_async
             flush_pending_async()          # anything queued while offline last session
+            self._post_login_sync(user)
             self.show_main_menu()
-            
+
         # In distributed mode: Try FastAPI first, fall back to direct Supabase
         # In direct mode: Use direct Supabase
-        # In fastapi mode (development): Use FastAPI with service role
         if CLIENT_MODE == "direct":
             # Direct Supabase authentication
             screen.loading.run(
@@ -126,21 +239,6 @@ class AppController:
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
                 message="Signing you in…", controls=(screen._ui,))
         elif CLIENT_MODE == "distributed":
-            # Try FastAPI first (production with anon key)
-            def try_fastapi_auth():
-                try:
-                    return auth_service.authenticate_user(identifier, password, establish_session=False)
-                except Exception as e:
-                    # FastAPI unavailable, fall back to direct Supabase
-                    logger = logging.getLogger(__name__)
-                    logger.warning("FastAPI authentication failed, falling back to direct Supabase: %s", e)
-                    return auth_service.authenticate_with_supabase(identifier, password, establish_session=False)
-            
-            screen.loading.run(
-                try_fastapi_auth,
-                signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
-                message="Signing you in…", controls=(screen._ui,))
-        else:  # fastapi mode (development)
             screen.loading.run(
                 lambda: auth_service.authenticate_user(identifier, password, establish_session=False),
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
@@ -228,12 +326,16 @@ class AppController:
             self.show_login()
             return
         self._show_screen(self.dashboard)
+        try:
+            self.dashboard.refresh_stats()
+        except Exception:
+            pass
 
-    def show_main_menu(self, checked=False, *, transition_direction=None):
+    def show_main_menu(self):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
-        self._show_screen(self.main_menu, transition_direction=transition_direction)
+        self._show_screen(self.main_menu)
 
     def show_minigames(self):
         if auth_service.get_current_user() is None:
@@ -250,54 +352,54 @@ class AppController:
             self.minigames.back_requested.connect(self.back_from_minigames)
         return self.minigames
 
-    def show_module_map(self, checked=False, *, transition_direction="forward"):
+    def show_module_map(self):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         if self.module_map is None:
             from screens.main_menu.module_select import ModuleSelectWidget
             self.module_map = ModuleSelectWidget()
-            self.module_map.go_back.connect(
-                lambda: self.show_main_menu(transition_direction="backward")
-            )
+            self.module_map.go_back.connect(self.show_main_menu)
             self.module_map.module_chosen.connect(self.open_module)
-        self._show_screen(self.module_map, transition_direction=transition_direction)
+        self._show_screen(self.module_map)
 
     def open_module(self, code):
+        if code and code.lower() in ("calendar", "actions", "months"):
+            from screens.dialogs import ComingSoonDialog
+            parent = getattr(self, "module_map", None) or getattr(self, "window", None)
+            dlg = ComingSoonDialog(parent)
+            dlg.exec()
+            return
         self.show_module_choices(code)
 
-    def show_module_choices(self, code=None, *, transition_direction="forward"):
+    def show_module_choices(self, code=None):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         code = code or self.selected_module
         if code is None:
-            self.show_module_map(transition_direction="backward")
+            self.show_module_map()
             return
         self.selected_module = code.lower()
         if self.module_lessons is None:
             from screens.main_menu.lesson_select import LessonSelectWidget
             self.module_lessons = LessonSelectWidget(module_code=self.selected_module)
-            self.module_lessons.go_back.connect(
-                lambda: self.show_module_map(transition_direction="backward")
-            )
-            self.module_lessons.menu_requested.connect(
-                lambda: self.show_main_menu(transition_direction="backward")
-            )
+            self.module_lessons.go_back.connect(self.show_module_map)
+            self.module_lessons.menu_requested.connect(self.show_main_menu)
             self.module_lessons.lesson_chosen.connect(self.open_module_lesson)
             self.module_lessons.game_chosen.connect(self.open_module_game)
             self.module_lessons.quiz_requested.connect(self.open_module_quiz)
         else:
             self.module_lessons.set_module(self.selected_module)
         self.module_lessons.set_streak(self.main_menu.ui.streakValue.text())
-        self._show_screen(self.module_lessons, transition_direction=transition_direction)
+        self._show_screen(self.module_lessons)
 
     def open_module_lesson(self, number):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         if self.selected_module is None:
-            self.show_module_map(transition_direction="backward")
+            self.show_module_map()
             return
         if self.active_lesson is not None and self.active_lesson.isVisible():
             return
@@ -317,11 +419,15 @@ class AppController:
             screen = WordLessonWidget(words, model_code)
         self.active_lesson = screen
         screen.lesson_finished.connect(self._lesson_back)
-        if self.selected_module == "alphabet":
+        if hasattr(screen, "layout_comp") and hasattr(screen.layout_comp, "results_widget") and screen.layout_comp.results_widget is not None:
             screen.layout_comp.results_widget.next_lesson_requested.connect(
                 lambda next_number=number + 1: self._open_next_lesson(next_number)
             )
-        self._show_screen(screen, transition_direction="forward")
+        # if self.selected_module == "alphabet":
+        #     screen.layout_comp.results_widget.next_lesson_requested.connect(
+        #         lambda next_number=number + 1: self._open_next_lesson(next_number)
+        #     )
+        self._show_screen(screen)
 
     def _open_next_lesson(self, number):
         self._dispose_lesson()
@@ -338,21 +444,24 @@ class AppController:
             try:
                 from shiboken6 import isValid
                 if isValid(screen):
-                    logging.warning("[DIAG] AppController._dispose_lesson: before screen.close() / deleteLater()")
+                    logging.warning("[DIAG] AppController._dispose_lesson: before removeWidget / screen.close() / deleteLater()")
+                    if hasattr(self, "stack") and self.stack is not None:
+                        self.stack.removeWidget(screen)
                     screen.close()
                     screen.deleteLater()
-                    logging.warning("[DIAG] AppController._dispose_lesson: after screen.close() / deleteLater()")
+                    logging.warning("[DIAG] AppController._dispose_lesson: after removeWidget / screen.close() / deleteLater()")
             except Exception:
                 logging.exception("[DIAG] AppController._dispose_lesson: error")
             logging.warning("[DIAG] AppController._dispose_lesson: exit")
 
     def _lesson_back(self):
         logging.warning("[DIAG] AppController._lesson_back: enter")
+        self._dispose_lesson()
         try:
             self.main_menu.refresh_home_stats()
         except Exception:
             pass
-        self.show_module_choices(transition_direction="backward")
+        self.show_module_choices()
         logging.warning("[DIAG] AppController._lesson_back: exit")
 
     def open_module_quiz(self):
@@ -374,14 +483,22 @@ class AppController:
         if self.quiz is not None and self.quiz.isVisible() and self.quiz.module_code == self.selected_module:
             return
         if self.quiz is not None:
+            if hasattr(self, "stack") and self.stack is not None:
+                self.stack.removeWidget(self.quiz)
             self.quiz.close()
             self.quiz.deleteLater()
+            self.quiz = None
         from screens.quizzes.module_quiz import ModuleQuiz
         self.quiz = ModuleQuiz(self.selected_module)
         self.quiz.back_requested.connect(self.show_module_choices)
         self._show_screen(self.quiz)
 
     def shutdown(self):
+        # try:
+        #     from backend import camera_ownership
+        #     camera_ownership.release_all()
+        # except Exception:
+        #     pass
         self.login.loading.cancel()
         self.register.loading.cancel()
         if hasattr(self, "dashboard") and self.dashboard is not None:
@@ -398,6 +515,8 @@ class AppController:
                        self.login, self.register, self.landing, self.welcome):
             if screen is not None:
                 screen.close()
+        if hasattr(self, "shell") and self.shell is not None:
+            self.shell.close()
 
     def show_camera_settings(self):
         if auth_service.get_current_user() is None:
@@ -445,11 +564,10 @@ class AppController:
         self._show_screen(screen)
 
     def back_from_minigames(self):
-        self.main_menu.invalidate_home_stats()
         if self.minigames.scope == "global":
-            self.show_main_menu(transition_direction="backward")
+            self.show_main_menu()
         else:
-            self.show_module_choices(self.minigames.module_code, transition_direction="backward")
+            self.show_module_choices(self.minigames.module_code)
 
     def dev_login(self):
         """Dev login stub for test compatibility.

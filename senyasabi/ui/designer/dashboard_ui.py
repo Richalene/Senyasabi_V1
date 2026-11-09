@@ -34,7 +34,7 @@ class Ui_Dashboard(object):
         self.imageBg.setScaledContents(True)
         self.btnBack = QPushButton(Dashboard)
         self.btnBack.setObjectName(u"btnBack")
-        self.btnBack.setGeometry(QRect(1810, 230, 80, 80))
+        self.btnBack.setGeometry(QRect(1780, 140, 80, 80))
         self.titlePanel = QFrame(Dashboard)
         self.titlePanel.setObjectName(u"titlePanel")
         self.titlePanel.setGeometry(QRect(150, 40, 200, 50))

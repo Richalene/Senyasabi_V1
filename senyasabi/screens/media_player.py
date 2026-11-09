@@ -49,6 +49,7 @@ class SignVideoPlayer(QWidget):
         self.video = None
         self.audio = None
         self.media = None
+        self._signals_connected = False
         self.body = QVBoxLayout(self)
         self.body.setContentsMargins(0, 0, 0, 0)
         self.message = QLabel("Lesson video is not installed yet.")
@@ -81,7 +82,7 @@ class SignVideoPlayer(QWidget):
         if is_avail:
             self.message.hide()
             if self.video is not None:
-                self.video.show()
+                self.show(); self.video.show()
         else:
             self.stop()
             msg = getattr(self.media, "message", None) or "Lesson video is not installed yet."
@@ -93,6 +94,29 @@ class SignVideoPlayer(QWidget):
             if self.video is not None:
                 self.video.hide()
         self.play_button.setVisible(is_avail and self.show_play_button)
+
+    def _connect_player_signals(self):
+        if self.player is None:
+            return
+        if not getattr(self, "_signals_connected", False):
+            try:
+                self.player.mediaStatusChanged.connect(self._on_media_status)
+                self.player.errorOccurred.connect(self.failed)
+                self._signals_connected = True
+            except Exception as exc:
+                log.warning("SignVideoPlayer: failed to connect player signals: %s", exc)
+
+    def _disconnect_player_signals(self):
+        if self.player is None:
+            return
+        if getattr(self, "_signals_connected", False):
+            for sig_name, slot in (("mediaStatusChanged", self._on_media_status),
+                                   ("errorOccurred", self.failed)):
+                try:
+                    getattr(self.player, sig_name).disconnect(slot)
+                except Exception as exc:
+                    log.warning("SignVideoPlayer: failed to disconnect %s: %s", sig_name, exc)
+            self._signals_connected = False
 
     def play(self):
         if not self.media or not self.media.available:
@@ -126,12 +150,14 @@ class SignVideoPlayer(QWidget):
                 self.player.setAudioOutput(self.audio)
                 self.player.setVideoOutput(self.video)
                 self.player.setLoops(QMediaPlayer.Loops.Infinite)
-                self.player.mediaStatusChanged.connect(self._on_media_status)
-                self.player.errorOccurred.connect(self.failed)
+                self._connect_player_signals()
             else:
+                self._connect_player_signals()
                 if self.is_muted and self.audio is not None:
                     self.audio.setMuted(True)
                     self.audio.setVolume(0.0)
+                elif not self.is_muted and self.audio is not None:
+                    get_audio_service().register_output(self.audio)
 
             if hasattr(self, "pause_overlay") and self.pause_overlay is not None:
                 self.pause_overlay.hide()
@@ -143,12 +169,12 @@ class SignVideoPlayer(QWidget):
                     return
                 if self.player.playbackState() == QMediaPlayer.PlaybackState.PausedState:
                     self.message.hide()
-                    self.video.show()
+                    self.show(); self.video.show()
                     self.player.play()
                     return
 
             self.message.hide()
-            self.video.show()
+            self.show(); self.video.show()
             # setSource() resets the player itself; an explicit stop() first was observed
             # blocking the UI thread inside Qt Multimedia.
             self.player.setSource(target_source)
@@ -205,12 +231,7 @@ class SignVideoPlayer(QWidget):
         if hasattr(self, "pause_overlay") and self.pause_overlay is not None:
             self.pause_overlay.hide()
         if self.player is not None:
-            for sig_name, slot in (("mediaStatusChanged", self._on_media_status),
-                                   ("errorOccurred", self.failed)):
-                try:
-                    getattr(self.player, sig_name).disconnect(slot)
-                except Exception as exc:
-                    log.warning("SignVideoPlayer.release: failed to disconnect %s: %s", sig_name, exc)
+            self._disconnect_player_signals()
             try:
                 log.warning("[DIAG] SignVideoPlayer.release: before player.pause()")
                 self.player.pause()

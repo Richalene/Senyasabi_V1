@@ -1,9 +1,12 @@
+import logging
 from datetime import datetime, timezone, date
 from sqlalchemy import func, select, text
 from sqlalchemy.orm import Session
 import uuid
 import json
 from typing import Any, Literal
+
+logger = logging.getLogger(__name__)
 
 from .models import (
     User,
@@ -1220,7 +1223,7 @@ def rebuild_user_statistics(
                    total_quiz_score, total_minigame_score, average_accuracy,
                    total_time_spent_seconds, CURRENT_TIMESTAMP
             FROM v_user_statistics_live
-            WHERE user_id = :user_id
+            WHERE user_id = :user_id OR user_id = :user_id_str
             ON CONFLICT (user_id) DO UPDATE SET
                 lessons_completed = excluded.lessons_completed,
                 quizzes_completed = excluded.quizzes_completed,
@@ -1231,7 +1234,7 @@ def rebuild_user_statistics(
                 total_time_spent_seconds = excluded.total_time_spent_seconds,
                 updated_at = CURRENT_TIMESTAMP
         """)
-        db.execute(query, {"user_id": user_id.hex})
+        db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
     else:
         query = text("""
             INSERT INTO user_statistics (
@@ -1758,3 +1761,82 @@ def get_sync_queue_stats(
         "pending": len(pending),
         "failed": len(failed),
     }
+
+def migrate_local_user_id(db: Session, old_uid: uuid.UUID, new_uid: uuid.UUID) -> bool:
+    """Migrate all local records from an offline temporary user ID to an authenticated remote user ID."""
+    if old_uid == new_uid:
+        return True
+
+    old_user = db.get(User, old_uid)
+    if not old_user:
+        return False
+
+    orig_username = old_user.username
+    orig_email = old_user.email
+    orig_display_name = old_user.display_name
+    orig_updated_at = old_user.updated_at
+
+    new_user = db.get(User, new_uid)
+    if not new_user:
+        # Temporarily free up unique username/email constraints on old_user
+        old_user.username = f"__migrated_{old_uid.hex[:16]}__"
+        old_user.email = None
+        db.flush()
+
+        new_user = User(
+            user_id=new_uid,
+            username=orig_username,
+            email=orig_email,
+            display_name=orig_display_name,
+            updated_at=orig_updated_at,
+        )
+        db.add(new_user)
+        db.flush()
+
+    for model, col in [
+        (OfflineAuth, OfflineAuth.user_id),
+        (QuizAttempt, QuizAttempt.user_id),
+        (MinigameAttempt, MinigameAttempt.user_id),
+        (LessonProgress, LessonProgress.user_id),
+        (UserBadges, UserBadges.user_id),
+        (Streak, Streak.user_id),
+        (UserStatistics, UserStatistics.user_id),
+        (SyncQueue, SyncQueue.user_id),
+        (LeaderboardCache, LeaderboardCache.user_id),
+    ]:
+        try:
+            db.query(model).filter(col == old_uid).update({col: new_uid}, synchronize_session=False)
+        except Exception as e:
+            logger.warning("Error migrating %s: %s", model, e)
+
+    db.flush()
+    try:
+        db.delete(old_user)
+        db.flush()
+    except Exception as e:
+        logger.warning("Error deleting old_user: %s", e)
+
+    db.commit()
+    return True
+
+from datetime import timedelta
+
+def record_activity_streak(db: Session, user_id: uuid.UUID,
+                           activity_date: date | None = None) -> Streak:
+    """Count one day of activity. Same-day calls are no-ops."""
+    today = activity_date or datetime.now(timezone.utc).date()
+    streak = db.get(Streak, user_id)
+    if streak is None:
+        streak = Streak(user_id=user_id, current_streak=1, longest_streak=1,
+                        last_activity_date=today)
+        db.add(streak)
+    else:
+        last = streak.last_activity_date
+        if last is not None and today <= last:
+            return streak                      # same day (or backfilled older activity)
+        streak.current_streak = (streak.current_streak + 1
+                                 if last == today - timedelta(days=1) else 1)
+        streak.longest_streak = max(streak.longest_streak, streak.current_streak)
+        streak.last_activity_date = today
+    db.flush()
+    return streak
