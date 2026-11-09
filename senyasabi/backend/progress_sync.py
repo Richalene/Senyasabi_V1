@@ -14,6 +14,7 @@ import time
 from backend import auth_service
 from backend.database import models as m
 from backend.database.session import session_scope
+from .database.repository import create_or_update_streak
 
 _log = logging.getLogger(__name__)
 CONTENT_SYNC_INTERVAL = 600  # seconds between content checks
@@ -119,53 +120,88 @@ def sync_content_if_due(force=False):
     #     _content_lock.release()
 
 def pull_user_progress():
-    """Refresh local content, then progress (and the leaderboard cache). Never raises."""
+    """Refresh local content, then progress and leaderboard/streak caches. Never raises."""
+
     try:
         token = auth_service.get_access_token()
         _log.debug("Sync upload token available: %s", bool(token))
+
         if not token:
             return False
-        sync_content_if_due()  # failure is fine: progress merge falls back to whatever is cached
+
+        # Content refresh is optional; progress sync should still proceed.
+        try:
+            sync_content_if_due()
+        except Exception as error:
+            _log.warning("Content sync failed; continuing with cached content: %s", error)
+
         snapshot = fetch_snapshot(token)
+
         if snapshot is None:
             return False
+
         apply_snapshot(snapshot)
+
     except Exception as error:
         _log.warning("Progress sync failed: %s", error)
         return False
-    try:  # keeps the dashboard rank in step with the leaderboard
+
+    # Refresh leaderboard independently.
+    try:
         from backend import leaderboard_service
         leaderboard_service.get_leaderboard()
     except Exception as error:
         _log.warning("Leaderboard refresh failed: %s", error)
-    try:  # refresh streak from server
+
+    # Refresh streak from server independently.
+    try:
         from backend.api_client import get_api_client
+
         client = get_api_client()
         user = auth_service.get_current_user()
+
         if user and user.get("user_id"):
-            try:
-                streak_data = client.get_user_streak(user["user_id"])
-                if streak_data:
-                    from datetime import date
-                    from .database.repository import create_or_update_streak
-                    from .database.session import session_scope
-                    import uuid
+            streak_data = client.get_user_streak(user["user_id"])
+
+            if streak_data:
+                last_activity = streak_data.get("last_activity_date")
+
+                if last_activity:
+                    # Normalize to date, regardless of whether the API
+                    # returns YYYY-MM-DD or an ISO datetime.
+                    server_last = (
+                        datetime.fromisoformat(last_activity).date()
+                        if isinstance(last_activity, str)
+                        else last_activity.date()
+                        if isinstance(last_activity, datetime)
+                        else last_activity
+                    )
+
                     uid = uuid.UUID(str(user["user_id"]))
+
                     with session_scope() as db:
-                        create_or_update_streak(
-                            db,
-                            uid,
-                            current_streak=streak_data.get("current_streak"),
-                            longest_streak=streak_data.get("longest_streak"),
-                            last_activity_date=date.fromisoformat(streak_data["last_activity_date"]) if streak_data.get("last_activity_date") else None
+                        local = db.get(m.Streak, uid)
+
+                        local_last = (
+                            local.last_activity_date
+                            if local is not None
+                            else None
                         )
-                    _log.info("Streak synced from server: current=%s, longest=%s",
-                             streak_data.get("current_streak"), streak_data.get("longest_streak"))
-            except Exception as e:
-                _log.warning("Streak sync failed: %s", e)
+
+                        if (
+                            local_last is None
+                            or server_last >= local_last
+                        ):
+                            create_or_update_streak(
+                                db,
+                                uid,
+                                streak_data["current_streak"],
+                                streak_data["longest_streak"],
+                                server_last
+                            )
+
     except Exception as error:
         _log.warning("Streak refresh failed: %s", error)
-    # finally:
-    #     _pull_lock.release()
+
     return True
 

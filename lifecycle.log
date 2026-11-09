@@ -1868,3 +1868,191 @@ Thread 0x000026ec (most recent call first):
     window.installEventFilter(self)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
     return result
+
+[04:03:46] *** UI THREAD HUNG FOR 4.8s ***
+
+--- Thread 6190411776 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 66, in __init__
+    self.main_menu = DashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 465, in __init__
+    install_page_menu(self, header=self.header)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/navigation.py", line 293, in install_page_menu
+    popup = MenuCalloutPopup(header.menu_button)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dialogs.py", line 519, in __init__
+    self.row_sign_out = MenuRowButton("Sign Out", self.btn_exit, inner, is_danger=True)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dialogs.py", line 450, in __init__
+    self.setStyleSheet(
+
+[04:07:21] *** UI THREAD HUNG FOR 4.4s ***
+
+--- Thread 6152794112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 65, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 102, in __init__
+    install_page_menu(self, header=self.header)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/navigation.py", line 293, in install_page_menu
+    popup = MenuCalloutPopup(header.menu_button)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dialogs.py", line 473, in __init__
+    from backend.audio_service import get_audio_service
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 991, in exec_module
+  File "<frozen importlib._bootstrap_external>", line 1087, in get_code
+  File "<frozen importlib._bootstrap_external>", line 1187, in get_data
+
+[04:11:14] *** UI THREAD HUNG FOR 4.5s ***
+
+--- Thread 6111784960 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 65, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 124, in __init__
+    self.loading = LoadingOverlay(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 91, in __init__
+    self.delay.timeout.connect(self._show)
+
+[04:17:04] *** UI THREAD HUNG FOR 4.4s ***
+
+--- Thread 6114570240 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 66, in __init__
+    self.main_menu = DashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 124, in __init__
+    self.loading = LoadingOverlay(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 99, in __init__
+    self.hide()
+
+[04:30:11] *** UI THREAD HUNG FOR 4.6s ***
+
+--- Thread 6122041344 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 66, in __init__
+    self.main_menu = DashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 124, in __init__
+    self.loading = LoadingOverlay(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 99, in __init__
+    self.hide()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[04:32:04] *** UI THREAD HUNG FOR 4.0s ***
+
+--- Thread 6185218048 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 66, in __init__
+    self.main_menu = DashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 412, in __init__
+    _ensure_cherry_bomb_font()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 24, in _ensure_cherry_bomb_font
+    font_path = str(get_base_dir() / "resources" / "font" / "CherryBombOne-Regular.ttf")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/paths.py", line 25, in get_base_dir
+    return Path(__file__).resolve().parent.parent
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/pathlib.py", line 1240, in resolve
+    s = self._flavour.realpath(self, strict=strict)
+  File "<frozen posixpath>", line 427, in realpath
+  File "<frozen posixpath>", line 462, in _joinrealpath
+
+[04:51:51] *** UI THREAD HUNG FOR 5.5s ***
+
+--- Thread 6187069440 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 65, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 124, in __init__
+    self.loading = LoadingOverlay(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 80, in __init__
+    self.frames = [QPixmap(str(_IMAGES / name)) for name in

@@ -13,6 +13,7 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from sqlalchemy import text
+from datetime import date, datetime, timedelta, timezone
 
 from ..database.postgre_session import get_postgres_session
 from ..security import get_current_user_id
@@ -79,6 +80,9 @@ async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_u
                                "user": upsert_user}.get(item.entity_type)
                     with db.begin_nested():       # savepoint: one bad item can't abort the batch
                         success = bool(handler and handler(db, user_id, item))
+                        if success and item.entity_type in ("quiz_attempt", "minigame_attempt", "lesson_progress"):
+                            if item.entity_type != "lesson_progress" or item.data.get("status") == "Completed":
+                                bump_streak(db, user_id, _activity_date(item))
                     succeeded += success
                     failed += not success
                 except Exception as e:
@@ -101,6 +105,33 @@ async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_u
             detail=f"Error during sync upload: {str(e)}"
         )
 
+def _activity_date(item) -> date:
+    raw = item.data.get("completed_at") or item.data.get("client_updated_at")
+    try:
+        return datetime.fromisoformat(raw.replace("Z", "+00:00")).astimezone().date()
+    except Exception:
+        return datetime.now(timezone.utc).date()
+
+def bump_streak(db, user_id: str, day: date):
+    row = db.execute(text(
+        "SELECT current_streak, longest_streak, last_activity_date "
+        "FROM public.streaks WHERE user_id = :u"), {"u": user_id}).first()
+    if row is None:
+        cur, longest = 1, 1
+    else:
+        cur, longest, last = row
+        if last is not None and day <= last:
+            return                      # same day or backfilled older activity
+        cur = cur + 1 if last == day - timedelta(days=1) else 1
+        longest = max(longest, cur)
+    db.execute(text("""
+        INSERT INTO public.streaks (user_id, current_streak, longest_streak, last_activity_date)
+        VALUES (:u, :c, :l, :d)
+        ON CONFLICT (user_id) DO UPDATE SET
+          current_streak = EXCLUDED.current_streak,
+          longest_streak = EXCLUDED.longest_streak,
+          last_activity_date = EXCLUDED.last_activity_date
+    """), {"u": user_id, "c": cur, "l": longest, "d": day})
 
 def upsert_user(db, user_id: str, item: SyncItem) -> bool:
     """Upsert user metadata."""

@@ -26,6 +26,7 @@ from .database.repository import (
     rebuild_user_statistics,
     upsert_quiz_attempt,
     upsert_minigame_attempt,
+    record_activity_streak,
 )
 from .database.models import SyncQueue
 from .database import models as m
@@ -147,8 +148,8 @@ class SyncService:
             try:
                 rebuild_user_statistics(db, user_id)
             except Exception as e:
-                _log.warning("Could not rebuild statistics after quiz attempt: %s", e)
-
+                logger.warning("Could not rebuild statistics after quiz attempt: %s", e)
+        record_activity_streak(db, user_id, completed_at.astimezone().date())
         return sync_id
     
     def queue_minigame_attempt(
@@ -204,7 +205,8 @@ class SyncService:
             try:
                 rebuild_user_statistics(db, user_id)
             except Exception as e:
-                _log.warning("Could not rebuild statistics after minigame attempt: %s", e)
+                logger.warning("Could not rebuild statistics after minigame attempt: %s", e)
+        record_activity_streak(db, user_id, completed_at.astimezone().date())
         return sync_id
 
     def queue_lesson_progress(
@@ -256,7 +258,10 @@ class SyncService:
             try:
                 rebuild_user_statistics(db, user_id)
             except Exception as e:
-                _log.warning("Could not rebuild statistics after lesson progress: %s", e)
+                logger.warning("Could not rebuild statistics after lesson progress: %s", e)
+
+            if status == "Completed":
+                record_activity_streak(db, user_id, now.astimezone().date())
         return sync_id
     
     # Backward-compatible alias for the old name
