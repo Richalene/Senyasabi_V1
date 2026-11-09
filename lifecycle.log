@@ -1569,3 +1569,20 @@ Thread 0x000026ec (most recent call first):
     self.loading = LoadingOverlay(self)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 99, in __init__
     self.hide()
+
+[01:54:05] *** UI THREAD HUNG FOR 4.0s ***
+
+--- Thread 6184087552 ---
+  File "threading.py", line 1032, in _bootstrap
+  File "threading.py", line 1075, in _bootstrap_inner
+  File "threading.py", line 1012, in run
+  File "main.py", line 49, in _watchdog_loop
+
+--- Thread 8426839680 ---
+  File "main.py", line 257, in <module>
+  File "main.py", line 252, in main
+  File "screens/app_controller.py", line 175, in show_startup_splash
+  File "screens/app_controller.py", line 147, in _show_screen
+  File "main.py", line 197, in _present
+  File "main.py", line 193, in notify
+  File "main.py", line 193, in notify

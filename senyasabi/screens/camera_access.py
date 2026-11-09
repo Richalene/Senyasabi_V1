@@ -6,21 +6,63 @@ from PySide6.QtWidgets import QDialog, QWidget, QHBoxLayout, QVBoxLayout, QPushB
 from backend.camera_service import get_camera_service, friendly_camera_error
 from screens.camera_setup import CameraSetupDialog
 from screens.loading import LoadingOverlay
+from .camera_permission import ensure_camera_permission
 
 log = logging.getLogger(__name__)
 
 
 def request_camera(parent, ready, cancelled, *, force=False):
-    service = get_camera_service()
-    if not force and service.selected_device() is not None:
-        ready()
+    # Prevent multiple permission requests while the prompt is pending.
+    if getattr(parent, "_camera_permission_pending", False):
         return None
-    dialog = CameraSetupDialog(parent, service=service, onboarding=not service.configured)
-    dialog.finished.connect(lambda result: ready() if result == QDialog.DialogCode.Accepted else cancelled())
-    dialog.finished.connect(dialog.deleteLater)
-    dialog.open()
-    return dialog
 
+    if (
+        parent._camera_dialog is not None
+        and parent._camera_dialog.isVisible()
+    ):
+        return parent._camera_dialog
+
+    parent._camera_permission_pending = True
+
+    def permission_resolved(granted):
+        parent._camera_permission_pending = False
+
+        if not granted:
+            cancelled()
+            return
+
+        service = get_camera_service()
+
+        if not force and service.selected_device() is not None:
+            ready()
+            return
+
+        dialog = CameraSetupDialog(
+            parent,
+            service=service,
+            onboarding=not service.configured
+        )
+
+        parent._camera_dialog = dialog
+
+        dialog.finished.connect(
+            lambda result: (
+                ready()
+                if result == QDialog.DialogCode.Accepted
+                else cancelled()
+            )
+        )
+
+        dialog.finished.connect(dialog.deleteLater)
+
+        dialog.destroyed.connect(
+            lambda: setattr(parent, "_camera_dialog", None)
+        )
+
+        dialog.open()
+
+    ensure_camera_permission(permission_resolved)
+    return None
 
 def alphabet_engine():
     from backend.recognition_engine import SignRecognitionEngine
@@ -69,6 +111,7 @@ class LessonCameraMixin:
         self._engine_factory = factory
         self._availability = availability
         self._camera_dialog = None
+        self._camera_permission_pending = False
         self._camera_misses = 0
         self._resources_closed = False
         self._engine = None
@@ -123,7 +166,12 @@ class LessonCameraMixin:
             self._camera_lbl.clear()
             self._camera_lbl.setText('Set up your camera to practice signs.')
             
-        self._camera_dialog = request_camera(self, self._prepare_camera, self._camera_off, force=force)
+        request_camera(
+            self,
+            self._prepare_camera,
+            self._camera_off,
+            force=force
+        )
 
     def choose_camera(self, checked=False):
         self.start_camera(force=True)
@@ -147,9 +195,21 @@ class LessonCameraMixin:
             except Exception:
                 engine.close()
                 raise
-                
-        self.loading.run(prepare, self._camera_ready, self._camera_failed,
-                         dispose=lambda engine: engine.close(), message='Preparing sign recognition…')
+
+        def start():
+            self.loading.run(prepare, self._camera_ready, self._camera_failed,
+                             dispose=lambda engine: engine.close(), message='Preparing sign recognition…')
+
+        def on_permission(granted):
+            if granted:
+                start()
+            else:
+                self._camera_failed(RuntimeError(
+                    "Camera access is blocked. Enable it in System Settings → "
+                    "Privacy & Security → Camera, then try again."
+                ))
+
+        ensure_camera_permission(callback=on_permission)
 
     def _set_cam_dot(self, active: bool):
         if hasattr(self, "layout_comp") and hasattr(self.layout_comp, "set_camera_active"):

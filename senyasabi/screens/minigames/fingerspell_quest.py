@@ -234,7 +234,12 @@ class FingerSpellQuestGameView(QWidget):
         self.countdown_timer.stop()
         if not (self.isVisible() or (self.window() and self.window().isVisible())):
             return
-        self._camera_dialog = camera_access.request_camera(self, self._prepare_camera, self._camera_off, force=force)
+        camera_access.request_camera(
+            self,
+            self._prepare_camera,
+            self._camera_off,
+            force=force
+        )
 
     def _camera_off(self):
         self._camera_dialog = None

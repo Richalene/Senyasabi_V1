@@ -300,3 +300,14 @@ Traceback (most recent call last):
 AttributeError: 'DashboardWindow' object has no attribute 'invalidate_home_stats'
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "screens/minigames/fingerspell_quest.py", line 588, in start_game
+  File "screens/minigames/fingerspell_quest.py", line 223, in start_game
+  File "screens/minigames/fingerspell_quest.py", line 237, in open_camera
+  File "screens/camera_access.py", line 64, in request_camera
+  File "screens/camera_permission.py", line 30, in ensure_camera_permission
+TypeError: requestPermission expected 3 arguments, got 2
+
+================================================

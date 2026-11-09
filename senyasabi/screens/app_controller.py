@@ -14,6 +14,7 @@ from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
 import threading
 from PySide6.QtWidgets import QApplication
+from screens.camera_permission import ensure_camera_permission
 
 _active_controller = None
 
@@ -516,20 +517,46 @@ class AppController:
         if auth_service.get_current_user() is None:
             self.show_login()
             return
+
         if self.camera_settings is not None:
             self.camera_settings.raise_()
             self.camera_settings.activateWindow()
             return
-        from screens.camera_setup import CameraSetupDialog
-        from backend.camera_service import get_camera_service
-        self.camera_settings = CameraSetupDialog(self.main_menu, onboarding=not get_camera_service().configured)
 
-        def finished(result):
-            dialog, self.camera_settings = self.camera_settings, None
-            if dialog is not None:
-                dialog.deleteLater()
-        self.camera_settings.finished.connect(finished)
-        self.camera_settings.open()
+        def permission_resolved(granted):
+            if not granted:
+                from PySide6.QtWidgets import QMessageBox
+
+                QMessageBox.warning(
+                    self,
+                    "Camera Permission Required",
+                    "SenyaSabi needs camera access to configure your camera. "
+                    "Please enable camera access in macOS System Settings "
+                    "under Privacy & Security > Camera."
+                )
+                return
+
+            # Check again in case the settings window was opened meanwhile.
+            if self.camera_settings is not None:
+                self.camera_settings.raise_()
+                self.camera_settings.activateWindow()
+                return
+
+            from screens.camera_setup import CameraSetupDialog
+            from backend.camera_service import get_camera_service
+
+            self.camera_settings = CameraSetupDialog(
+                self.main_menu,
+                onboarding=not get_camera_service().configured
+            )
+
+            self.camera_settings.destroyed.connect(
+                lambda: setattr(self, "camera_settings", None)
+            )
+
+            self.camera_settings.show()
+
+        ensure_camera_permission(permission_resolved)
 
     def open_module_game(self, kind):
         if auth_service.get_current_user() is None:
