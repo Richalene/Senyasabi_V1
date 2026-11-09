@@ -138,6 +138,33 @@ def pull_user_progress():
         leaderboard_service.get_leaderboard()
     except Exception as error:
         _log.warning("Leaderboard refresh failed: %s", error)
+    try:  # refresh streak from server
+        from backend.api_client import get_api_client
+        client = get_api_client()
+        user = auth_service.get_current_user()
+        if user and user.get("user_id"):
+            try:
+                streak_data = client.get_user_streak(user["user_id"])
+                if streak_data:
+                    from datetime import date
+                    from .database.repository import create_or_update_streak
+                    from .database.session import session_scope
+                    import uuid
+                    uid = uuid.UUID(str(user["user_id"]))
+                    with session_scope() as db:
+                        create_or_update_streak(
+                            db,
+                            uid,
+                            current_streak=streak_data.get("current_streak"),
+                            longest_streak=streak_data.get("longest_streak"),
+                            last_activity_date=date.fromisoformat(streak_data["last_activity_date"]) if streak_data.get("last_activity_date") else None
+                        )
+                    _log.info("Streak synced from server: current=%s, longest=%s",
+                             streak_data.get("current_streak"), streak_data.get("longest_streak"))
+            except Exception as e:
+                _log.warning("Streak sync failed: %s", e)
+    except Exception as error:
+        _log.warning("Streak refresh failed: %s", error)
     # finally:
     #     _pull_lock.release()
     return True

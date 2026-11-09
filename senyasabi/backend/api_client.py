@@ -355,17 +355,48 @@ class APIClient:
         params = {"force_refresh": force_refresh} if force_refresh else None
         return self._request("GET", f"/api/v1/progress/{user_id}/statistics", params=params)
     
-    def get_user_streak(self, user_id: int) -> Optional[Dict]:
+    def get_user_streak(self, user_id: str) -> Optional[Dict]:
         """
         Get user streak information.
-        
+
+        In distributed mode: Try FastAPI first, fall back to direct Supabase
+        In fastapi mode: Query FastAPI backend
+
         Args:
-            user_id: User ID
-            
+            user_id: User ID (UUID string)
+
         Returns:
             User streak or None
         """
-        return self._request("GET", f"/api/v1/progress/{user_id}/streak")
+        mode = _current_client_mode()
+        if mode == "distributed":
+            result = self._request("GET", f"/api/v1/progress/{user_id}/streak")
+            if result is not None:
+                return result
+            return self._get_streak_from_supabase(user_id)
+        else:  # fastapi mode
+            return self._request("GET", f"/api/v1/progress/{user_id}/streak")
+
+    def _get_streak_from_supabase(self, user_id: str) -> Optional[Dict]:
+        """Fetch streak directly from Supabase (fallback mode)."""
+        from .supabase_client import get_supabase_client
+        supabase = get_supabase_client()
+        if supabase is None:
+            return None
+        try:
+            response = supabase.table('streaks').select('*').eq('user_id', user_id).execute()
+            if response.data:
+                row = response.data[0]
+                return {
+                    "user_id": row.get('user_id'),
+                    "current_streak": row.get('current_streak', 0),
+                    "longest_streak": row.get('longest_streak', 0),
+                    "last_activity_date": row.get('last_activity_date')
+                }
+            return None
+        except Exception as e:
+            logging.getLogger(__name__).warning("Failed to fetch streak from Supabase: %s", e)
+            return None
     
     # Leaderboard methods
     def get_leaderboard(self, board_code: str = "all_time", limit: int = 100) -> Optional[Dict]:
