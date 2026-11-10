@@ -1,6 +1,6 @@
 # SenyaSabi evaluation - pass rates
 
-Generated 2026-11-10 13:33:39
+Generated 2026-11-11 01:19:01
 
 | Category | Total | Pass | Fail | Error | Skipped | Pass rate |
 |---|---:|---:|---:|---:|---:|---:|
@@ -93,14 +93,14 @@ Generated 2026-11-10 13:33:39
 - **API / external services (Sec. 11)** `test_external_services.LandmarkTests.test_api_004_model_returns_sign_and_confidence` - AttributeError: module 'cv2.dnn' has no attribute 'DictValue'
 - **API / external services (Sec. 11)** `test_external_services.LandmarkTests.test_api_004_word_model_needs_24_frames_then_predicts` - AttributeError: module 'cv2.dnn' has no attribute 'DictValue'
 - **API / external services (Sec. 11)** `test_external_services.ServiceFailureTests.test_api_008_alphabet_model_missing_file` - AttributeError: module 'cv2.dnn' has no attribute 'DictValue'
-- **Performance (Sec. 12)** `test_performance.DatabasePerformanceTests.test_pt_005_continuous_use_is_stable` - AssertionError: 1355.419956 not less than 50 : memory grew by 1355.4 MB over 73030 frames
+- **Performance (Sec. 12)** `test_performance.DatabasePerformanceTests.test_pt_005_continuous_use_is_stable` - AssertionError: 1228.802324 not less than 50 : memory grew by 1228.8 MB over 66228 frames
 - **Security (Sec. 13)** `test_security.SecretHandlingTests.test_sec_006_api_errors_do_not_echo_raw_exceptions` - -  'main.py:134'] : Internal exception text (SQL, hosts) is returned to clients
 - **Usability / UI (Sec. 15)** `test_usability_ui.ReadabilityTests.test_ui_002_back_to_lessons_white_on_green` - AssertionError: 2.9395688754965135 not greater than or equal to 3.0 : #FFFFFF on #8C9F3E = 2.94:1 (needs 3.0:1)
 - **Usability / UI (Sec. 15)** `test_usability_ui.ReadabilityTests.test_ui_002_next_button_white_on_green` - AssertionError: 1.9701962235267558 not greater than or equal to 3.0 : #FFFFFF on #ACC412 = 1.97:1 (needs 3.0:1)
 - **Usability / UI (Sec. 15)** `test_usability_ui.ResponsivenessTests.test_ui_006_minigame_scales_with_window` - AssertionError: 1820 not less than or equal to 1024 : (1024, 600)
-- **REG-001 Login** `test_auth.NavigationTests.test_complete_flow` - + [<screens.auth.login.LoginScreen(0x71a3cc1c0) at 0x10bda32c0>]
+- **REG-001 Login** `test_auth.NavigationTests.test_complete_flow` - + [<screens.auth.login.LoginScreen(0x8610c0c40) at 0x10dfcbc00>]
 - **REG-001 Login** `test_auth.NavigationTests.test_password_visibility_toggles_preserve_text` - AssertionError: 348 != 368
-- **REG-002 Registration** `test_auth.NavigationTests.test_complete_flow` - + [<screens.auth.login.LoginScreen(0x71a3cc1c0) at 0x10bda32c0>]
+- **REG-002 Registration** `test_auth.NavigationTests.test_complete_flow` - + [<screens.auth.login.LoginScreen(0x8610c0c40) at 0x10dfcbc00>]
 - **REG-002 Registration** `test_auth.NavigationTests.test_password_visibility_toggles_preserve_text` - AssertionError: 348 != 368
 - **REG-003 Database operations** `setUpClass (tests_backend_smoke.BackendSmoke)` - AttributeError: 'NoneType' object has no attribute 'content_version_id'
 - **REG-004 Sign recognition & feedback** `test_word_recognition.TrainingParityTests.test_recognition_canonicalization_preserves_display_and_sign_code` - StopIteration
@@ -124,12 +124,12 @@ Generated 2026-11-10 13:33:39
 - **REG-005 Minigames** `test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='basic_communication', kind='sprint')` - +  'Fast']
 - **REG-005 Minigames** `test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='basic_communication', kind='quest')` - Diff is 657 characters long. Set self.maxDiff to None to see it.
 - **REG-005 Minigames** `test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='basic_communication', kind='detective')` - Diff is 657 characters long. Set self.maxDiff to None to see it.
-- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state` - + [<screens.dashboard.dashboard.DashboardWindow(0x7da331f80, name="main") at 0x128fe2780>]
-- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_days_sprint_back_uses_the_captured_module_hub` - -  <screens.app_controller.MainWindowShell(0x7dc66c8c0) at 0x128fed400>]
-- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_global_sprint_back_returns_to_global_hub_then_main_menu` - -  <screens.app_controller.MainWindowShell(0x7dc66c8c0) at 0x128fed400>]
-- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_greeting_detective_then_global_detective_does_not_inherit_greeting` - -  <screens.app_controller.MainWindowShell(0x7dc66c1c0) at 0x1138786c0>]
-- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_main_menu_opens_three_global_games_without_a_module` - -  <screens.app_controller.MainWindowShell(0x7dc66c1c0) at 0x1138786c0>]
-- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet` - -  <screens.app_controller.MainWindowShell(0x7dc66c1c0) at 0x1138786c0>]
+- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state` - + [<screens.dashboard.dashboard.DashboardWindow(0xb703896c0, name="main") at 0x129507140>]
+- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_days_sprint_back_uses_the_captured_module_hub` - -  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]
+- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_global_sprint_back_returns_to_global_hub_then_main_menu` - -  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]
+- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_greeting_detective_then_global_detective_does_not_inherit_greeting` - -  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]
+- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_main_menu_opens_three_global_games_without_a_module` - -  <screens.app_controller.MainWindowShell(0xb6dff6840) at 0x12aab5a40>]
+- **REG-005 Minigames** `test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet` - -  <screens.app_controller.MainWindowShell(0xb6dff6840) at 0x12aab5a40>]
 - **REG-005 Minigames** `test_ui_polish.UiPolishTests.test_coming_soon_copy_wraps_and_next_lesson_is_optional` - AssertionError: False is not true
 - **REG-005 Minigames** `test_ui_polish.UiPolishTests.test_dashboard_buttons_bounce_on_hover_and_restore_geometry` - AssertionError: 500 not greater than 500
 - **REG-005 Minigames** `test_ui_polish.UiPolishTests.test_dashboard_primary_actions_are_tight_and_nonoverlapping` - AssertionError: -20 != 0

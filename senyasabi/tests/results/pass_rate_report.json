@@ -367,7 +367,7 @@
       {
         "test": "test_performance.DatabasePerformanceTests.test_pt_005_continuous_use_is_stable",
         "status": "fail",
-        "detail": "AssertionError: 1355.419956 not less than 50 : memory grew by 1355.4 MB over 73030 frames"
+        "detail": "AssertionError: 1228.802324 not less than 50 : memory grew by 1228.8 MB over 66228 frames"
       },
       {
         "test": "test_performance.StartupAndLatencyTests.test_pt_001_application_startup_time",
@@ -719,7 +719,7 @@
       {
         "test": "test_auth.NavigationTests.test_complete_flow",
         "status": "fail",
-        "detail": "+ [<screens.auth.login.LoginScreen(0x71a3cc1c0) at 0x10bda32c0>]"
+        "detail": "+ [<screens.auth.login.LoginScreen(0x8610c0c40) at 0x10dfcbc00>]"
       },
       {
         "test": "test_auth.NavigationTests.test_password_visibility_toggles_preserve_text",
@@ -811,7 +811,7 @@
       {
         "test": "test_auth.NavigationTests.test_complete_flow",
         "status": "fail",
-        "detail": "+ [<screens.auth.login.LoginScreen(0x71a3cc1c0) at 0x10bda32c0>]"
+        "detail": "+ [<screens.auth.login.LoginScreen(0x8610c0c40) at 0x10dfcbc00>]"
       },
       {
         "test": "test_auth.NavigationTests.test_password_visibility_toggles_preserve_text",
@@ -1295,32 +1295,32 @@
       {
         "test": "test_minigame_scope.MinigameNavigationScopeTests.test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state",
         "status": "fail",
-        "detail": "+ [<screens.dashboard.dashboard.DashboardWindow(0x7da331f80, name=\"main\") at 0x128fe2780>]"
+        "detail": "+ [<screens.dashboard.dashboard.DashboardWindow(0xb703896c0, name=\"main\") at 0x129507140>]"
       },
       {
         "test": "test_minigame_scope.MinigameNavigationScopeTests.test_days_sprint_back_uses_the_captured_module_hub",
         "status": "fail",
-        "detail": "-  <screens.app_controller.MainWindowShell(0x7dc66c8c0) at 0x128fed400>]"
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]"
       },
       {
         "test": "test_minigame_scope.MinigameNavigationScopeTests.test_global_sprint_back_returns_to_global_hub_then_main_menu",
         "status": "fail",
-        "detail": "-  <screens.app_controller.MainWindowShell(0x7dc66c8c0) at 0x128fed400>]"
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]"
       },
       {
         "test": "test_minigame_scope.MinigameNavigationScopeTests.test_greeting_detective_then_global_detective_does_not_inherit_greeting",
         "status": "fail",
-        "detail": "-  <screens.app_controller.MainWindowShell(0x7dc66c1c0) at 0x1138786c0>]"
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]"
       },
       {
         "test": "test_minigame_scope.MinigameNavigationScopeTests.test_main_menu_opens_three_global_games_without_a_module",
         "status": "fail",
-        "detail": "-  <screens.app_controller.MainWindowShell(0x7dc66c1c0) at 0x1138786c0>]"
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6dff6840) at 0x12aab5a40>]"
       },
       {
         "test": "test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet",
         "status": "fail",
-        "detail": "-  <screens.app_controller.MainWindowShell(0x7dc66c1c0) at 0x1138786c0>]"
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6dff6840) at 0x12aab5a40>]"
       },
       {
         "test": "test_ui_polish.UiPolishTests.test_artwork_native_aspect_and_landing_hit_regions",

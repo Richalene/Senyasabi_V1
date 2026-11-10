@@ -6868,3 +6868,7 @@ Thread 0x000026ec (most recent call first):
     self.loading = LoadingOverlay(self)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 80, in __init__
     self.frames = [QPixmap(str(_IMAGES / name)) for name in
+
+[01:14:39] inference worker started
+
+[01:18:43] inference worker started

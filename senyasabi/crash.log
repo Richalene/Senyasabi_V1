@@ -214,3 +214,24 @@ Traceback (most recent call last):
 AssertionError
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+AssertionError
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 11, in <module>
+AssertionError
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+AssertionError
+
+================================================
