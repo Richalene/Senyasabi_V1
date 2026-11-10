@@ -5,6 +5,7 @@ from sqlalchemy.orm import Session
 import uuid
 import json
 from typing import Any, Literal
+from sqlalchemy.exc import OperationalError
 
 logger = logging.getLogger(__name__)
 
@@ -1205,25 +1206,36 @@ def get_user_statistics(
     return db.get(UserStatistics, user_id)
 
 
+
 def rebuild_user_statistics(
     db: Session,
     user_id: uuid.UUID | None = None,
 ) -> None:
     """
     Rebuild user statistics from the live view.
-    This should be called if the cached statistics drift from reality.
+    Uses a SAVEPOINT to safely retry SQLite lock errors
+    without rolling back the caller's entire transaction.
     """
+    import time
+
+    max_retries = 3
+    base_delay = 0.1
+
     if user_id is not None:
         query = text("""
             INSERT INTO user_statistics (
-                user_id, lessons_completed, quizzes_completed, minigames_completed,
-                total_quiz_score, total_minigame_score, average_accuracy,
-                total_time_spent_seconds, updated_at)
-            SELECT user_id, lessons_completed, quizzes_completed, minigames_completed,
-                   total_quiz_score, total_minigame_score, average_accuracy,
-                   total_time_spent_seconds, CURRENT_TIMESTAMP
+                user_id, lessons_completed, quizzes_completed,
+                minigames_completed, total_quiz_score,
+                total_minigame_score, average_accuracy,
+                total_time_spent_seconds, updated_at
+            )
+            SELECT
+                user_id, lessons_completed, quizzes_completed,
+                minigames_completed, total_quiz_score,
+                total_minigame_score, average_accuracy,
+                total_time_spent_seconds, CURRENT_TIMESTAMP
             FROM v_user_statistics_live
-            WHERE user_id = :user_id OR user_id = :user_id_str
+            WHERE user_id IN (:uid_hex, :uid_str)
             ON CONFLICT (user_id) DO UPDATE SET
                 lessons_completed = excluded.lessons_completed,
                 quizzes_completed = excluded.quizzes_completed,
@@ -1231,19 +1243,28 @@ def rebuild_user_statistics(
                 total_quiz_score = excluded.total_quiz_score,
                 total_minigame_score = excluded.total_minigame_score,
                 average_accuracy = excluded.average_accuracy,
-                total_time_spent_seconds = excluded.total_time_spent_seconds,
+                total_time_spent_seconds =
+                    excluded.total_time_spent_seconds,
                 updated_at = CURRENT_TIMESTAMP
         """)
-        db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+
+        params = {
+            "uid_hex": user_id.hex,
+            "uid_str": str(user_id),
+        }
     else:
         query = text("""
             INSERT INTO user_statistics (
-                user_id, lessons_completed, quizzes_completed, minigames_completed,
-                total_quiz_score, total_minigame_score, average_accuracy,
-                total_time_spent_seconds, updated_at)
-            SELECT user_id, lessons_completed, quizzes_completed, minigames_completed,
-                   total_quiz_score, total_minigame_score, average_accuracy,
-                   total_time_spent_seconds, CURRENT_TIMESTAMP
+                user_id, lessons_completed, quizzes_completed,
+                minigames_completed, total_quiz_score,
+                total_minigame_score, average_accuracy,
+                total_time_spent_seconds, updated_at
+            )
+            SELECT
+                user_id, lessons_completed, quizzes_completed,
+                minigames_completed, total_quiz_score,
+                total_minigame_score, average_accuracy,
+                total_time_spent_seconds, CURRENT_TIMESTAMP
             FROM v_user_statistics_live
             ON CONFLICT (user_id) DO UPDATE SET
                 lessons_completed = excluded.lessons_completed,
@@ -1252,12 +1273,26 @@ def rebuild_user_statistics(
                 total_quiz_score = excluded.total_quiz_score,
                 total_minigame_score = excluded.total_minigame_score,
                 average_accuracy = excluded.average_accuracy,
-                total_time_spent_seconds = excluded.total_time_spent_seconds,
+                total_time_spent_seconds =
+                    excluded.total_time_spent_seconds,
                 updated_at = CURRENT_TIMESTAMP
         """)
-        db.execute(query)
+        params = {}
 
-    db.commit()
+    for attempt in range(max_retries):
+        try:
+            with db.begin_nested():
+                db.execute(query, params)
+            return
+
+        except OperationalError as e:
+            if (
+                "database is locked" not in str(e).lower()
+                or attempt == max_retries - 1
+            ):
+                raise
+
+            time.sleep(base_delay * (2 ** attempt))
 
 # ══════════════════════════════════════════════════════════════════════
 # streaks
@@ -1274,27 +1309,45 @@ def create_or_update_streak(
     longest_streak: int | None = None,
     last_activity_date: date | None = None,
 ) -> Streak:
-    streak = get_streak(db, user_id)
+    """Create or update streak with retry logic for SQLite database locks.
+    Uses SAVEPOINT to safely retry without rolling back the caller's transaction."""
+    import time
+    max_retries = 3
+    base_delay = 0.1
 
-    if streak is None:
-        streak = Streak(
-            user_id=user_id,
-            current_streak=current_streak or 0,
-            longest_streak=longest_streak or 0,
-            last_activity_date=last_activity_date,
-        )
-        db.add(streak)
-    else:
-        if current_streak is not None:
-            streak.current_streak = current_streak
-        if longest_streak is not None:
-            streak.longest_streak = longest_streak
-        if last_activity_date is not None:
-            streak.last_activity_date = last_activity_date
+    for attempt in range(max_retries):
+        try:
+            with db.begin_nested():
+                streak = get_streak(db, user_id)
 
-    db.commit()
-    db.refresh(streak)
-    return streak
+                if streak is None:
+                    streak = Streak(
+                        user_id=user_id,
+                        current_streak=current_streak or 0,
+                        longest_streak=longest_streak or 0,
+                        last_activity_date=last_activity_date,
+                    )
+                    db.add(streak)
+                else:
+                    if current_streak is not None:
+                        streak.current_streak = current_streak
+                    if longest_streak is not None:
+                        streak.longest_streak = longest_streak
+                    if last_activity_date is not None:
+                        streak.last_activity_date = last_activity_date
+
+                db.flush()
+            # Refresh outside the SAVEPOINT to avoid nested transaction issues
+            db.refresh(streak)
+            return streak
+
+        except OperationalError as e:
+            if (
+                "database is locked" not in str(e).lower()
+                or attempt == max_retries - 1
+            ):
+                raise
+            time.sleep(base_delay * (2 ** attempt))
 
 # ══════════════════════════════════════════════════════════════════════
 # leaderboard_cache
@@ -1823,20 +1876,37 @@ from datetime import timedelta
 
 def record_activity_streak(db: Session, user_id: uuid.UUID,
                            activity_date: date | None = None) -> Streak:
-    """Count one day of activity. Same-day calls are no-ops."""
+    """Count one day of activity. Same-day calls are no-ops.
+    Uses SAVEPOINT to safely retry SQLite lock errors without rolling back
+    the caller's entire transaction."""
+    import time
+    max_retries = 3
+    base_delay = 0.1
     today = activity_date or datetime.now(timezone.utc).date()
-    streak = db.get(Streak, user_id)
-    if streak is None:
-        streak = Streak(user_id=user_id, current_streak=1, longest_streak=1,
-                        last_activity_date=today)
-        db.add(streak)
-    else:
-        last = streak.last_activity_date
-        if last is not None and today <= last:
-            return streak                      # same day (or backfilled older activity)
-        streak.current_streak = (streak.current_streak + 1
-                                 if last == today - timedelta(days=1) else 1)
-        streak.longest_streak = max(streak.longest_streak, streak.current_streak)
-        streak.last_activity_date = today
-    db.flush()
-    return streak
+
+    for attempt in range(max_retries):
+        try:
+            with db.begin_nested():
+                streak = db.get(Streak, user_id)
+                if streak is None:
+                    streak = Streak(user_id=user_id, current_streak=1, longest_streak=1,
+                                    last_activity_date=today)
+                    db.add(streak)
+                else:
+                    last = streak.last_activity_date
+                    if last is not None and today <= last:
+                        return streak                      # same day (or backfilled older activity)
+                    streak.current_streak = (streak.current_streak + 1
+                                             if last == today - timedelta(days=1) else 1)
+                    streak.longest_streak = max(streak.longest_streak, streak.current_streak)
+                    streak.last_activity_date = today
+                db.flush()
+            return streak
+
+        except OperationalError as e:
+            if (
+                "database is locked" not in str(e).lower()
+                or attempt == max_retries - 1
+            ):
+                raise
+            time.sleep(base_delay * (2 ** attempt))

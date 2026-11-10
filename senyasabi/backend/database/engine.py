@@ -16,5 +16,6 @@ def enable_sqlite_foreign_keys(dbapi_connection, connection_record):
     """Enable foreign-key enforcement for every SQLite connection."""
     cursor = dbapi_connection.cursor()
     cursor.execute("PRAGMA journal_mode=WAL")
+    cursor.execute("PRAGMA busy_timeout=10000")
     cursor.execute("PRAGMA foreign_keys=ON")
     cursor.close()
