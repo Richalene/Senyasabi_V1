@@ -207,3 +207,10 @@ Traceback (most recent call last):
 TypeError: Error calling Python override of QApplication::notify(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QApplication::notify(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::boundingRectFor(): Error calling Python override of QGraphicsEffect::draw(): cannot unpack non-iterable PySide6.QtGui.QPixmap object
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 17, in <module>
+AssertionError
+
+================================================

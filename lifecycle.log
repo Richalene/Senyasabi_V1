@@ -2056,3 +2056,1685 @@ Thread 0x000026ec (most recent call first):
     self.loading = LoadingOverlay(self)
   File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 80, in __init__
     self.frames = [QPixmap(str(_IMAGES / name)) for name in
+
+[12:48:52] *** UI THREAD HUNG FOR 5.4s ***
+
+--- Thread 6183301120 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 35, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[13:33:19] inference worker started
+
+[14:34:26] *** UI THREAD HUNG FOR 6.2s ***
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 22, in __init__
+    self._ui = QUiLoader().load(str(_UI_FILE), self)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/enum.py", line 764, in __call__
+    return cls._create_(
+
+[14:39:03] *** UI THREAD HUNG FOR 4.4s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 425, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 587, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 595, in record_score
+    record_minigame_result("sprint", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:39:08] *** UI THREAD HUNG FOR 9.4s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 425, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 587, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 595, in record_score
+    record_minigame_result("sprint", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:39:13] *** UI THREAD HUNG FOR 14.4s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 425, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 587, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 595, in record_score
+    record_minigame_result("sprint", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:39:18] *** UI THREAD HUNG FOR 19.4s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 425, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 587, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 595, in record_score
+    record_minigame_result("sprint", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:39:23] *** UI THREAD HUNG FOR 24.4s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 425, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 587, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 595, in record_score
+    record_minigame_result("sprint", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:39:28] *** UI THREAD HUNG FOR 29.4s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 425, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 587, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/sign_sprint.py", line 595, in record_score
+    record_minigame_result("sprint", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:40:07] *** UI THREAD HUNG FOR 4.6s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:40:12] *** UI THREAD HUNG FOR 9.6s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:40:17] *** UI THREAD HUNG FOR 14.6s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:40:22] *** UI THREAD HUNG FOR 19.6s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:40:27] *** UI THREAD HUNG FOR 24.6s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[14:40:33] *** UI THREAD HUNG FOR 29.7s ***
+
+--- Thread 6252949504 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6236123136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6219296768 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6202470400 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6183350272 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[15:04:05] *** UI THREAD HUNG FOR 14.4s ***
+
+--- Thread 6111916032 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 64, in __init__
+    self.register = RegisterScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/register.py", line 36, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[16:26:15] *** UI THREAD HUNG FOR 7.1s ***
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 22, in __init__
+    self._ui = QUiLoader().load(str(_UI_FILE), self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[16:27:54] *** UI THREAD HUNG FOR 4.6s ***
+
+--- Thread 6204878848 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6188052480 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6171226112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6154399744 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[16:27:59] *** UI THREAD HUNG FOR 9.6s ***
+
+--- Thread 6204878848 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6188052480 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6171226112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6154399744 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[16:28:04] *** UI THREAD HUNG FOR 14.7s ***
+
+--- Thread 6204878848 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6188052480 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6171226112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6154399744 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[16:28:09] *** UI THREAD HUNG FOR 19.7s ***
+
+--- Thread 6204878848 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6188052480 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6171226112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6154399744 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[16:28:14] *** UI THREAD HUNG FOR 24.7s ***
+
+--- Thread 6204878848 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6188052480 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6171226112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6154399744 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
+
+[16:28:19] *** UI THREAD HUNG FOR 29.7s ***
+
+--- Thread 6204878848 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6188052480 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6171226112 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6154399744 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6114537472 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 438, in next_round
+    self.game_finished.emit(self.session.score, self.session.total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 591, in show_score
+    self.record_score(score, total)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 599, in record_score
+    record_minigame_result("quest", score, total, self.session.limit)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/score_service.py", line 55, in record_minigame_result
+    rebuild_user_statistics(db, uid)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/repository.py", line 1237, in rebuild_user_statistics
+    db.execute(query, {"user_id": user_id.hex, "user_id_str": str(user_id)})
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2373, in execute
+    return self._execute_internal(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/orm/session.py", line 2280, in _execute_internal
+    result = conn.execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1421, in execute
+    return meth(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/sql/elements.py", line 526, in _execute_on_connection
+    return connection._execute_clauseelement(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1643, in _execute_clauseelement
+    ret = self._execute_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1848, in _execute_context
+    return self._exec_single_context(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/base.py", line 1969, in _exec_single_context
+    self.dialect.do_execute(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/default.py", line 952, in do_execute
+    cursor.execute(statement, parameters)
