@@ -8,6 +8,7 @@ CREATE TABLE IF NOT EXISTS users (
     display_name VARCHAR(100),
     notifications_enabled INTEGER NOT NULL DEFAULT 1,
     dark_mode INTEGER NOT NULL DEFAULT 0,
+    timezone TEXT,
     created_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
 );

@@ -47,6 +47,7 @@ class User(Base):
     )
     notifications_enabled: Mapped[bool] = mapped_column(Boolean, default=True, nullable=False)
     dark_mode: Mapped[bool] = mapped_column(Boolean, default=False, nullable=False)
+    timezone: Mapped[str | None] = mapped_column(String(64), nullable=True)
     created_at: Mapped[datetime] = mapped_column(UTCDateTime, default=utcnow, nullable=False)
     updated_at: Mapped[datetime] = _updated_at()
     offline_auth: Mapped["OfflineAuth | None"] = relationship(back_populates="user", uselist=False)

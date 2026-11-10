@@ -8,13 +8,11 @@ session, content not cached locally) returns False and the dashboard keeps its c
 import logging
 import uuid
 from datetime import date, datetime, timezone
-import threading
 import time
 
 from backend import auth_service
 from backend.database import models as m
 from backend.database.session import session_scope
-from .database.repository import create_or_update_streak
 
 _log = logging.getLogger(__name__)
 CONTENT_SYNC_INTERVAL = 600  # seconds between content checks
@@ -27,7 +25,6 @@ _TABLES = {
     "quiz_attempts": m.QuizAttempt,
     "minigame_attempts": m.MinigameAttempt,
     "user_badges": m.UserBadges,
-    "streaks": m.Streak,
     "user_statistics": m.UserStatistics,
 }
 
@@ -86,7 +83,10 @@ def apply_snapshot(snapshot):
                 db.merge(model(**converted))
             db.flush()
             counts[name] = len(rows)
-
+        from backend import streak_service
+        user = auth_service.get_current_user()
+        for row in snapshot.get("streaks") or []:
+            streak_service.reconcile(db, uuid.UUID(str(row["user_id"])), row)
         # Refresh local user_statistics from live view after applying remote snapshot
         user = auth_service.get_current_user()
         if user and user.get("user_id"):
@@ -153,53 +153,15 @@ def pull_user_progress():
     except Exception as error:
         _log.warning("Leaderboard refresh failed: %s", error)
 
-    # Refresh streak from server independently.
     try:
         from backend.api_client import get_api_client
-
-        client = get_api_client()
+        from backend import streak_service
         user = auth_service.get_current_user()
-
         if user and user.get("user_id"):
-            streak_data = client.get_user_streak(user["user_id"])
-
-            if streak_data:
-                last_activity = streak_data.get("last_activity_date")
-
-                if last_activity:
-                    # Normalize to date, regardless of whether the API
-                    # returns YYYY-MM-DD or an ISO datetime.
-                    server_last = (
-                        datetime.fromisoformat(last_activity).date()
-                        if isinstance(last_activity, str)
-                        else last_activity.date()
-                        if isinstance(last_activity, datetime)
-                        else last_activity
-                    )
-
-                    uid = uuid.UUID(str(user["user_id"]))
-
-                    with session_scope() as db:
-                        local = db.get(m.Streak, uid)
-
-                        local_last = (
-                            local.last_activity_date
-                            if local is not None
-                            else None
-                        )
-
-                        if (
-                            local_last is None
-                            or server_last >= local_last
-                        ):
-                            create_or_update_streak(
-                                db,
-                                uid,
-                                streak_data["current_streak"],
-                                streak_data["longest_streak"],
-                                server_last
-                            )
-
+            data = get_api_client().get_user_streak(user["user_id"])
+            if data:
+                with session_scope() as db:
+                    streak_service.reconcile(db, uuid.UUID(str(user["user_id"])), data)
     except Exception as error:
         _log.warning("Streak refresh failed: %s", error)
 

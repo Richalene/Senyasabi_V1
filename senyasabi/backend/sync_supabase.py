@@ -266,6 +266,17 @@ def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
                 except Exception:
                     logger.exception("Error processing sync item")
                     failed += 1
+            streak = None
+            if succeeded:
+                try:
+                    tz = next((i.get("data", {}).get("timezone") for i in sync_items
+                            if i.get("data", {}).get("timezone")), None)
+                    rpc = supabase.rpc("recalculate_streak",
+                                    {"p_user_id": user_id, "p_timezone": tz}).execute()
+                    rows = rpc.data
+                    streak = rows[0] if isinstance(rows, list) and rows else (rows or None)
+                except Exception:
+                    logger.exception("Streak recalculation RPC failed")
         finally:
             if orig_key and hasattr(supabase, "postgrest"):
                 try:
@@ -277,7 +288,8 @@ def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
             "processed": processed,
             "succeeded": succeeded,
             "failed": failed,
-            "mappings": {}
+            "mappings": {},
+            "streak": streak
         }
 
     except Exception:
