@@ -15,7 +15,7 @@ try:
 except ImportError:
     ROOT = Path(__file__).resolve().parents[2]
 _UI_FILE = ROOT / "ui/designer/lesson_select.ui"
-_COMING_SOON_MODULES = {"number", "family", "greeting", "days", "calendar", "actions"}
+_COMING_SOON_MODULES = {"family", "days", "calendar", "months", "actions"}
 
 
 class LessonSelectWidget(QWidget):

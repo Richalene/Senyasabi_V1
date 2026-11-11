@@ -33,11 +33,11 @@ class Ui_LessonSelect(object):
         self.imageBg.setScaledContents(True)
         self.lblMyLessons = QLabel(LessonSelect)
         self.lblMyLessons.setObjectName(u"lblMyLessons")
-        self.lblMyLessons.setGeometry(QRect(280, 180, 380, 70))
+        self.lblMyLessons.setGeometry(QRect(240, 180, 480, 70))
         self.lblMyLessons.setStyleSheet(u"font-family: \"Cherry Bomb One\", cursive, sans-serif; font-size: 46px; color: #4F3222; background: transparent;")
         self.lblMiniGames = QLabel(LessonSelect)
         self.lblMiniGames.setObjectName(u"lblMiniGames")
-        self.lblMiniGames.setGeometry(QRect(1260, 180, 380, 70))
+        self.lblMiniGames.setGeometry(QRect(1220, 180, 440, 70))
         self.lblMiniGames.setStyleSheet(u"font-family: \"Cherry Bomb One\", cursive, sans-serif; font-size: 46px; color: #4F3222; background: transparent;")
         self.btnBack = QPushButton(LessonSelect)
         self.btnBack.setObjectName(u"btnBack")
@@ -50,7 +50,7 @@ class Ui_LessonSelect(object):
         self.divider.setFrameShape(QFrame.Shape.VLine)
         self.btnLesson1 = QPushButton(LessonSelect)
         self.btnLesson1.setObjectName(u"btnLesson1")
-        self.btnLesson1.setGeometry(QRect(180, 300, 500, 92))
+        self.btnLesson1.setGeometry(QRect(230, 280, 500, 92))
         self.btnLesson1.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnLesson1.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -68,7 +68,7 @@ class Ui_LessonSelect(object):
 "    ")
         self.btnLesson2 = QPushButton(LessonSelect)
         self.btnLesson2.setObjectName(u"btnLesson2")
-        self.btnLesson2.setGeometry(QRect(300, 415, 500, 92))
+        self.btnLesson2.setGeometry(QRect(230, 395, 500, 92))
         self.btnLesson2.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnLesson2.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -86,7 +86,7 @@ class Ui_LessonSelect(object):
 "    ")
         self.btnLesson3 = QPushButton(LessonSelect)
         self.btnLesson3.setObjectName(u"btnLesson3")
-        self.btnLesson3.setGeometry(QRect(180, 530, 500, 92))
+        self.btnLesson3.setGeometry(QRect(230, 510, 500, 92))
         self.btnLesson3.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnLesson3.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -104,7 +104,7 @@ class Ui_LessonSelect(object):
 "    ")
         self.btnLesson4 = QPushButton(LessonSelect)
         self.btnLesson4.setObjectName(u"btnLesson4")
-        self.btnLesson4.setGeometry(QRect(300, 645, 500, 92))
+        self.btnLesson4.setGeometry(QRect(230, 625, 500, 92))
         self.btnLesson4.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnLesson4.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -122,7 +122,7 @@ class Ui_LessonSelect(object):
 "    ")
         self.btnLesson5 = QPushButton(LessonSelect)
         self.btnLesson5.setObjectName(u"btnLesson5")
-        self.btnLesson5.setGeometry(QRect(180, 760, 500, 92))
+        self.btnLesson5.setGeometry(QRect(230, 740, 500, 92))
         self.btnLesson5.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnLesson5.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -140,7 +140,7 @@ class Ui_LessonSelect(object):
 "    ")
         self.btnSprint = QPushButton(LessonSelect)
         self.btnSprint.setObjectName(u"btnSprint")
-        self.btnSprint.setGeometry(QRect(1020, 340, 380, 150))
+        self.btnSprint.setGeometry(QRect(1220, 280, 440, 135))
         self.btnSprint.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnSprint.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -164,7 +164,7 @@ class Ui_LessonSelect(object):
         self.starSprint.setScaledContents(True)
         self.btnQuest = QPushButton(LessonSelect)
         self.btnQuest.setObjectName(u"btnQuest")
-        self.btnQuest.setGeometry(QRect(1460, 340, 380, 150))
+        self.btnQuest.setGeometry(QRect(1220, 445, 440, 135))
         self.btnQuest.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnQuest.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -193,7 +193,7 @@ class Ui_LessonSelect(object):
         self.starQuest2.setScaledContents(True)
         self.btnExpression = QPushButton(LessonSelect)
         self.btnExpression.setObjectName(u"btnExpression")
-        self.btnExpression.setGeometry(QRect(1020, 560, 380, 150))
+        self.btnExpression.setGeometry(QRect(1220, 775, 440, 135))
         self.btnExpression.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnExpression.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -222,7 +222,7 @@ class Ui_LessonSelect(object):
         self.starExpr2.setScaledContents(True)
         self.btnDetective = QPushButton(LessonSelect)
         self.btnDetective.setObjectName(u"btnDetective")
-        self.btnDetective.setGeometry(QRect(1460, 560, 380, 150))
+        self.btnDetective.setGeometry(QRect(1220, 610, 440, 135))
         self.btnDetective.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnDetective.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -256,7 +256,7 @@ class Ui_LessonSelect(object):
         self.starDet3.setScaledContents(True)
         self.btnQuiz = QPushButton(LessonSelect)
         self.btnQuiz.setObjectName(u"btnQuiz")
-        self.btnQuiz.setGeometry(QRect(260, 930, 460, 74))
+        self.btnQuiz.setGeometry(QRect(250, 870, 460, 78))
         self.btnQuiz.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnQuiz.setStyleSheet(u"\n"
 "QPushButton {\n"

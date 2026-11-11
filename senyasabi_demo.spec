@@ -28,6 +28,14 @@ datas = [
     
     # Models (MediaPipe hand & pose detector tasks)
     (str(senyasabi_root / "resources" / "models" / "mediapipe"), "resources/models/mediapipe"),
+    (str(senyasabi_root / "resources" / "models" / "manifest.json"), "resources/models"),
+    (str(senyasabi_root / "resources" / "models" / "word_categories" / "number"), "resources/models/word_categories/number"),
+    (str(senyasabi_root / "resources" / "models" / "word_categories" / "greeting"), "resources/models/word_categories/greeting"),
+    (str(senyasabi_root / "resources" / "models" / "word_categories" / "survival"), "resources/models/word_categories/survival"),
+    (str(senyasabi_root / "resources" / "models" / "training_configs"), "resources/models/training_configs"),
+    
+    # Video demonstration clips for Numbers and Basic Communication (Greeting & Survival)
+    (str(senyasabi_root / "resources" / "videos" / "clips_labeled"), "resources/videos/clips_labeled"),
     
     # VRM signs for alphabet stills
     (str(senyasabi_root / "resources" / "VRM_SIGNS"), "resources/VRM_SIGNS"),
