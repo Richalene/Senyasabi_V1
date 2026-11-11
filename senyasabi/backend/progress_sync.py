@@ -8,7 +8,6 @@ session, content not cached locally) returns False and the dashboard keeps its c
 import logging
 import uuid
 from datetime import date, datetime, timezone
-import threading
 import time
 
 from backend import auth_service
@@ -26,7 +25,6 @@ _TABLES = {
     "quiz_attempts": m.QuizAttempt,
     "minigame_attempts": m.MinigameAttempt,
     "user_badges": m.UserBadges,
-    "streaks": m.Streak,
     "user_statistics": m.UserStatistics,
 }
 
@@ -85,7 +83,10 @@ def apply_snapshot(snapshot):
                 db.merge(model(**converted))
             db.flush()
             counts[name] = len(rows)
-
+        from backend import streak_service
+        user = auth_service.get_current_user()
+        for row in snapshot.get("streaks") or []:
+            streak_service.reconcile(db, uuid.UUID(str(row["user_id"])), row)
         # Refresh local user_statistics from live view after applying remote snapshot
         user = auth_service.get_current_user()
         if user and user.get("user_id"):
@@ -119,26 +120,50 @@ def sync_content_if_due(force=False):
     #     _content_lock.release()
 
 def pull_user_progress():
-    """Refresh local content, then progress (and the leaderboard cache). Never raises."""
+    """Refresh local content, then progress and leaderboard/streak caches. Never raises."""
+
     try:
         token = auth_service.get_access_token()
         _log.debug("Sync upload token available: %s", bool(token))
+
         if not token:
             return False
-        sync_content_if_due()  # failure is fine: progress merge falls back to whatever is cached
+
+        # Content refresh is optional; progress sync should still proceed.
+        try:
+            sync_content_if_due()
+        except Exception as error:
+            _log.warning("Content sync failed; continuing with cached content: %s", error)
+
         snapshot = fetch_snapshot(token)
+
         if snapshot is None:
             return False
+
         apply_snapshot(snapshot)
+
     except Exception as error:
         _log.warning("Progress sync failed: %s", error)
         return False
-    try:  # keeps the dashboard rank in step with the leaderboard
+
+    # Refresh leaderboard independently.
+    try:
         from backend import leaderboard_service
         leaderboard_service.get_leaderboard()
     except Exception as error:
         _log.warning("Leaderboard refresh failed: %s", error)
-    # finally:
-    #     _pull_lock.release()
+
+    try:
+        from backend.api_client import get_api_client
+        from backend import streak_service
+        user = auth_service.get_current_user()
+        if user and user.get("user_id"):
+            data = get_api_client().get_user_streak(user["user_id"])
+            if data:
+                with session_scope() as db:
+                    streak_service.reconcile(db, uuid.UUID(str(user["user_id"])), data)
+    except Exception as error:
+        _log.warning("Streak refresh failed: %s", error)
+
     return True
 

@@ -12,7 +12,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
 
 from argon2 import PasswordHasher
 from backend import auth_service as auth
-from PySide6.QtWidgets import QApplication, QPushButton
+from PySide6.QtWidgets import QApplication, QPushButton, QLineEdit
 from PySide6.QtTest import QTest
 from screens.app_controller import AppController
 
@@ -202,6 +202,29 @@ class NavigationTests(unittest.TestCase):
             self.assert_screen(c.login)
             self.assertIsNone(auth.get_current_user())
             self.assertFalse(c.login.email_input.text())
+
+    def test_password_visibility_toggles_preserve_text(self):
+        for field in (self.controller.login.password_input,
+                      self.controller.register.password_input,
+                      self.controller.register.confirm_password_input):
+            field.setText("keep-this-secret")
+            field.window().show()
+            self.app.processEvents()
+            toggle = field.visibility_toggle
+            self.assertEqual(field.echoMode(), QLineEdit.EchoMode.Password)
+            toggle.click()
+            self.assertEqual(field.echoMode(), QLineEdit.EchoMode.Normal)
+            self.assertEqual(field.text(), "keep-this-secret")
+            toggle.click()
+            self.assertEqual(field.echoMode(), QLineEdit.EchoMode.Password)
+            old_x = toggle.x()
+            field.resize(field.width() + 20, field.height())
+            self.assertEqual(toggle.x(), field.width() - 52)
+            self.assertGreater(toggle.x(), old_x)
+        self.controller.login.password_input.visibility_toggle.setChecked(True)
+        self.controller._clear_passwords()
+        self.assertEqual(self.controller.login.password_input.echoMode(), QLineEdit.EchoMode.Password)
+        self.assertEqual(self.controller.login.password_input.text(), "")
 
 
 if __name__ == '__main__':

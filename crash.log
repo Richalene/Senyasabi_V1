@@ -1,0 +1,375 @@
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 62, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 62, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+--- APPLICATION START ---
+
+--- APPLICATION START ---
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dialogs.py", line 580, in _on_sign_out
+    auth_service.clear_session()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: module 'backend.auth_service' has no attribute 'clear_session'. Did you mean: '_clear_session'?
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+  File "<string>", line 48, in <module>
+ModuleNotFoundError: No module named 'screens'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import senyasabi.main; print('main imported successfully')
+    ^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 74, in <module>
+    from screens.startup import FittedForm
+ModuleNotFoundError: No module named 'screens'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "<string>", line 1, in <module>
+    import sys; sys.path.insert(0, 'senyasabi'); import main; print('main imported successfully')
+                                                 ^^^^^^^^^^^
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 76, in <module>
+    from screens.app_controller import AppController
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\app_controller.py", line 8, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\dashboard\dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\auth_service.py", line 25, in <module>
+    from .database import repository as repo
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\database\__init__.py", line 1, in <module>
+    from .engine import engine
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\backend\database\engine.py", line 1, in <module>
+    from sqlalchemy import create_engine, event
+ModuleNotFoundError: No module named 'sqlalchemy'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "C:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 114, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 368, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 368, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 368, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 368, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 368, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 273, in open_module_lesson
+    model_code = get_lesson_model_code(self.selected_module, number)
+                 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/content_service.py", line 368, in get_lesson_model_code
+    if lesson.get("lesson_number") == lesson_order and lesson.get("module_code"):
+       ^^^^^^^^^^
+AttributeError: 'LessonRecord' object has no attribute 'get'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 109, in <module>
+    from PySide6.QtCore import QEvent, QTimer, Qt
+ModuleNotFoundError: No module named 'PySide6'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 14, in <module>
+    from argon2 import PasswordHasher, Type
+ModuleNotFoundError: No module named 'argon2'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 109, in <module>
+    from PySide6.QtCore import QEvent, QTimer, Qt
+ModuleNotFoundError: No module named 'PySide6'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 14, in <module>
+    from argon2 import PasswordHasher, Type
+ModuleNotFoundError: No module named 'argon2'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 24, in <module>
+    from .api import auth_client
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/api/auth_client.py", line 2, in <module>
+    import requests
+ModuleNotFoundError: No module named 'requests'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 115, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 7, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 35, in <module>
+    from .database import repository as repo
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/__init__.py", line 1, in <module>
+    from .engine import engine
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/engine.py", line 1, in <module>
+    from sqlalchemy import create_engine, event
+ModuleNotFoundError: No module named 'sqlalchemy'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 138, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 138, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 180, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 180, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 180, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 309, in logout
+    self.main_menu.invalidate_home_stats()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardWindow' object has no attribute 'invalidate_home_stats'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "screens/minigames/fingerspell_quest.py", line 588, in start_game
+  File "screens/minigames/fingerspell_quest.py", line 223, in start_game
+  File "screens/minigames/fingerspell_quest.py", line 237, in open_camera
+  File "screens/camera_access.py", line 64, in request_camera
+  File "screens/camera_permission.py", line 30, in ensure_camera_permission
+TypeError: requestPermission expected 3 arguments, got 2
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 310, in logout
+    self.main_menu.invalidate_home_stats()
+    ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AttributeError: 'DashboardWindow' object has no attribute 'invalidate_home_stats'
+
+================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 140, in <module>
+    from screens.app_controller import AppController
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 9, in <module>
+    from screens.dashboard.dashboard import DashboardWindow, StatisticsDashboardWindow
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 19, in <module>
+    from backend import auth_service, dashboard_service
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/auth_service.py", line 36, in <module>
+    from .database import repository as repo
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/__init__.py", line 1, in <module>
+    from .engine import engine
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/database/engine.py", line 1, in <module>
+    from sqlalchemy import create_engine, event
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/__init__.py", line 13, in <module>
+    from .engine import AdaptedConnection as AdaptedConnection
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/__init__.py", line 26, in <module>
+    from .create import create_engine as create_engine
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/create.py", line 23, in <module>
+    from . import url as _url
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/sqlalchemy/engine/url.py", line 42, in <module>
+    from ..dialects import plugins
+  File "shibokensupport/signature/loader.py", line 72, in feature_imported
+  File "shibokensupport/feature.py", line 148, in feature_imported
+  File "shibokensupport/feature.py", line 159, in _mod_uses_pyside
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/inspect.py", line 1285, in getsource
+    lines, lnum = getsourcelines(object)
+                  ^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/inspect.py", line 1267, in getsourcelines
+    lines, lnum = findsource(object)
+                  ^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/inspect.py", line 1092, in findsource
+    lines = linecache.getlines(file, module.__dict__)
+            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/linecache.py", line 46, in getlines
+    return updatecache(filename, module_globals)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/linecache.py", line 138, in updatecache
+    with tokenize.open(fullname) as fp:
+         ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/tokenize.py", line 451, in open
+    encoding, lines = detect_encoding(buffer.readline)
+                      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/tokenize.py", line 420, in detect_encoding
+    first = read_or_stop()
+            ^^^^^^^^^^^^^^
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/tokenize.py", line 378, in read_or_stop
+    return readline()
+           ^^^^^^^^^^
+KeyboardInterrupt
+
+================================================

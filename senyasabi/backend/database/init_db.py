@@ -32,6 +32,15 @@ def ensure_database_directory():
     db_path = Path(DATABASE_PATH)
     db_path.parent.mkdir(parents=True, exist_ok=True)
 
+def _ensure_user_timezone():
+    conn = sqlite3.connect(DATABASE_PATH)
+    try:
+        cols = {r[1] for r in conn.execute("PRAGMA table_info(users)")}
+        if cols and "timezone" not in cols:
+            conn.execute("ALTER TABLE users ADD COLUMN timezone TEXT")
+            conn.commit()
+    finally:
+        conn.close()
 
 def run_schema_sql():
     """Execute the SQLite schema SQL file to create all tables."""
@@ -78,10 +87,12 @@ def initialize_database(force_rebuild: bool = False):
         run_schema_sql()
 
         logger.info("Running initial migrations...")
+        _ensure_user_timezone()
         run_migrations()
 
     else:
         logger.info("Database exists. Checking migrations...")
+        _ensure_user_timezone()
         migration_result = run_migrations()
 
         if migration_result["success"]:

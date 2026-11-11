@@ -14,7 +14,7 @@ if not senyasabi_root.exists():
 # Bundled data files specifically for Module 1 Demo
 datas = [
     # Demo configuration (.env.production as .env)
-    (str(senyasabi_root / ".env.production"), "."),
+    (str(senyasabi_root / ".env"), "."),
     
     # Core resources
     (str(senyasabi_root / "resources" / "data" / "senyasabi.db"), "resources/data"),
@@ -66,6 +66,7 @@ hidden_imports = [
     "keras",
     "sklearn",
     "sklearn.preprocessing",
+    "matplotlib",
     
     # Security, Keyring, and DB
     "argon2",
@@ -172,7 +173,6 @@ excludes = [
     # Unused ML & scientific libraries
     "jax",
     "jaxlib",
-    "matplotlib",
     "tensorboard",
     "boto3",
     "botocore",
@@ -218,7 +218,7 @@ exe = EXE(
     argv_emulation=False,
     target_arch=None,
     codesign_identity=None,
-    entitlements_file=None,
+    entitlements_file="entitlements.plist",
     icon=str(senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png") if (senyasabi_root / "resources" / "img" / "ui" / "senyasabi_logo.png").exists() else None,
 )
 
@@ -242,9 +242,8 @@ if sys.platform == "darwin":
         bundle_identifier="com.senyasabi.demo",
         info_plist={
             "NSCameraUsageDescription": "SenyaSabi requires camera access for sign language recognition during lessons and minigames.",
-            "NSMicrophoneUsageDescription": "SenyaSabi does not require microphone access.",
             "CFBundleShortVersionString": "1.0.0",
             "CFBundleVersion": "1.0.0",
-            "NSHighResolutionCapable": "True",
+            "NSHighResolutionCapable": True,
         },
     )

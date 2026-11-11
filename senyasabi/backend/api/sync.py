@@ -13,6 +13,8 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from typing import List, Dict, Any, Optional
 from pydantic import BaseModel
 from sqlalchemy import text
+from datetime import date, datetime, timedelta, timezone
+from fastapi.encoders import jsonable_encoder
 
 from ..database.postgre_session import get_postgres_session
 from ..security import get_current_user_id
@@ -33,14 +35,25 @@ class SyncRequest(BaseModel):
     user_id: str  # UUID string from JWT
     sync_items: List[SyncItem]
 
-
 class SyncResponse(BaseModel):
-    """Sync upload response."""
     processed: int
     succeeded: int
     failed: int
-    mappings: Dict[str, Dict[str, str]]  # entity_type -> {client_id: server_id}
+    mappings: Dict[str, Dict[str, str]]
+    streak: Optional[Dict[str, Any]] = None          # authoritative
 
+QUALIFYING = ("quiz_attempt", "minigame_attempt", "lesson_progress")
+
+def _valid(item) -> bool:
+    """Reject impossible timestamps; a small clock skew is tolerated."""
+    raw = item.data.get("completed_at")
+    if not raw:
+        return item.entity_type == "lesson_progress" and item.data.get("status") != "Completed"
+    try:
+        ts = datetime.fromisoformat(raw.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return ts <= datetime.now(timezone.utc) + timedelta(days=1)
 
 @router.post("/upload")
 async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_user_id)):
@@ -68,10 +81,10 @@ async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_u
             succeeded = 0
             failed = 0
             mappings = {}
+            activity, tz_name = False, None
             
             for item in request.sync_items:
                 processed += 1
-                
                 try:
                     handler = {"quiz_attempt": upsert_quiz_attempt,
                                "minigame_attempt": upsert_minigame_attempt,
@@ -79,28 +92,35 @@ async def upload_sync(request: SyncRequest, user_id: str = Depends(get_current_u
                                "user": upsert_user}.get(item.entity_type)
                     with db.begin_nested():       # savepoint: one bad item can't abort the batch
                         success = bool(handler and handler(db, user_id, item))
+                    if success and item.entity_type in QUALIFYING and (
+                            item.entity_type != "lesson_progress"
+                            or item.data.get("status") == "Completed"):
+                        activity = True
+                        tz_name = tz_name or item.data.get("timezone")
                     succeeded += success
                     failed += not success
                 except Exception as e:
                     failed += 1
                     print(f"Error processing sync item: {e}")
 
+            streak = None
+            if activity:      # steps 3-4: recalc, update streaks, trigger refreshes the cache
+                row = db.execute(text("SELECT * FROM public.recalculate_streak(:u, :tz)"),
+                                 {"u": user_id, "tz": tz_name}).mappings().first()
+                streak = jsonable_encoder(dict(row)) if row else None
+
+
             db.execute(text("SELECT public.refresh_user_statistics(:u)"), {"u": user_id})
             db.commit()
 
-            return SyncResponse(
-                processed=processed,
-                succeeded=succeeded,
-                failed=failed,
-                mappings=mappings
-            )
+            return SyncResponse(processed=processed, succeeded=succeeded, failed=failed,
+                                mappings=mappings, streak=streak)
             
     except Exception as e:
         raise HTTPException(
             status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
             detail=f"Error during sync upload: {str(e)}"
         )
-
 
 def upsert_user(db, user_id: str, item: SyncItem) -> bool:
     """Upsert user metadata."""
@@ -153,28 +173,22 @@ def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:
     if status == "Completed":
         passed = True  # Always pass if marked completed
     
-    completed_at_sql = "now()" if status == "Completed" else "NULL"
-    result = db.execute(text(f"""
+    completed_at = data.get("completed_at") if status == "Completed" else None
+    client_updated_at = client_updated_at or datetime.now(timezone.utc).isoformat()
+    result = db.execute(text("""
         INSERT INTO public.lesson_progress AS lp (
             user_id, lesson_id, completion_percentage, status,
-            completed_at, time_spent_seconds, client_updated_at, updated_at
-        )
-        VALUES (
-            :user_id, :lesson_id, :completion_percentage, :status,
-            {completed_at_sql}, :time_spent_seconds, :client_updated_at, now()
-        )
+            completed_at, time_spent_seconds, client_updated_at, updated_at)
+        VALUES (:user_id, :lesson_id, :completion_percentage, :status,
+            CASE WHEN :status = 'Completed'
+                 THEN COALESCE(CAST(:completed_at AS timestamptz), now()) END,
+            :time_spent_seconds, CAST(:client_updated_at AS timestamptz), now())
         ON CONFLICT (user_id, lesson_id) DO UPDATE SET
             completion_percentage = GREATEST(lp.completion_percentage, EXCLUDED.completion_percentage),
-            time_spent_seconds = GREATEST(lp.time_spent_seconds, EXCLUDED.time_spent_seconds),
-            status = CASE
-                WHEN EXCLUDED.status = 'Completed' OR lp.status = 'Completed' THEN 'Completed'
-                ELSE EXCLUDED.status
-            END,
-            completed_at = CASE
-                WHEN lp.completed_at IS NOT NULL THEN lp.completed_at
-                WHEN EXCLUDED.status = 'Completed' THEN now()
-                ELSE NULL
-            END,
+            time_spent_seconds    = GREATEST(lp.time_spent_seconds, EXCLUDED.time_spent_seconds),
+            status = CASE WHEN EXCLUDED.status = 'Completed' OR lp.status = 'Completed'
+                          THEN 'Completed' ELSE EXCLUDED.status END,
+            completed_at = LEAST(lp.completed_at, EXCLUDED.completed_at),   -- earliest wins, NULLs ignored
             client_updated_at = GREATEST(lp.client_updated_at, EXCLUDED.client_updated_at),
             updated_at = now()
         RETURNING user_id
@@ -184,7 +198,8 @@ def upsert_lesson_progress(db, user_id: str, item: SyncItem) -> bool:
         "completion_percentage": completion_percentage,
         "status": status,
         "time_spent_seconds": time_spent_seconds,
-        "client_updated_at": client_updated_at or "now()",
+        "completed_at": completed_at,
+        "client_updated_at": client_updated_at,
     })
     
     return result.rowcount > 0

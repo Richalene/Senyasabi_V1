@@ -1,8 +1,9 @@
 """Custom UI widgets and components for SenyaSabi minigames."""
 from pathlib import Path
-from PySide6.QtCore import Qt, Signal, QRectF, QSize
+from PySide6.QtCore import Qt, Signal, QRectF, QPointF, QSize
 from PySide6.QtGui import QPainter, QPixmap, QColor, QFont, QPen, QPainterPath
-from PySide6.QtWidgets import QWidget, QLabel, QPushButton, QHBoxLayout, QVBoxLayout
+from PySide6.QtWidgets import (QWidget, QLabel, QPushButton, QHBoxLayout,
+                                QVBoxLayout, QSizePolicy)
 
 try:
     from backend.paths import get_base_dir
@@ -13,7 +14,7 @@ except ImportError:
 
 class PillButton(QPushButton):
     def __init__(self, text, parent=None, *, background, foreground, hover, pressed,
-                 border=None, border_width=0):
+                border=None, border_width=0):
         super().__init__(text, parent)
         self._background = QColor(background)
         self._foreground = QColor(foreground)
@@ -46,7 +47,7 @@ class PillButton(QPushButton):
 
 class PillBadge(QLabel):
     def __init__(self, text="", parent=None, *, background, foreground,
-                 border=None, border_width=0):
+                border=None, border_width=0):
         super().__init__(text, parent)
         self._background = QColor(background)
         self._foreground = QColor(foreground)
@@ -81,52 +82,79 @@ class HowToPlayWidget(QWidget):
     - SIGNSPRINTHOW.png, FINGERSPELLQUESTHOW.png, SIGNDETECTIVEHOW.png
     - Let's Go! (starts minigame)
     - Go Back (returns to minigame menu)
+
+    Scales to whatever size it is given: the background keeps its 16:9
+    aspect ratio (centered) and the clickable buttons follow it.
     """
     start_requested = Signal()
     back_requested = Signal()
+    BASE_W, BASE_H = 1920, 1080
 
     def __init__(self, bg_image_name, parent=None):
         super().__init__(parent)
-        self.resize(1920, 1080)
         self.setObjectName("howToPlayWidget")
+        self.setMinimumSize(0, 0)
+        self._last_scale = None
 
         self.bg_label = QLabel(self)
-        self.bg_label.setGeometry(0, 0, 1920, 1080)
-        self.bg_label.setPixmap(QPixmap(str(ROOT / "resources/img/games" / bg_image_name)))
+        pix = QPixmap(str(ROOT / "resources/img/games" / bg_image_name))
+        self.bg_label.setPixmap(pix)
         self.bg_label.setScaledContents(True)
+        # Never let the pixmap dictate a minimum size
+        self.bg_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
 
-        # Buttons over 'Let's Go!' and 'Go Back'
-        # Both buttons are styled as cohesive green pill buttons matching the SenyaSabi UI theme
-        btn_style = (
-            "QPushButton {"
-            "  background-color: #C2D076;"
-            "  color: #FFFFFF;"
-            "  font-family: 'Segoe UI', Arial, sans-serif;"
-            "  font-size: 32px;"
-            "  font-weight: 700;"
-            "  border: none;"
-            "  border-radius: 44px;"
-            "}"
-            "QPushButton:hover {"
-            "  background-color: #B1C065;"
-            "}"
-            "QPushButton:pressed {"
-            "  background-color: #9FAF54;"
-            "}"
-        )
+        # Fill any letterbox bars with the image's edge colour
+        if not pix.isNull():
+            edge = pix.toImage().pixelColor(0, 0).name()
+            self.setAttribute(Qt.WidgetAttribute.WA_StyledBackground, True)
+            self.setStyleSheet(f"#howToPlayWidget {{ background-color: {edge}; }}")
 
-        self.btn_start = QPushButton("Let's Go!", self)
-        self.btn_start.setGeometry(401, 840, 283, 88)
+        # Transparent / styled buttons over 'Let's Go!' and 'Go Back'
+        self.btn_start = QPushButton(self)
         self.btn_start.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_start.setStyleSheet(btn_style)
         self.btn_start.clicked.connect(self.start_requested.emit)
 
-        self.btn_back = QPushButton("Go Back", self)
-        self.btn_back.setGeometry(743, 840, 283, 88)
+        self.btn_back = QPushButton(self)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_back.setStyleSheet(btn_style)
         self.btn_back.clicked.connect(self.back_requested.emit)
         self.back_button = self.btn_back
+
+        self._scale_layout()
+
+    def _apply_button_styles(self, s):
+        r = max(4, int(40 * s))
+        self.btn_start.setStyleSheet(
+            f"QPushButton {{ background: transparent; border: none; border-radius: {r}px; }} "
+            "QPushButton:hover { background: rgba(255, 255, 255, 0.25); }"
+        )
+        self.btn_back.setStyleSheet(
+            f"QPushButton {{ background: transparent; border: none; border-radius: {r}px; }} "
+            "QPushButton:hover { background: rgba(0, 0, 0, 0.08); }"
+        )
+
+    def _scale_layout(self):
+        w, h = self.width(), self.height()
+        if w < 2 or h < 2:
+            return
+        s = max(0.05, min(w / self.BASE_W, h / self.BASE_H))
+        ox = (w - self.BASE_W * s) / 2
+        oy = (h - self.BASE_H * s) / 2
+
+        def place(widget, x, y, bw, bh):
+            widget.setGeometry(int(ox + x * s), int(oy + y * s),
+                               max(1, int(bw * s)), max(1, int(bh * s)))
+
+        place(self.bg_label, 0, 0, self.BASE_W, self.BASE_H)
+        place(self.btn_start, 390, 810, 300, 110)
+        place(self.btn_back, 730, 810, 300, 110)
+
+        if self._last_scale != s:
+            self._last_scale = s
+            self._apply_button_styles(s)
+
+    def resizeEvent(self, event):
+        super().resizeEvent(event)
+        self._scale_layout()
 
 
 class MinigameScoreWidget(QWidget):
@@ -147,14 +175,16 @@ class MinigameScoreWidget(QWidget):
 
     def __init__(self, parent=None):
         super().__init__(parent)
-        self.resize(self.BASE_WIDTH, self.BASE_HEIGHT)
         self.setObjectName("minigameScoreWidget")
+        self.setMinimumSize(0, 0)
+        self._last_scale = None
 
         # Background scores_bg.png
         self.bg_label = QLabel(self)
         self.bg_label.setGeometry(0, 0, 1920, 1080)
         self.bg_label.setPixmap(QPixmap(str(ROOT / "resources/img/scores_bg.png")))
         self.bg_label.setScaledContents(True)
+        self.bg_label.setSizePolicy(QSizePolicy.Policy.Ignored, QSizePolicy.Policy.Ignored)
 
         # Top-right Close Button
         self.btn_close = QPushButton(self)
@@ -170,30 +200,12 @@ class MinigameScoreWidget(QWidget):
         # Seamless Title Banner inside yellow blob
         self.title_banner = QLabel(self)
         self.title_banner.setGeometry(160, 310, 1020, 220)
-        self.title_banner.setStyleSheet(
-            "QLabel {"
-            "  background-color: #FFDE59;"
-            "  color: #704833;"
-            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
-            "  font-size: 110px;"
-            "  font-weight: bold;"
-            "}"
-        )
         self.title_banner.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.title_banner.setText("Excellent!")
 
         # Dynamic Score Display aligned directly next to baked 'Score:'
         self.lbl_score_val = QLabel(self)
         self.lbl_score_val.setGeometry(475, 640, 300, 140)
-        self.lbl_score_val.setStyleSheet(
-            "QLabel {"
-            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
-            "  font-size: 85px;"
-            "  font-weight: bold;"
-            "  color: #704833;"
-            "  background: transparent;"
-            "}"
-        )
         self.lbl_score_val.setText("5/5")
         self.lbl_score_val.setAlignment(Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
@@ -201,13 +213,6 @@ class MinigameScoreWidget(QWidget):
         self.badge_acc = PillBadge("", self, background="#BFD379", foreground="#2D4014")
         self.badge_acc.setGeometry(800, 665, 280, 68)
         self.badge_acc.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.badge_acc.setStyleSheet(
-            "QLabel {"
-            "  font-family: 'Segoe UI', sans-serif;"
-            "  font-size: 24px;"
-            "  font-weight: 700;"
-            "}"
-        )
         self.badge_acc.setText("100% Accuracy")
 
         # Primary Continue Button
@@ -217,13 +222,6 @@ class MinigameScoreWidget(QWidget):
         )
         self.btn_next.setGeometry(170, 815, 340, 85)
         self.btn_next.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_next.setStyleSheet(
-            "QPushButton {"
-            "  font-family: 'Segoe UI', sans-serif;"
-            "  font-size: 30px;"
-            "  font-weight: 700;"
-            "}"
-        )
         self.btn_next.clicked.connect(self.continue_requested.emit)
 
         # Secondary Play Again Button
@@ -233,14 +231,53 @@ class MinigameScoreWidget(QWidget):
         )
         self.btn_replay.setGeometry(540, 815, 270, 85)
         self.btn_replay.setCursor(Qt.CursorShape.PointingHandCursor)
-        self.btn_replay.setStyleSheet(
-            "QPushButton {"
+        self.btn_replay.clicked.connect(self.replay_requested.emit)
+
+        self._apply_fonts(1.0)
+
+    def _apply_fonts(self, scale):
+        """Font sizes follow the window scale so text never overflows."""
+        def px(v, lo):
+            return max(lo, int(v * scale))
+        self.title_banner.setStyleSheet(
+            "QLabel {"
+            "  background-color: #FFDE59;"
+            "  color: #704833;"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            f"  font-size: {px(110, 14)}px;"
+            "  font-weight: bold;"
+            "}"
+        )
+        self.lbl_score_val.setStyleSheet(
+            "QLabel {"
+            "  font-family: 'Cherry Bomb One', 'Segoe UI', sans-serif;"
+            f"  font-size: {px(85, 12)}px;"
+            "  font-weight: bold;"
+            "  color: #704833;"
+            "  background: transparent;"
+            "}"
+        )
+        self.badge_acc.setStyleSheet(
+            "QLabel {"
             "  font-family: 'Segoe UI', sans-serif;"
-            "  font-size: 26px;"
+            f"  font-size: {px(24, 8)}px;"
             "  font-weight: 700;"
             "}"
         )
-        self.btn_replay.clicked.connect(self.replay_requested.emit)
+        self.btn_next.setStyleSheet(
+            "QPushButton {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            f"  font-size: {px(30, 9)}px;"
+            "  font-weight: 700;"
+            "}"
+        )
+        self.btn_replay.setStyleSheet(
+            "QPushButton {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            f"  font-size: {px(26, 8)}px;"
+            "  font-weight: 700;"
+            "}"
+        )
 
     def resizeEvent(self, event):
         super().resizeEvent(event)
@@ -257,6 +294,10 @@ class MinigameScoreWidget(QWidget):
         self.badge_acc.setGeometry(int(800 * sx), int(665 * sy), max(1, int(280 * sx)), max(1, int(68 * sy)))
         self.btn_next.setGeometry(int(170 * sx), int(815 * sy), max(1, int(340 * sx)), max(1, int(85 * sy)))
         self.btn_replay.setGeometry(int(540 * sx), int(815 * sy), max(1, int(270 * sx)), max(1, int(85 * sy)))
+
+        if self._last_scale != scale:
+            self._last_scale = scale
+            self._apply_fonts(scale)
 
     def set_score(self, score, total):
         self.lbl_score_val.setText(f"{score}/{total}")
@@ -279,6 +320,7 @@ class MinigameScoreWidget(QWidget):
 class MinigameHeader(QWidget):
     """
     Standard Minigame Header with SenyaSabi logo (top-left) and Close '✕' (top-right).
+    Call set_scale(s) to resize it relative to its 1920x1080 design size.
     """
     close_requested = Signal()
 
@@ -287,17 +329,17 @@ class MinigameHeader(QWidget):
         self.setFixedHeight(90)
         self.setStyleSheet("background: transparent;")
 
-        layout = QHBoxLayout(self)
-        layout.setContentsMargins(40, 20, 40, 10)
+        self._layout = QHBoxLayout(self)
+        self._layout.setContentsMargins(40, 20, 40, 10)
 
         # SenyaSabi Logo
         self.logo = QLabel(self)
         self.logo.setPixmap(QPixmap(str(ROOT / "resources/img/ui/senyasabi_logo_header.png")))
         self.logo.setScaledContents(True)
         self.logo.setFixedSize(176, 60)
-        layout.addWidget(self.logo, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+        self._layout.addWidget(self.logo, alignment=Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
 
-        layout.addStretch()
+        self._layout.addStretch()
 
         # Close button
         self.btn_close = QPushButton(self)
@@ -309,7 +351,13 @@ class MinigameHeader(QWidget):
             "QPushButton:hover { transform: scale(1.1); }"
         )
         self.btn_close.clicked.connect(self.close_requested.emit)
-        layout.addWidget(self.btn_close, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+        self._layout.addWidget(self.btn_close, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+    def set_scale(self, s):
+        self.setFixedHeight(max(1, int(90 * s)))
+        self._layout.setContentsMargins(int(40 * s), int(20 * s), int(40 * s), int(10 * s))
+        self.logo.setFixedSize(max(1, int(176 * s)), max(1, int(60 * s)))
+        self.btn_close.setFixedSize(max(1, int(48 * s)), max(1, int(48 * s)))
 
 
 class LetterTile(QLabel):
@@ -321,18 +369,28 @@ class LetterTile(QLabel):
     - correct: vibrant green celebration tile
     - wrong: soft error tint for incorrect attempt
     - revealed: golden dashed border when round expires
+    Call set_scale(s) to resize tile, font, border and radius together.
     """
     def __init__(self, letter="", tile_size=100, parent=None):
         if isinstance(tile_size, QWidget):
             parent = tile_size
             tile_size = 100
         super().__init__(parent)
+        self._base_size = int(tile_size)
+        self._scale = 1.0
         self.letter = letter.upper()
-        self.tile_size = int(tile_size)
         self.state = "filled" if letter else "empty"
-        self.setFixedSize(self.tile_size, self.tile_size)
+        self.setFixedSize(self._base_size, self._base_size)
         self.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.setText(self.letter)
+        self.update_style()
+
+    def set_scale(self, s):
+        if abs(s - self._scale) < 1e-6:
+            return
+        self._scale = s
+        side = max(1, int(self._base_size * s))
+        self.setFixedSize(side, side)
         self.update_style()
 
     def set_letter(self, letter, state=None):
@@ -349,78 +407,73 @@ class LetterTile(QLabel):
         self.update_style()
 
     def update_style(self):
-        font_size = max(18, int(self.tile_size * 0.42))
-        radius = max(8, int(self.tile_size * 0.20))
-        border_w = max(2, int(self.tile_size * 0.03))
-
+        s = self._scale
+        bw = max(1, round(3 * s))
+        bw_active = max(1, round(3.5 * s))
+        radius = max(4, int(20 * s))
+        font = (
+            "  font-family: 'Segoe UI', Arial, sans-serif;"
+            f"  font-size: {max(8, int(42 * s))}px;"
+            "  font-weight: 800;"
+        )
         if self.state == "empty":
             self.setStyleSheet(
-                f"QLabel {{"
-                f"  background-color: #FFFDF0;"
-                f"  color: #3C2415;"
-                f"  border: {border_w}px solid #D5C9A9;"
+                "QLabel {"
+                "  background-color: #FFFDF0;"
+                "  color: #3C2415;"
+                f"  border: {bw}px solid #D5C9A9;"
                 f"  border-radius: {radius}px;"
-                f"}}"
+                "}"
             )
         elif self.state == "active":
             self.setStyleSheet(
-                f"QLabel {{"
-                f"  background-color: #FFFFFF;"
-                f"  color: #FFAE00;"
-                f"  border: {border_w + 1}px solid #FFAE00;"
+                "QLabel {"
+                "  background-color: #FFFFFF;"
+                "  color: #FFAE00;"
+                f"  border: {bw_active}px solid #FFAE00;"
                 f"  border-radius: {radius}px;"
-                f"  font-family: 'Segoe UI', Arial, sans-serif;"
-                f"  font-size: {font_size}px;"
-                f"  font-weight: 800;"
-                f"}}"
+                f"{font}"
+                "}"
             )
         elif self.state == "correct":
             self.setStyleSheet(
-                f"QLabel {{"
-                f"  background-color: #BFD379;"
-                f"  color: #1E330C;"
-                f"  border: {border_w}px solid #94AB45;"
+                "QLabel {"
+                "  background-color: #BFD379;"
+                "  color: #1E330C;"
+                f"  border: {bw}px solid #94AB45;"
                 f"  border-radius: {radius}px;"
-                f"  font-family: 'Segoe UI', Arial, sans-serif;"
-                f"  font-size: {font_size}px;"
-                f"  font-weight: 800;"
-                f"}}"
+                f"{font}"
+                "}"
             )
         elif self.state == "wrong":
             self.setStyleSheet(
-                f"QLabel {{"
-                f"  background-color: #FFB3A7;"
-                f"  color: #661D17;"
-                f"  border: {border_w}px solid #E06D5E;"
+                "QLabel {"
+                "  background-color: #FFB3A7;"
+                "  color: #661D17;"
+                f"  border: {bw}px solid #E06D5E;"
                 f"  border-radius: {radius}px;"
-                f"  font-family: 'Segoe UI', Arial, sans-serif;"
-                f"  font-size: {font_size}px;"
-                f"  font-weight: 800;"
-                f"}}"
+                f"{font}"
+                "}"
             )
         elif self.state == "revealed":
             self.setStyleSheet(
-                f"QLabel {{"
-                f"  background-color: #FFE6A3;"
-                f"  color: #5C3B28;"
-                f"  border: {border_w}px dashed #E09800;"
+                "QLabel {"
+                "  background-color: #FFE6A3;"
+                "  color: #5C3B28;"
+                f"  border: {bw}px dashed #E09800;"
                 f"  border-radius: {radius}px;"
-                f"  font-family: 'Segoe UI', Arial, sans-serif;"
-                f"  font-size: {font_size}px;"
-                f"  font-weight: 800;"
-                f"}}"
+                f"{font}"
+                "}"
             )
         else:  # filled
             self.setStyleSheet(
-                f"QLabel {{"
-                f"  background-color: #FFAE00;"
-                f"  color: #2D1A0D;"
-                f"  border: {border_w}px solid #E69D00;"
+                "QLabel {"
+                "  background-color: #FFAE00;"
+                "  color: #2D1A0D;"
+                f"  border: {bw}px solid #E69D00;"
                 f"  border-radius: {radius}px;"
-                f"  font-family: 'Segoe UI', Arial, sans-serif;"
-                f"  font-size: {font_size}px;"
-                f"  font-weight: 800;"
-                f"}}"
+                f"{font}"
+                "}"
             )
 
 
@@ -430,14 +483,22 @@ class CircularActionButton(QPushButton):
     - Pause / Play (orange #FFAE00)
     - Replay (orange #FFAE00)
     - Next (grey #B4B4B4 or green #ACC412 when ready)
+    Icons are drawn relative to the button size, so set_scale(s) resizes everything.
     """
+    BASE_SIZE = 70
+
     def __init__(self, kind="pause", parent=None):
         super().__init__(parent)
         self.kind = kind
-        self.setFixedSize(70, 70)
+        self.setFixedSize(self.BASE_SIZE, self.BASE_SIZE)
         self.setCursor(Qt.CursorShape.PointingHandCursor)
         self.is_green = False
         self.update_appearance()
+
+    def set_scale(self, s):
+        side = max(1, int(self.BASE_SIZE * s))
+        if self.width() != side:
+            self.setFixedSize(side, side)
 
     def set_kind(self, kind, green=False):
         self.kind = kind
@@ -452,6 +513,8 @@ class CircularActionButton(QPushButton):
         painter = QPainter(self)
         painter.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.SmoothPixmapTransform)
 
+        k = self.width() / float(self.BASE_SIZE)  # icon scale factor
+
         # Background circle
         if self.kind in ("pause", "play", "replay"):
             bg_color = QColor("#FFAE00")
@@ -462,7 +525,7 @@ class CircularActionButton(QPushButton):
 
         painter.setBrush(bg_color)
         painter.setPen(Qt.PenStyle.NoPen)
-        painter.drawEllipse(QRectF(2, 2, self.width() - 4, self.height() - 4))
+        painter.drawEllipse(QRectF(2 * k, 2 * k, self.width() - 4 * k, self.height() - 4 * k))
 
         # Icon inside
         painter.setPen(Qt.PenStyle.NoPen)
@@ -473,45 +536,44 @@ class CircularActionButton(QPushButton):
 
         if self.kind == "pause":
             # Two bars
-            bar_w = 7
-            bar_h = 24
-            gap = 6
+            bar_w = 7 * k
+            bar_h = 24 * k
+            gap = 6 * k
             painter.setBrush(QColor("#704833"))
-            painter.drawRoundedRect(QRectF(cx - gap / 2 - bar_w, cy - bar_h / 2, bar_w, bar_h), 3, 3)
-            painter.drawRoundedRect(QRectF(cx + gap / 2, cy - bar_h / 2, bar_w, bar_h), 3, 3)
+            painter.drawRoundedRect(QRectF(cx - gap / 2 - bar_w, cy - bar_h / 2, bar_w, bar_h), 3 * k, 3 * k)
+            painter.drawRoundedRect(QRectF(cx + gap / 2, cy - bar_h / 2, bar_w, bar_h), 3 * k, 3 * k)
 
         elif self.kind == "play":
             # Right-pointing triangle
             painter.setBrush(QColor("#704833"))
             path = QPainterPath()
-            path.moveTo(cx - 8, cy - 14)
-            path.lineTo(cx + 14, cy)
-            path.lineTo(cx - 8, cy + 14)
+            path.moveTo(cx - 8 * k, cy - 14 * k)
+            path.lineTo(cx + 14 * k, cy)
+            path.lineTo(cx - 8 * k, cy + 14 * k)
             path.closeSubpath()
             painter.drawPath(path)
 
         elif self.kind == "replay":
             # Circular arrow
-            painter.setPen(QPen(QColor("#704833"), 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.setPen(QPen(QColor("#704833"), 5 * k, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
             painter.setBrush(Qt.BrushStyle.NoBrush)
-            painter.drawArc(QRectF(cx - 15, cy - 15, 30, 30), 45 * 16, 270 * 16)
+            painter.drawArc(QRectF(cx - 15 * k, cy - 15 * k, 30 * k, 30 * k), 45 * 16, 270 * 16)
             # Arrow head
             painter.setPen(Qt.PenStyle.NoPen)
             painter.setBrush(QColor("#704833"))
             path = QPainterPath()
-            path.moveTo(cx + 8, cy - 18)
-            path.lineTo(cx + 18, cy - 12)
-            path.lineTo(cx + 8, cy - 6)
+            path.moveTo(cx + 8 * k, cy - 18 * k)
+            path.lineTo(cx + 18 * k, cy - 12 * k)
+            path.lineTo(cx + 8 * k, cy - 6 * k)
             path.closeSubpath()
             painter.drawPath(path)
 
         elif self.kind == "next":
             # Right arrow
-            painter.setPen(QPen(QColor("#FFFFFF"), 5, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
-            painter.drawLine(cx - 10, cy, cx + 10, cy)
-            painter.drawLine(cx + 3, cy - 7, cx + 10, cy)
-            painter.drawLine(cx + 3, cy + 7, cx + 10, cy)
+            painter.setPen(QPen(QColor("#FFFFFF"), 5 * k, Qt.PenStyle.SolidLine, Qt.PenCapStyle.RoundCap))
+            painter.drawLine(QPointF(cx - 10 * k, cy), QPointF(cx + 10 * k, cy))
+            painter.drawLine(QPointF(cx + 3 * k, cy - 7 * k), QPointF(cx + 10 * k, cy))
+            painter.drawLine(QPointF(cx + 3 * k, cy + 7 * k), QPointF(cx + 10 * k, cy))
 
     def update_appearance(self):
         self.setStyleSheet("QPushButton { background: transparent; border: none; }")
-

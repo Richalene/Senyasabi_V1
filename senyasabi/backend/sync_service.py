@@ -29,6 +29,7 @@ from .database.repository import (
 )
 from .database.models import SyncQueue
 from .database import models as m
+from . import streak_service
 
 from sqlalchemy import select
 
@@ -69,6 +70,7 @@ class SyncService:
     def __init__(self, settings=None) -> None:
         self.client_version = "1.0.0"
         self._qsettings = settings   # QSettings; created lazily so tests can inject one
+        self._server_streaks = {}
 
     def queue_user_update(
         self,
@@ -134,6 +136,10 @@ class SyncService:
                 camera_accuracy=camera_accuracy,
                 mc_accuracy=mc_accuracy,
             )
+
+            _, tz_name = streak_service.apply_activity(db, user_id)   # steps 2-4
+            payload["timezone"] = tz_name
+
             item = enqueue_sync(
                 db,
                 sync_id=uuid.uuid4(),
@@ -147,8 +153,7 @@ class SyncService:
             try:
                 rebuild_user_statistics(db, user_id)
             except Exception as e:
-                _log.warning("Could not rebuild statistics after quiz attempt: %s", e)
-
+                logger.warning("Could not rebuild statistics after quiz attempt: %s", e)
         return sync_id
     
     def queue_minigame_attempt(
@@ -191,6 +196,10 @@ class SyncService:
                 duration_seconds=duration_seconds,
                 accuracy=accuracy,
             )
+
+            _, tz_name = streak_service.apply_activity(db, user_id)   # steps 2-4
+            payload["timezone"] = tz_name
+
             item = enqueue_sync(
                 db,
                 sync_id=uuid.uuid4(),
@@ -204,7 +213,7 @@ class SyncService:
             try:
                 rebuild_user_statistics(db, user_id)
             except Exception as e:
-                _log.warning("Could not rebuild statistics after minigame attempt: %s", e)
+                logger.warning("Could not rebuild statistics after minigame attempt: %s", e)
         return sync_id
 
     def queue_lesson_progress(
@@ -247,6 +256,13 @@ class SyncService:
             }
             if progress.completed_at is not None:
                 payload["completed_at"] = _iso_utc(progress.completed_at)
+
+            if status == "Completed":
+                _, tz_name = streak_service.apply_activity(db, user_id)
+            else:
+                tz_name = streak_service.resolve_timezone(db, user_id)
+
+            payload["timezone"] = tz_name
             item = enqueue_sync(
                 db, sync_id=uuid.uuid4(), user_id=user_id,
                 entity_type="lesson_progress", entity_id=lesson_id,
@@ -256,7 +272,7 @@ class SyncService:
             try:
                 rebuild_user_statistics(db, user_id)
             except Exception as e:
-                _log.warning("Could not rebuild statistics after lesson progress: %s", e)
+                logger.warning("Could not rebuild statistics after lesson progress: %s", e)
         return sync_id
     
     # Backward-compatible alias for the old name
@@ -295,6 +311,14 @@ class SyncService:
                     mark_sync_failed(db, item.sync_id, str(e))
                     results["failed"] += 1
                     results["errors"].append(f"{item.entity_type}:{item.entity_id} - {e}")
+        
+        streak = self._server_streaks.pop(user_id, None)
+        if streak:
+            try:
+                with session_scope() as db:
+                    streak_service.reconcile(db, user_id, streak)
+            except Exception:
+                logger.exception("Could not reconcile streak")
 
         if results["succeeded"]:
             from . import leaderboard_service  # lazy: refresh open leaderboards
@@ -380,7 +404,8 @@ class SyncService:
             if resp.status_code == 200:
                 data = resp.json()
                 succeeded = data.get("succeeded", 0)
-                logger.info("FastAPI sync response: %s", data)
+                if data.get("streak"):
+                    self._server_streaks[item.user_id] = data["streak"]
                 return succeeded > 0
 
             if resp.status_code in (401, 403):
@@ -419,9 +444,9 @@ class SyncService:
         try:
             result = upload_sync(str(item.user_id), sync_items)
             if result and isinstance(result, dict):
-                succeeded = result.get("succeeded", 0)
-                logger.info("Supabase sync succeeded: %s items, response: %s", succeeded, result)
-                return succeeded > 0
+                if result.get("streak"):
+                    self._server_streaks[item.user_id] = result["streak"]
+                return result.get("succeeded", 0) > 0
             logger.debug("Supabase sync skipped or returned no response (likely unauthenticated)")
             return False
         except Exception as exc:
@@ -446,7 +471,12 @@ class SyncService:
     def _local_synced_version(self) -> int:
         with session_scope() as db:
             if db.scalar(select(m.Module.module_id).limit(1)) is None:
-                return 0   # empty/rebuilt DB: ignore a stale marker
+                # Local database is empty! Reset the synced version back to 0
+                settings = self._settings()
+                settings.setValue(_SYNCED_VERSION_KEY, 0)
+                settings.sync()
+                return 0   
+        
         try:
             return max(0, int(str(self._settings().value(_SYNCED_VERSION_KEY, 0))))
         except (TypeError, ValueError):

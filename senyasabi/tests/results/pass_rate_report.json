@@ -1,0 +1,1505 @@
+{
+  "Functional (Sec. 8)": {
+    "summary": {
+      "pass": 16,
+      "fail": 0,
+      "error": 0,
+      "skip": 1,
+      "total": 17,
+      "executed": 16,
+      "rate": 100.0
+    },
+    "case_ids": {
+      "TC-F-001": "PASS",
+      "TC-F-002": "PASS",
+      "TC-F-003": "PASS",
+      "TC-F-004": "PASS",
+      "TC-F-005": "PASS",
+      "TC-F-006": "PASS",
+      "TC-F-007": "PASS",
+      "TC-F-008": "PASS",
+      "TC-F-009": "PASS",
+      "TC-F-010": "PASS",
+      "TC-F-011": "PASS",
+      "TC-F-012": "PASS",
+      "TC-F-013": "PASS",
+      "TC-F-014": "PASS",
+      "TC-F-015": "SKIP",
+      "TC-F-016": "PASS"
+    },
+    "tests": [
+      {
+        "test": "test_functional.AuthFunctionalTests.test_tc_f_001_login_valid_credentials",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.AuthFunctionalTests.test_tc_f_002_login_invalid_password",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.AuthFunctionalTests.test_tc_f_003_registration_valid",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.DashboardFunctionalTests.test_tc_f_004_dashboard_data_has_every_area",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.DashboardFunctionalTests.test_tc_f_004_dashboard_window_renders_all_areas",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.LessonFunctionalTests.test_tc_f_005_select_lesson_by_level",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.LessonFunctionalTests.test_tc_f_006_demonstrator_media_for_every_letter",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.MinigameFunctionalTests.test_tc_f_010_sign_sprint_full_round",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.MinigameFunctionalTests.test_tc_f_011_fingerspell_quest_full_round",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.MinigameFunctionalTests.test_tc_f_012_sign_detective_full_round",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.ProgressFunctionalTests.test_tc_f_013_completing_a_lesson_saves_and_advances",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.ProgressFunctionalTests.test_tc_f_014_statistics_match_learner_data",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.ProgressFunctionalTests.test_tc_f_015_spend_points_in_store",
+        "status": "skip",
+        "detail": "TC-F-015: in-app store is not implemented yet"
+      },
+      {
+        "test": "test_functional.ProgressFunctionalTests.test_tc_f_016_save_and_retrieve_activity_records",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.RecognitionFunctionalTests.test_tc_f_007_correct_sign_scores_and_gives_feedback",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.RecognitionFunctionalTests.test_tc_f_008_incorrect_sign_is_not_credited",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_functional.RecognitionFunctionalTests.test_tc_f_009_no_hand_in_view",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "Input validation (Sec. 9)": {
+    "summary": {
+      "pass": 10,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "total": 10,
+      "executed": 10,
+      "rate": 100.0
+    },
+    "case_ids": {
+      "IV-001": "PASS",
+      "IV-002": "PASS",
+      "IV-003": "PASS",
+      "IV-004": "PASS",
+      "IV-005": "PASS",
+      "IV-006": "PASS",
+      "IV-007": "PASS",
+      "IV-008": "PASS"
+    },
+    "tests": [
+      {
+        "test": "test_input_validation.ConfirmPasswordTests.test_iv_008_confirm_password_mismatch",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.ConfirmPasswordTests.test_iv_008_matching_passwords_proceed",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_001_blank_username",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_002_invalid_email_formats",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_003_password_too_short",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_004_duplicate_username_or_email",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_005_blank_required_fields",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_006_whitespace_only_input",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_007_api_rejects_oversized_fields",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_input_validation.SignUpValidationTests.test_iv_007_excessively_long_input",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "Database (Sec. 10)": {
+    "summary": {
+      "pass": 8,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "total": 8,
+      "executed": 8,
+      "rate": 100.0
+    },
+    "case_ids": {
+      "DB-001": "PASS",
+      "DB-002": "PASS",
+      "DB-003": "PASS",
+      "DB-004": "PASS",
+      "DB-005": "PASS",
+      "DB-006": "PASS",
+      "DB-007": "PASS",
+      "DB-008": "PASS"
+    },
+    "tests": [
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_001_insert",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_002_select",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_003_update",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_004_delete",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_005_duplicates_prevented",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_006_foreign_key_integrity",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_007_interrupted_save_leaves_consistent_data",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_database_ops.DatabaseTests.test_db_008_data_persists_across_restart",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "API / external services (Sec. 11)": {
+    "summary": {
+      "pass": 9,
+      "fail": 0,
+      "error": 3,
+      "skip": 0,
+      "total": 12,
+      "executed": 12,
+      "rate": 75.0
+    },
+    "case_ids": {
+      "API-001": "PASS",
+      "API-002": "PASS",
+      "API-003": "PASS",
+      "API-004": "FAIL",
+      "API-005": "PASS",
+      "API-006": "PASS",
+      "API-007": "PASS",
+      "API-008": "FAIL"
+    },
+    "tests": [
+      {
+        "test": "test_external_services.CameraTests.test_api_001_webcam_access_and_video_feed",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.CameraTests.test_api_002_camera_unavailable_or_disconnected",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.CameraTests.test_api_006_camera_permission_denied_or_in_use",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.CameraTests.test_api_006_os_permission_prompt_paths",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.LandmarkTests.test_api_003_21_hand_landmarks_extracted",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.LandmarkTests.test_api_004_model_returns_sign_and_confidence",
+        "status": "error",
+        "detail": "AttributeError: module 'cv2.dnn' has no attribute 'DictValue'"
+      },
+      {
+        "test": "test_external_services.LandmarkTests.test_api_004_word_model_needs_24_frames_then_predicts",
+        "status": "error",
+        "detail": "AttributeError: module 'cv2.dnn' has no attribute 'DictValue'"
+      },
+      {
+        "test": "test_external_services.LandmarkTests.test_api_007_partial_visibility_and_poor_lighting",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.ServiceFailureTests.test_api_005_dashboard_falls_back_when_backend_down",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.ServiceFailureTests.test_api_005_database_connection_failure_is_handled",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_external_services.ServiceFailureTests.test_api_008_alphabet_model_missing_file",
+        "status": "error",
+        "detail": "AttributeError: module 'cv2.dnn' has no attribute 'DictValue'"
+      },
+      {
+        "test": "test_external_services.ServiceFailureTests.test_api_008_missing_or_unreadable_model",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "Performance (Sec. 12)": {
+    "summary": {
+      "pass": 8,
+      "fail": 1,
+      "error": 0,
+      "skip": 1,
+      "total": 10,
+      "executed": 9,
+      "rate": 88.9
+    },
+    "case_ids": {
+      "PT-001": "PASS",
+      "PT-002": "PASS",
+      "PT-003": "PASS",
+      "PT-004": "PASS",
+      "PT-005": "FAIL",
+      "PT-006": "PASS",
+      "PT-007": "SKIP"
+    },
+    "tests": [
+      {
+        "test": "test_performance.DatabasePerformanceTests.test_pt_003_database_query_speed",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.DatabasePerformanceTests.test_pt_004_five_concurrent_sessions",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.DatabasePerformanceTests.test_pt_005_continuous_use_is_stable",
+        "status": "fail",
+        "detail": "AssertionError: 1228.802324 not less than 50 : memory grew by 1228.8 MB over 66228 frames"
+      },
+      {
+        "test": "test_performance.StartupAndLatencyTests.test_pt_001_application_startup_time",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.StartupAndLatencyTests.test_pt_002_real_alphabet_model_latency",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.StartupAndLatencyTests.test_pt_002_real_word_models_latency",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.StartupAndLatencyTests.test_pt_002_recognition_pipeline_latency",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.ThroughputTests.test_pt_006_pipeline_frame_rate",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.ThroughputTests.test_pt_006_real_mediapipe_hands_frame_rate",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_performance.ThroughputTests.test_pt_007_cpu_and_ram_budget",
+        "status": "skip",
+        "detail": "psutil not installed"
+      }
+    ]
+  },
+  "Security (Sec. 13)": {
+    "summary": {
+      "pass": 16,
+      "fail": 1,
+      "error": 0,
+      "skip": 0,
+      "total": 17,
+      "executed": 17,
+      "rate": 94.1
+    },
+    "case_ids": {
+      "SEC-001": "PASS",
+      "SEC-002": "PASS",
+      "SEC-003": "PASS",
+      "SEC-004": "PASS",
+      "SEC-005": "PASS",
+      "SEC-006": "FAIL",
+      "SEC-007": "PASS",
+      "SEC-008": "PASS"
+    },
+    "tests": [
+      {
+        "test": "test_security.LoginBehaviourTests.test_sec_001_api_login_does_not_reveal_which_part_was_wrong",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.LoginBehaviourTests.test_sec_001_invalid_login_gives_generic_error_and_no_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.LoginBehaviourTests.test_sec_003_passwords_are_hashed_with_argon2id",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.LoginBehaviourTests.test_sec_004_logout_terminates_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.LoginBehaviourTests.test_sec_005_sql_injection_strings_are_inert",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.LoginBehaviourTests.test_sec_007_lockout_after_repeated_failures",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.RenderingSafetyTests.test_sec_005_user_text_is_rendered_as_plain_text",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.SecretHandlingTests.test_sec_006_api_errors_do_not_echo_raw_exceptions",
+        "status": "fail",
+        "detail": "-  'main.py:134'] : Internal exception text (SQL, hosts) is returned to clients"
+      },
+      {
+        "test": "test_security.SecretHandlingTests.test_sec_006_desktop_client_never_touches_server_secrets",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.SecretHandlingTests.test_sec_006_env_file_is_git_ignored",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.SecretHandlingTests.test_sec_006_no_hardcoded_credentials_in_source",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.SecretHandlingTests.test_sec_008_https_enforced_in_production",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.SecretHandlingTests.test_sec_008_tls_verification_never_disabled",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.TokenAndAuthorizationTests.test_sec_002_every_non_public_route_requires_authentication",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.TokenAndAuthorizationTests.test_sec_002_forged_expired_and_unsigned_tokens_rejected",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.TokenAndAuthorizationTests.test_sec_002_users_cannot_read_each_others_progress",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_security.TokenAndAuthorizationTests.test_sec_002_valid_token_identifies_only_its_owner",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "Compatibility (Sec. 14)": {
+    "summary": {
+      "pass": 9,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "total": 9,
+      "executed": 9,
+      "rate": 100.0
+    },
+    "case_ids": {},
+    "tests": [
+      {
+        "test": "test_compatibility.RuntimeCompatibilityTests.test_compat_core_dependencies_import",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.RuntimeCompatibilityTests.test_compat_frozen_build_resolves_resources",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.RuntimeCompatibilityTests.test_compat_ml_dependencies_import",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.RuntimeCompatibilityTests.test_compat_python_and_os_supported",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.WebcamCompatibilityTests.test_compat_builtin_and_usb_cameras_selected_by_stable_id",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.WebcamCompatibilityTests.test_compat_landing_screen_fits_common_laptop_displays",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.WebcamCompatibilityTests.test_compat_landmark_features_are_resolution_independent",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.WebcamCompatibilityTests.test_compat_preview_handles_every_webcam_resolution",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_compatibility.WebcamCompatibilityTests.test_compat_real_device_enumeration_never_crashes",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "Usability / UI (Sec. 15)": {
+    "summary": {
+      "pass": 13,
+      "fail": 3,
+      "error": 0,
+      "skip": 0,
+      "total": 16,
+      "executed": 16,
+      "rate": 81.2
+    },
+    "case_ids": {
+      "UI-001": "PASS",
+      "UI-002": "FAIL",
+      "UI-003": "PASS",
+      "UI-004": "PASS",
+      "UI-005": "PASS",
+      "UI-006": "FAIL",
+      "UI-007": "PASS"
+    },
+    "tests": [
+      {
+        "test": "test_usability_ui.CameraVisibilityTests.test_ui_007_camera_preview_shows_the_frame",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.CameraVisibilityTests.test_ui_007_hand_tracking_overlay_is_drawn_without_mutating_source",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ConsistencyAndFeedbackTests.test_ui_003_clickable_controls_share_pointer_cursor",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ConsistencyAndFeedbackTests.test_ui_004_results_screen_message_matches_accuracy",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ConsistencyAndFeedbackTests.test_ui_004_sign_feedback_states_are_visually_distinct",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ConsistencyAndFeedbackTests.test_ui_005_error_messages_are_clear_and_not_technical",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.NavigationTests.test_ui_001_learning_reachable_in_three_clicks_with_back",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.NavigationTests.test_ui_001_onboarding_navigation_and_back",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ReadabilityTests.test_ui_002_back_to_lessons_white_on_green",
+        "status": "fail",
+        "detail": "AssertionError: 2.9395688754965135 not greater than or equal to 3.0 : #FFFFFF on #8C9F3E = 2.94:1 (needs 3.0:1)"
+      },
+      {
+        "test": "test_usability_ui.ReadabilityTests.test_ui_002_body_text_contrast_cream_card",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ReadabilityTests.test_ui_002_next_button_white_on_green",
+        "status": "fail",
+        "detail": "AssertionError: 1.9701962235267558 not greater than or equal to 3.0 : #FFFFFF on #ACC412 = 1.97:1 (needs 3.0:1)"
+      },
+      {
+        "test": "test_usability_ui.ReadabilityTests.test_ui_002_pill_button_contrast",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ReadabilityTests.test_ui_002_prediction_pill_contrast",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ReadabilityTests.test_ui_002_stylesheet_font_sizes_are_legible",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ResponsivenessTests.test_ui_006_auth_forms_fit_without_horizontal_scroll",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_usability_ui.ResponsivenessTests.test_ui_006_minigame_scales_with_window",
+        "status": "fail",
+        "detail": "AssertionError: 1820 not less than or equal to 1024 : (1024, 600)"
+      }
+    ]
+  },
+  "REG-001 Login": {
+    "summary": {
+      "pass": 13,
+      "fail": 2,
+      "error": 0,
+      "skip": 0,
+      "total": 15,
+      "executed": 15,
+      "rate": 86.7
+    },
+    "modules": [
+      "test_auth",
+      "test_auth_loading",
+      "test_auth_token_handoff"
+    ],
+    "tests": [
+      {
+        "test": "test_auth.AuthTests.test_finishing_verification_after_logout_does_not_restore_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_login_logout_repeated",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_required_email_duplicates",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_signup_hash_and_safe_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_verification_only_keeps_session_until_explicit_commit",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.NavigationTests.test_complete_flow",
+        "status": "fail",
+        "detail": "+ [<screens.auth.login.LoginScreen(0x8610c0c40) at 0x10dfcbc00>]"
+      },
+      {
+        "test": "test_auth.NavigationTests.test_password_visibility_toggles_preserve_text",
+        "status": "fail",
+        "detail": "AssertionError: 348 != 368"
+      },
+      {
+        "test": "test_auth_loading.AuthLoadingTests.test_navigating_away_or_logout_discards_late_signin",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_loading.AuthLoadingTests.test_registration_password_mismatch_does_not_start_loading",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_loading.AuthLoadingTests.test_signin_errors_restore_form_and_allow_retry",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_loading.AuthLoadingTests.test_signin_responsive_single_submission_and_gui_session_commit",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_loading.AuthLoadingTests.test_signup_errors_restore_form_and_allow_retry",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_loading.AuthLoadingTests.test_signup_responsive_single_submission_and_success",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_token_handoff.BackgroundLoginTokenTests.test_cancelled_login_leaves_no_session_and_logout_clears_pending",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth_token_handoff.BackgroundLoginTokenTests.test_token_available_only_after_ui_publishes_session",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "REG-002 Registration": {
+    "summary": {
+      "pass": 11,
+      "fail": 2,
+      "error": 0,
+      "skip": 0,
+      "total": 13,
+      "executed": 13,
+      "rate": 84.6
+    },
+    "modules": [
+      "test_auth",
+      "test_offline_user_sync"
+    ],
+    "tests": [
+      {
+        "test": "test_auth.AuthTests.test_finishing_verification_after_logout_does_not_restore_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_login_logout_repeated",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_required_email_duplicates",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_signup_hash_and_safe_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.AuthTests.test_verification_only_keeps_session_until_explicit_commit",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_auth.NavigationTests.test_complete_flow",
+        "status": "fail",
+        "detail": "+ [<screens.auth.login.LoginScreen(0x8610c0c40) at 0x10dfcbc00>]"
+      },
+      {
+        "test": "test_auth.NavigationTests.test_password_visibility_toggles_preserve_text",
+        "status": "fail",
+        "detail": "AssertionError: 348 != 368"
+      },
+      {
+        "test": "test_offline_user_sync.TestOfflineUserSync.test_offline_login_fallback_when_network_unavailable",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_offline_user_sync.TestOfflineUserSync.test_offline_registration_stores_locally_without_secrets",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_offline_user_sync.TestOfflineUserSync.test_online_login_existing_remote_user_does_not_trigger_re_registration",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_offline_user_sync.TestOfflineUserSync.test_online_registration_preserves_standard_behavior",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_offline_user_sync.TestOfflineUserSync.test_reconnection_links_offline_user_and_migrates_id",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_offline_user_sync.TestOfflineUserSync.test_wrong_password_does_not_link_or_bypass_auth",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "REG-003 Database operations": {
+    "summary": {
+      "pass": 17,
+      "fail": 0,
+      "error": 1,
+      "skip": 0,
+      "total": 18,
+      "executed": 18,
+      "rate": 94.4
+    },
+    "modules": [
+      "test_schema_drift",
+      "tests_backend_smoke",
+      "test_progress_sync",
+      "test_leaderboard_data"
+    ],
+    "tests": [
+      {
+        "test": "test_schema_drift.SchemaDriftTests.test_model_tables_and_columns_match_sql",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "setUpClass (tests_backend_smoke.BackendSmoke)",
+        "status": "error",
+        "detail": "AttributeError: 'NoneType' object has no attribute 'content_version_id'"
+      },
+      {
+        "test": "test_progress_sync.ProgressSyncTests.test_apply_merges_rows_and_is_idempotent",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_progress_sync.ProgressSyncTests.test_pull_is_skipped_without_session_and_never_raises",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_progress_sync.ProgressSyncTests.test_server_value_updates_existing_row_without_deleting_others",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_progress_sync.ProgressSyncTests.test_successful_pull_returns_true",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_cache_is_replaced_not_accumulated",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_empty_board_is_not_an_error",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_local_attempts_build_board_without_api",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_notify_calls_and_removes_listeners",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_offline_uses_cache_written_by_last_online_fetch",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_periods_validated_and_boards_cached_separately",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_ranking_scores_and_current_user",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_ties_share_rank_and_order_is_deterministic",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.ServiceTests.test_unavailable_when_offline_and_uncached",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.WindowTests.test_hidden_window_does_not_refresh_and_error_state_has_retry",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.WindowTests.test_set_board_loads_requested_period",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_leaderboard_data.WindowTests.test_shows_name_and_points_and_refreshes_on_score_update",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  },
+  "REG-004 Sign recognition & feedback": {
+    "summary": {
+      "pass": 36,
+      "fail": 3,
+      "error": 6,
+      "skip": 0,
+      "total": 45,
+      "executed": 45,
+      "rate": 80.0
+    },
+    "modules": [
+      "test_word_recognition",
+      "test_camera_preview",
+      "test_camera_setup"
+    ],
+    "tests": [
+      {
+        "test": "test_word_recognition.EngineLifecycleTests.test_detector_cleanup_includes_pose_even_when_hand_close_fails",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.EngineLifecycleTests.test_missing_task_assets_fail_before_importing_mediapipe",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.EngineLifecycleTests.test_no_hand_frames_still_fill_buffer_and_disconnect_cleans_up",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.EngineLifecycleTests.test_preprocessor_error_releases_capture_and_clears_sequence",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.EngineLifecycleTests.test_training_detector_options_and_partial_creation_cleanup",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_duplicate_and_unlabeled_hands_use_training_leftovers_order",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_exact_order_origin_scale_visibility_and_handedness",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_missing_pose_fallback_and_missing_hand_slots",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_no_pose_no_hands_are_exact_zero_frames",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_partial_hand_is_not_silently_padded_differently_from_training",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_runtime_converts_bgr_to_rgb_without_mirroring",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.FeaturesTests.test_shoulder_scale_floor_visibility_and_nan_behavior",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.SequenceTests.test_24_frames_required_float32_order_and_sliding_window",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.SequenceTests.test_frame_copied_and_invalid_input_or_output_rejected",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.SequenceTests.test_zero_frames_retained_and_buffers_are_per_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.TrainingParityTests.test_exported_config_validated_without_key_translation",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.TrainingParityTests.test_extraction_and_final_normalization_ast_match_supplied_source",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_word_recognition.TrainingParityTests.test_recognition_canonicalization_preserves_display_and_sign_code",
+        "status": "error",
+        "detail": "StopIteration"
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_actual_image_is_clipped_when_source_matches_widget_aspect",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_all_five_camera_screens_present_frames_through_shared_component",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_ancestor_label_styles_cannot_restore_square_preview_background",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_bgr_display_conversion_copies_without_mutating_recognition_frame",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_camera_action_button_keeps_ancestor_theme_over_the_live_image",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_designer_replacement_preserves_geometry_layout_and_identity",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_display_is_mirrored_but_frame_and_source_are_not",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_letterboxed_image_keeps_rounded_corners_and_is_centered",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_resize_and_fullscreen_keep_original_aspect_and_source_resolution",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_preview.CameraPreviewTests.test_status_text_and_clear_remove_previous_live_image",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_both_recognition_engines_reopen_the_shared_selected_camera",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_cancel_onboarding_then_back_keeps_session_and_module",
+        "status": "error",
+        "detail": "AttributeError: 'NoneType' object has no attribute '_camera_dialog'"
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_close_during_preview_releases_and_does_not_save",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_close_while_preview_initializes_disposes_late_capture",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_configured_gate_is_automatic_and_settings_are_reachable",
+        "status": "error",
+        "detail": "AttributeError: 'NoneType' object has no attribute '_camera_dialog'"
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_device_disconnection_never_silently_picks_another_camera",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_failure_is_friendly_and_can_choose_retry_or_continue",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_no_camera_does_not_prevent_cancellation_or_retry",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_nothing_opens_until_explicit_setup_and_test",
+        "status": "error",
+        "detail": "AttributeError: 'PySide6.QtWidgets.QWidget' object has no attribute '_camera_dialog'"
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_numeric_fallback_is_explicit_and_centralized",
+        "status": "fail",
+        "detail": "  Actual: VideoCapture(3, 1200)"
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_preference_uses_stable_id_across_enumeration_order_and_instances",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_preview_save_release_then_activity_uses_same_device",
+        "status": "fail",
+        "detail": "AssertionError: Timed out waiting for camera UI"
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_qt_camera_start_failure_releases_lease",
+        "status": "fail",
+        "detail": "AssertionError: \"Device busy\" does not match \"Another SenyaSabi activity is still using the camera. Please retry.\""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_qt_capture_worker_thread_stops_without_gui_blocked_callbacks",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_qt_video_frame_conversion_preserves_orientation_and_bgr",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_repeated_failed_reads_release_capture_once",
+        "status": "error",
+        "detail": "backend.camera_service.CameraError: Another SenyaSabi activity is still using the camera. Please retry."
+      },
+      {
+        "test": "test_camera_setup.CameraSetupTests.test_repeated_game_and_quiz_routes_do_not_reset_active_windows",
+        "status": "error",
+        "detail": "AttributeError: 'NoneType' object has no attribute 'game'"
+      }
+    ]
+  },
+  "REG-005 Minigames": {
+    "summary": {
+      "pass": 9,
+      "fail": 27,
+      "error": 1,
+      "skip": 0,
+      "total": 37,
+      "executed": 37,
+      "rate": 24.3
+    },
+    "modules": [
+      "test_minigame_scope",
+      "test_ui_polish"
+    ],
+    "tests": [
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_global_sessions_have_complete_appropriate_pool_for_each_game (kind='sprint')",
+        "status": "fail",
+        "detail": "Diff is 1546 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_global_sessions_have_complete_appropriate_pool_for_each_game (kind='quest')",
+        "status": "fail",
+        "detail": "Diff is 1725 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_global_sessions_have_complete_appropriate_pool_for_each_game (kind='detective')",
+        "status": "fail",
+        "detail": "Diff is 1725 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_global_words_use_all_ten_content_modules_and_exclude_alphabet",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_inconsistent_scope_and_module_are_rejected",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='survival', kind='sprint')",
+        "status": "fail",
+        "detail": "+  'Fast']"
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='survival', kind='quest')",
+        "status": "fail",
+        "detail": "Diff is 657 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='survival', kind='detective')",
+        "status": "fail",
+        "detail": "Diff is 657 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='greeting', kind='sprint')",
+        "status": "fail",
+        "detail": "+  'Fast']"
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='greeting', kind='quest')",
+        "status": "fail",
+        "detail": "Diff is 657 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='greeting', kind='detective')",
+        "status": "fail",
+        "detail": "Diff is 657 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='basic_communication', kind='sprint')",
+        "status": "fail",
+        "detail": "+  'Fast']"
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='basic_communication', kind='quest')",
+        "status": "fail",
+        "detail": "Diff is 657 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_module_sessions_never_fall_back_to_global_and_alphabet_still_works (module_code='basic_communication', kind='detective')",
+        "status": "fail",
+        "detail": "Diff is 657 characters long. Set self.maxDiff to None to see it."
+      },
+      {
+        "test": "test_minigame_scope.MinigameContentScopeTests.test_older_direct_game_callers_keep_their_intended_scope",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_minigame_scope.MinigameNavigationScopeTests.test_days_back_to_main_then_minigames_ignores_days_and_preserves_learning_state",
+        "status": "fail",
+        "detail": "+ [<screens.dashboard.dashboard.DashboardWindow(0xb703896c0, name=\"main\") at 0x129507140>]"
+      },
+      {
+        "test": "test_minigame_scope.MinigameNavigationScopeTests.test_days_sprint_back_uses_the_captured_module_hub",
+        "status": "fail",
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]"
+      },
+      {
+        "test": "test_minigame_scope.MinigameNavigationScopeTests.test_global_sprint_back_returns_to_global_hub_then_main_menu",
+        "status": "fail",
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]"
+      },
+      {
+        "test": "test_minigame_scope.MinigameNavigationScopeTests.test_greeting_detective_then_global_detective_does_not_inherit_greeting",
+        "status": "fail",
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6ebfe680) at 0x12a439900>]"
+      },
+      {
+        "test": "test_minigame_scope.MinigameNavigationScopeTests.test_main_menu_opens_three_global_games_without_a_module",
+        "status": "fail",
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6dff6840) at 0x12aab5a40>]"
+      },
+      {
+        "test": "test_minigame_scope.MinigameNavigationScopeTests.test_repeated_global_module_switches_include_all_games_and_alphabet",
+        "status": "fail",
+        "detail": "-  <screens.app_controller.MainWindowShell(0xb6dff6840) at 0x12aab5a40>]"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_artwork_native_aspect_and_landing_hit_regions",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_auth_forms_scroll_instead_of_clipping_small_displays",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_coming_soon_copy_wraps_and_next_lesson_is_optional",
+        "status": "fail",
+        "detail": "AssertionError: False is not true"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_dashboard_buttons_bounce_on_hover_and_restore_geometry",
+        "status": "fail",
+        "detail": "AssertionError: 500 not greater than 500"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_dashboard_primary_actions_are_tight_and_nonoverlapping",
+        "status": "fail",
+        "detail": "AssertionError: -20 != 0"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_dashboard_stats_load_survives_screen_hide",
+        "status": "fail",
+        "detail": "AssertionError: False is not true"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_fireflies_are_larger_and_expression_is_hidden_for_alphabet",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_fitted_form_clamps_to_new_screen_bounds",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_fullscreen_persists_across_reused_screen_switches",
+        "status": "fail",
+        "detail": "AssertionError"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_home_stats_do_not_reload_on_same_user_screen_revisits",
+        "status": "fail",
+        "detail": "Calls: [call(), call()]."
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_lesson_target_label_is_large_and_centered",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_module_transition_uses_fireflies_without_a_full_window_overlay",
+        "status": "fail",
+        "detail": "AssertionError: unexpectedly None"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_quiz_long_sequences_reflow_without_losing_answer",
+        "status": "error",
+        "detail": "ValueError: Unknown module: relationships"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_shared_button_bounce_scales_visual_without_moving_hitbox",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_sprint_game_scales_with_window_size",
+        "status": "fail",
+        "detail": "AssertionError: 1820 not less than or equal to 1200"
+      },
+      {
+        "test": "test_ui_polish.UiPolishTests.test_sprint_playback_and_back_controls_remain_reachable_at_600_height",
+        "status": "fail",
+        "detail": "AssertionError: False is not true"
+      }
+    ]
+  },
+  "REG-006 Progress tracking": {
+    "summary": {
+      "pass": 16,
+      "fail": 0,
+      "error": 0,
+      "skip": 0,
+      "total": 16,
+      "executed": 16,
+      "rate": 100.0
+    },
+    "modules": [
+      "test_dashboard",
+      "test_dashboard_wiring",
+      "test_data_loading"
+    ],
+    "tests": [
+      {
+        "test": "test_dashboard.DashboardTests.test_back_navigation_and_anonymous_guard",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard.DashboardTests.test_defaults_and_fresh_data",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard.DashboardTests.test_hamburger_opens_shared_controls_without_navigating",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard.DashboardTests.test_session_lookup_and_rendering",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard_wiring.TestDashboardWiring.test_apply_snapshot_preserves_local_completed_status",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard_wiring.TestDashboardWiring.test_authenticated_snapshot_attaches_jwt_and_restores_anon_key",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard_wiring.TestDashboardWiring.test_dashboard_rank_fallback_to_remote_position",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard_wiring.TestDashboardWiring.test_statistics_freshness_after_quiz_and_lesson",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_dashboard_wiring.TestDashboardWiring.test_unauthenticated_snapshot_returns_none_safely",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_construction_does_not_query_repositories",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_hidden_statistics_discard_completion",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_leaderboard_explicit_user_does_not_read_current_session",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_leaderboard_worker_uses_captured_user_and_recovers",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_progress_refresh_keeps_ui_responsive_and_suppresses_duplicates",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_session_switch_cannot_restore_previous_progress",
+        "status": "pass",
+        "detail": ""
+      },
+      {
+        "test": "test_data_loading.DataLoadingTests.test_statistics_failure_offers_working_retry",
+        "status": "pass",
+        "detail": ""
+      }
+    ]
+  }
+}

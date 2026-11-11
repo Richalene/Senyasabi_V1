@@ -684,3 +684,156 @@ COMMIT;
 --   SELECT public.refresh_user_statistics(:user_id);
 -- To rebuild every cached summary:
 --   SELECT public.rebuild_user_statistics();
+
+-- ── user timezone (NULL until the first client sync sets it) ─────────────
+ALTER TABLE public.users ADD COLUMN IF NOT EXISTS timezone TEXT;
+
+-- ── leaderboard cache (server-side) ──────────────────────────────────────
+CREATE TABLE IF NOT EXISTS public.leaderboard_cache (
+    board_code     TEXT NOT NULL CHECK (board_code IN ('all_time','weekly','monthly')),
+    user_id        UUID NOT NULL REFERENCES public.users(user_id) ON DELETE CASCADE,
+    display_name   TEXT NOT NULL,
+    total_score    BIGINT NOT NULL DEFAULT 0,
+    rank_position  INTEGER NOT NULL,
+    current_streak INTEGER NOT NULL DEFAULT 0,
+    badge_count    INTEGER NOT NULL DEFAULT 0,
+    fetched_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    PRIMARY KEY (board_code, user_id)
+);
+CREATE INDEX IF NOT EXISTS idx_leaderboard_cache_rank
+    ON public.leaderboard_cache (board_code, rank_position);
+ALTER TABLE public.leaderboard_cache ENABLE ROW LEVEL SECURITY;
+
+CREATE OR REPLACE FUNCTION public.refresh_leaderboard_cache(p_board_code TEXT DEFAULT NULL)
+RETURNS VOID LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+DECLARE b RECORD;
+BEGIN
+  FOR b IN
+    SELECT * FROM (VALUES ('all_time', NULL::interval),
+                          ('weekly',   interval '7 days'),
+                          ('monthly',  interval '30 days')) AS t(code, period)
+    WHERE p_board_code IS NULL OR t.code = p_board_code
+  LOOP
+    DELETE FROM public.leaderboard_cache WHERE board_code = b.code;
+    INSERT INTO public.leaderboard_cache
+        (board_code, user_id, display_name, total_score, rank_position,
+         current_streak, badge_count, fetched_at)
+    SELECT b.code, s.user_id, s.display_name, s.total_score,
+           RANK() OVER (ORDER BY s.total_score DESC)::INT,
+           s.current_streak, s.badge_count, now()
+    FROM (
+      SELECT u.user_id,
+             COALESCE(NULLIF(btrim(u.display_name), ''), u.username) AS display_name,
+             (COALESCE((SELECT SUM(qa.score) FROM public.quiz_attempts qa
+                         WHERE qa.user_id = u.user_id AND qa.completed_at IS NOT NULL
+                           AND (b.period IS NULL OR qa.completed_at >= now() - b.period)), 0)
+            + COALESCE((SELECT SUM(ma.score) FROM public.minigame_attempts ma
+                         WHERE ma.user_id = u.user_id AND ma.completed_at IS NOT NULL
+                           AND (b.period IS NULL OR ma.completed_at >= now() - b.period)), 0))::BIGINT AS total_score,
+             COALESCE((SELECT st.current_streak FROM public.streaks st
+                        WHERE st.user_id = u.user_id), 0) AS current_streak,
+             (SELECT COUNT(*) FROM public.user_badges ub WHERE ub.user_id = u.user_id)::INT AS badge_count
+      FROM public.users u
+    ) s
+    WHERE s.total_score > 0;
+  END LOOP;
+END $$;
+
+CREATE OR REPLACE FUNCTION public.trg_refresh_leaderboard()
+RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+BEGIN
+  PERFORM public.refresh_leaderboard_cache(NULL);
+  RETURN NULL;
+END $$;
+
+DO $$
+DECLARE t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['streaks','quiz_attempts','minigame_attempts','user_badges'] LOOP
+    EXECUTE format('DROP TRIGGER IF EXISTS trg_%1$s_leaderboard ON public.%1$I', t);
+    EXECUTE format('CREATE TRIGGER trg_%1$s_leaderboard
+                    AFTER INSERT OR UPDATE OR DELETE ON public.%1$I
+                    FOR EACH STATEMENT EXECUTE FUNCTION public.trg_refresh_leaderboard()', t);
+  END LOOP;
+END $$;
+
+-- ── authoritative streak ─────────────────────────────────────────────────
+CREATE OR REPLACE FUNCTION public.recalculate_streak(p_user_id UUID, p_timezone TEXT DEFAULT NULL)
+RETURNS TABLE (current_streak INTEGER, longest_streak INTEGER, last_activity_date DATE)
+LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
+#variable_conflict use_column
+DECLARE
+  v_tz TEXT; v_cur INT; v_run_longest INT; v_last DATE;
+BEGIN
+  -- Direct-mode callers carry a user JWT; FastAPI runs as postgres (auth.uid() IS NULL).
+  IF auth.uid() IS NOT NULL AND auth.uid() <> p_user_id THEN
+    RAISE EXCEPTION 'Not your streak' USING ERRCODE = '42501';
+  END IF;
+  PERFORM pg_advisory_xact_lock(hashtext(p_user_id::text));
+
+  SELECT COALESCE(
+           (SELECT name FROM pg_timezone_names WHERE name = p_timezone),
+           (SELECT u.timezone FROM users u WHERE u.user_id = p_user_id),
+           'UTC') INTO v_tz;
+
+  IF p_timezone IS NOT NULL AND p_timezone = v_tz THEN
+    UPDATE users SET timezone = v_tz
+     WHERE user_id = p_user_id AND timezone IS DISTINCT FROM v_tz;
+  END IF;
+
+  WITH acts AS (   -- UNION dedupes; backfilled rows count like any other
+    SELECT (completed_at AT TIME ZONE v_tz)::date AS d FROM lesson_progress
+     WHERE user_id = p_user_id AND status = 'Completed' AND completed_at IS NOT NULL
+    UNION
+    SELECT (completed_at AT TIME ZONE v_tz)::date FROM quiz_attempts
+     WHERE user_id = p_user_id AND completed_at IS NOT NULL
+    UNION
+    SELECT (completed_at AT TIME ZONE v_tz)::date FROM minigame_attempts
+     WHERE user_id = p_user_id AND completed_at IS NOT NULL
+  ), grp AS (
+    SELECT d, d - (ROW_NUMBER() OVER (ORDER BY d))::int AS g FROM acts
+  ), runs AS (
+    SELECT MIN(d) AS s, MAX(d) AS e, COUNT(*)::int AS n FROM grp GROUP BY g
+  )
+  SELECT (SELECT n FROM runs ORDER BY e DESC LIMIT 1),
+         (SELECT MAX(n) FROM runs),
+         (SELECT MAX(e) FROM runs)
+    INTO v_cur, v_run_longest, v_last;
+
+  IF v_last IS NOT NULL THEN
+    INSERT INTO streaks AS s (user_id, current_streak, longest_streak, last_activity_date)
+    VALUES (p_user_id, v_cur, v_run_longest, v_last)
+    ON CONFLICT (user_id) DO UPDATE SET
+      current_streak     = EXCLUDED.current_streak,
+      longest_streak     = GREATEST(s.longest_streak, EXCLUDED.longest_streak),
+      last_activity_date = EXCLUDED.last_activity_date;
+  END IF;
+
+  RETURN QUERY
+    SELECT s.current_streak, s.longest_streak, s.last_activity_date
+      FROM streaks s WHERE s.user_id = p_user_id;
+END $$;
+
+REVOKE ALL ON FUNCTION public.recalculate_streak(UUID, TEXT) FROM PUBLIC, anon;
+GRANT EXECUTE ON FUNCTION public.recalculate_streak(UUID, TEXT) TO authenticated;
+
+-- ── direct mode only: RLS so a signed-in user can write/read their own rows ──
+GRANT SELECT ON public.leaderboard_cache TO anon, authenticated;
+DROP POLICY IF EXISTS leaderboard_cache_read ON public.leaderboard_cache;
+CREATE POLICY leaderboard_cache_read ON public.leaderboard_cache
+    FOR SELECT TO anon, authenticated USING (true);
+
+DO $$
+DECLARE t TEXT;
+BEGIN
+  FOREACH t IN ARRAY ARRAY['lesson_progress','quiz_attempts','minigame_attempts'] LOOP
+    EXECUTE format('GRANT SELECT, INSERT, UPDATE ON public.%I TO authenticated', t);
+    EXECUTE format('DROP POLICY IF EXISTS %1$s_own ON public.%1$I', t);
+    EXECUTE format('CREATE POLICY %1$s_own ON public.%1$I FOR ALL TO authenticated
+                    USING (user_id = auth.uid()) WITH CHECK (user_id = auth.uid())', t);
+  END LOOP;
+  GRANT SELECT ON public.streaks TO authenticated;
+  DROP POLICY IF EXISTS streaks_own ON public.streaks;
+  CREATE POLICY streaks_own ON public.streaks FOR SELECT TO authenticated
+      USING (user_id = auth.uid());
+END $$;

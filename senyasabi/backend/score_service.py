@@ -34,23 +34,86 @@ def _minigame_id(db, kind):
         (m.Minigame.minigame_code == GAME_CODES[kind]) | (m.Minigame.game_type == kind)).limit(1))
 
 
+# def record_minigame_result(kind, score, total, duration_seconds):
+#     """UI-thread safe: only local SQLite work happens here; the upload is backgrounded."""
+#     uid = _user_uuid()
+#     if uid is None:
+#         return None
+#     with session_scope() as db:
+#         minigame_id = _minigame_id(db, kind)
+#     if minigame_id is None:
+#         log.warning("Minigame %r is not in the local cache; score not recorded", kind)
+#         return None
+#     completed = datetime.now(timezone.utc)
+#     attempt_id = uuid.uuid4()
+#     sync_service.queue_minigame_attempt(           # SQLite row + durable sync_queue entry
+#         uid, attempt_id, minigame_id,
+#         completed - timedelta(seconds=duration_seconds), completed,
+#         int(score), int(duration_seconds),
+#         round(100.0 * score / max(1, total), 2))   # server expects 0-100
+#     with session_scope() as db:
+#         rebuild_user_statistics(db, uid)
+#     notify_scores_changed()
+#     flush_pending_async()
+#     return attempt_id
+
 def record_minigame_result(kind, score, total, duration_seconds):
     """UI-thread safe: only local SQLite work happens here; the upload is backgrounded."""
     uid = _user_uuid()
     if uid is None:
         return None
-    with session_scope() as db:
-        minigame_id = _minigame_id(db, kind)
-    if minigame_id is None:
-        log.warning("Minigame %r is not in the local cache; score not recorded", kind)
-        return None
+    
     completed = datetime.now(timezone.utc)
     attempt_id = uuid.uuid4()
-    sync_service.queue_minigame_attempt(           # SQLite row + durable sync_queue entry
-        uid, attempt_id, minigame_id,
+    started_at = completed - timedelta(seconds=duration_seconds)
+    percentage = round(100.0 * score / max(1, total), 2)
+
+    with session_scope() as db:
+        minigame_id = _minigame_id(db, kind)
+        if minigame_id is None:
+            log.warning("Minigame %r is not in the local cache; score not recorded", kind)
+            return None
+        
+        sync_service.queue_minigame_attempt(
+            uid, attempt_id, minigame_id,
+            started_at, completed,
+            int(score), int(duration_seconds), percentage
+        )
+        rebuild_user_statistics(db, uid)
+
+    notify_scores_changed()
+    
+    flush_pending_async()
+    return attempt_id
+
+
+def record_lesson_progress(lesson_id, progress, completed=False):
+    """Record lesson progress locally and flush it in the background."""
+    uid = _user_uuid()
+    if uid is None:
+        return None
+
+    updated_at = datetime.now(timezone.utc)
+    status = "completed" if completed else "in_progress"
+    sync_service.queue_lesson_progress(uid, lesson_id, status, int(progress), updated_at)
+    flush_pending_async()
+    return updated_at
+
+
+def record_quiz_attempt(quiz_id, score, total, duration_seconds):
+    """Record a quiz attempt locally and flush it in the background."""
+    uid = _user_uuid()
+    if uid is None:
+        return None
+
+    completed = datetime.now(timezone.utc)
+    attempt_id = uuid.uuid4()
+    sync_service.queue_quiz_attempt(
+        uid, attempt_id, quiz_id,
         completed - timedelta(seconds=duration_seconds), completed,
         int(score), int(duration_seconds),
-        round(100.0 * score / max(1, total), 2))   # server expects 0-100
+        round(100.0 * score / max(1, total), 2),
+        passed=score >= total)
     with session_scope() as db:
         rebuild_user_statistics(db, uid)
     notify_scores_changed()
@@ -76,5 +139,8 @@ def _flush(uid):
     try:
         result = sync_service.process_pending_syncs(uid, batch_size=50)
         log.info("Sync flush: %s", result)
+        if result["succeeded"]:
+            from . import progress_sync
+            progress_sync.pull_user_progress()
     except Exception:
         log.exception("Sync flush failed")

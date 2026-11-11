@@ -33,42 +33,6 @@ try:
 except Exception:
     pass
 
-# def run_camera_loop(device_index=0):
-#     print("1. Starting camera", flush=True)
-    
-#     # Use CAP_AVFOUNDATION since you are on macOS
-#     cap = cv2.VideoCapture(device_index, cv2.CAP_AVFOUNDATION)
-#     print("2. Camera started:", cap.isOpened(), flush=True)
-
-#     if not cap.isOpened():
-#         print("Error: Could not open camera.", flush=True)
-#         return
-
-#     try:
-#         while cap.isOpened():
-#             print("3. Reading frame", flush=True)
-#             ok, frame = cap.read()
-
-#             if not ok:
-#                 print("Frame read failed", flush=True)
-#                 break
-
-#             print("4. Frame received", flush=True)
-
-#             # --- UNCOMMENT & WRAP YOUR MODEL INFERENCE HERE ---
-#             # print("5. Starting model inference", flush=True)
-#             # result = self.model.process(frame)  # Replace with your actual model call
-#             # print("6. Inference completed", flush=True)
-
-#             # Optional: break early during testing if you just want to check if it crashes on startup
-#             # break
-
-    # except Exception as e:
-    #     print(f"Exception caught in loop: {e}", flush=True)
-    # finally:
-    #     cap.release()
-    #     print("Camera released.", flush=True)
-
 def _watchdog_loop():
     global _last_qt_tick
     while True:
@@ -232,8 +196,21 @@ class SenyaSabiApplication(QApplication):
         if self.fullscreen:
             window.showFullScreen()
         else:
-            window.showMaximized()
+            # Force 1920x1080 resolution, centered on screen
+            screen = window.screen()
+            if screen:
+                available = screen.availableGeometry()
+                x = (available.width() - 1920) // 2
+                y = (available.height() - 1080) // 2
+                window.setGeometry(x, y, 1920, 1080)
+            else:
+                window.setGeometry(0, 0, 1920, 1080)
+            window.show()
 
+    def _matches_presentation(self, window):
+        if self.fullscreen:
+            return window.isFullScreen()
+        return window.width() == 1920 and window.height() == 1080
 
 def main() -> int:
     # Setup logging first

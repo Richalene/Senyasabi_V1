@@ -1,4 +1,5 @@
-"""Media resolution and download-once SQLite cache."""
+"""Download-once media cache. Fetches via presigned URL, verifies SHA-256,
+records the file in SQLite media_cache. Cache hits never touch the network."""
 from dataclasses import dataclass, replace
 import hashlib
 import json
@@ -16,7 +17,7 @@ from .api_client import get_api_client
 from .config import MEDIA_CACHE_DIR, CLIENT_MODE
 from .content_service import ROOT, get_sign
 from .database import repository as repo
-from .database.models import MediaCache, MediaFile, utcnow
+from .database.models import MediaCache, MediaFile, ContentVersion, utcnow
 from .database.session import session_scope
 from .database.models import LessonMedia
 
@@ -197,7 +198,7 @@ def get_lesson_media(lesson_id, role=None) -> dict[str, int]:
     if role:
         query = query.where(LessonMedia.media_role == role)
     with session_scope() as db:
-        return {Path(name or "").stem.upper(): media_id for name, media_id in db.execute(query)}
+        return {Path(name or "").stem.split("_")[0].upper(): media_id for name, media_id in db.execute(query)}
 
 
 def fetch_lesson_images(lesson_id, role=None) -> dict[str, Path]:
@@ -212,12 +213,24 @@ def fetch_lesson_images(lesson_id, role=None) -> dict[str, Path]:
 def resolve_sign_video(module_code, sign_code):
     return _service.resolve_sign_video(module_code, sign_code)
 
+_download_locks: dict[int, threading.Lock] = {}
+_download_locks_guard = threading.Lock()
+
+def _lock_for(media_id: int) -> threading.Lock:
+    with _download_locks_guard:
+        return _download_locks.setdefault(media_id, threading.Lock())
 
 def get_media_path(media_id: int) -> Path | None:
-    """Local path for a media file, downloading it if needed. None if unavailable.
-    Blocking: call from a worker thread, not the Qt UI thread."""
-    return _cached_path(media_id) or _download(media_id)
-
+    """Local path for a media file. Cache hit = no network. Downloads at most once per file,
+    even when several threads ask at the same time. Blocking: call from a worker thread."""
+    path = _cached_path(media_id)
+    if path is not None:
+        return path
+    with _lock_for(media_id):
+        path = _cached_path(media_id)      # another thread may have just finished it
+        if path is not None:
+            return path
+        return _download(media_id)
 
 def _cached_path(media_id: int) -> Path | None:
     with session_scope() as db:
@@ -236,18 +249,53 @@ def _cached_path(media_id: int) -> Path | None:
         return path
 
 
+def _record_cache(media_id: int, name: str, info: dict, digest: bytes) -> bool:
+    """Write/refresh the media_cache row for a freshly downloaded file."""
+    try:
+        with session_scope() as db:
+            version = repo.get_content_version_by_number(db, info["content_version_number"])
+            if version is None:   # content not synced yet: create the version row, as sync does
+                version = ContentVersion(version_number=info["content_version_number"],
+                                         changelog="Synced from server",
+                                         is_published=True, is_deleted=False)
+                db.add(version)
+                db.flush()
+            cv_id = version.content_version_id
+
+            if db.get(MediaFile, media_id) is None:   # media_cache has an FK to media_files
+                db.add(MediaFile(
+                    media_id=media_id,
+                    file_name=info.get("file_name"),
+                    object_key=info.get("object_key") or f"media/{media_id}",  # key is server-side only
+                    media_type=info["media_type"],
+                    width=info.get("width"), height=info.get("height"),
+                    duration_seconds=info.get("duration_seconds"),
+                    file_size=info.get("file_size"),
+                    checksum=digest, content_version_id=cv_id))
+                db.flush()
+
+            db.merge(MediaCache(media_id=media_id, local_path=name,
+                                content_version_id=cv_id, checksum=digest,
+                                cached_at=utcnow()))
+        return True
+    except Exception:
+        logger.exception("Could not record media_cache row for %s", media_id)
+        return False
+        
+
 def _download(media_id: int) -> Path | None:
-    # Get media info from appropriate source
-    if CLIENT_MODE == "distributed":
-        info = _get_media_info_supabase(media_id)
-    else:
-        info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
+    info = get_api_client()._request("GET", f"/api/v1/media/presign/{media_id}")
     
     if not info or not info.get("url"):
         return None                              # offline / not found
 
     MEDIA_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    name = f"{media_id}_{Path(info.get('file_name') or 'media').name}"
+
+    import re
+
+    raw_filename = info.get('file_name') or 'media'
+    safe_filename = re.sub(r'[()\s]+', '_', raw_filename)
+    name = f"{media_id}_{safe_filename}"
     dest = MEDIA_CACHE_DIR / name
     sha = hashlib.sha256()
 
@@ -269,7 +317,7 @@ def _download(media_id: int) -> Path | None:
                     r.url,
                     r.text[:1000],
                 )
-                r.raise_for_status()
+            r.raise_for_status()
 
             for chunk in r.iter_content(CHUNK):
                 if chunk:
@@ -281,52 +329,13 @@ def _download(media_id: int) -> Path | None:
             raise ValueError("checksum mismatch")
         
         os.replace(tmp_name, dest)               # atomic: never a half-written file
-        logger.info(
-            "Successfully downloaded and verified media_id=%s, file_name=%s, destination=%s",
-            media_id,
-            info.get("file_name"),
-            dest,
-        )
     except Exception:
         logger.exception("Media download failed for %s", media_id)
         Path(tmp_name).unlink(missing_ok=True)
         return None
 
     digest = sha.digest()
-    with session_scope() as db:
-        version = repo.get_content_version_by_number(db, info["content_version_number"])
-        if version is None:
-            logger.warning("Content version %s missing locally", info["content_version_number"])
-            return dest  # file is usable; skip DB record
-        
-        cv_id = version.content_version_id
-
-        # 1. Ensure the media_files row exists without overwriting its real object_key
-        media_record = db.get(MediaFile, media_id)
-        if media_record is None:
-            # Fallback only if the sync missed it; otherwise, let server snapshot provide the key
-            db.add(MediaFile(
-                media_id=media_id,
-                file_name=info.get("file_name"),
-                object_key=info.get("object_key"),  # Use real key from info if available
-                media_type=info["media_type"],
-                width=info.get("width"),
-                height=info.get("height"),
-                duration_seconds=info.get("duration_seconds"),
-                file_size=info.get("file_size"),
-                checksum=digest,
-                content_version_id=cv_id
-            ))
-            db.flush()
-
-        # 2. Record only local cache metadata in MediaCache (local_path vs remote storage)
-        db.merge(MediaCache(
-            media_id=media_id,
-            local_path=name,                  # Local disk path
-            content_version_id=cv_id,
-            checksum=digest,
-            cached_at=utcnow()
-        ))
+    _record_cache(media_id, name, info, digest)   # file is usable even if recording fails
     return dest
 
 

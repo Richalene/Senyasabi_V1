@@ -49,9 +49,11 @@ class StartupTests(unittest.TestCase):
             self.assert_screen(c.welcome)
             c.welcome.ui.btnContinue.click()
             self.assert_screen(c.landing)
-            with patch('screens.startup.QMessageBox.information') as notice:
+            with patch('screens.startup.QMessageBox.information') as notice, \
+                    patch('screens.dialogs.ComingSoonDialog') as coming_soon:
                 c.landing.ui.btnLearnMore.click()
                 notice.assert_called_once()
+                coming_soon.assert_not_called()
             self.assert_screen(c.landing)
             c.landing.ui.btnGetStarted.click()
             self.assert_screen(c.register)

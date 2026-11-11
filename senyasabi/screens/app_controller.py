@@ -14,12 +14,12 @@ from backend.content_service import get_signs_for_module
 from screens.dialogs import ComingSoonDialog
 import threading
 from PySide6.QtWidgets import QApplication
+from screens.camera_permission import ensure_camera_permission
 
 _active_controller = None
 
 def get_active_controller():
     return _active_controller
-
 
 class MainWindowShell(QMainWindow):
     """Persistent top-level host window managing a QStackedWidget for single-window navigation."""
@@ -85,7 +85,6 @@ class AppController:
         self.dashboard.ui.btnBack.clicked.connect(self.show_main_menu)
         self.main_menu.stats_requested.connect(self.show_dashboard)
         self.main_menu.logout_requested.connect(self.logout)
-        self.dashboard.logout_requested.connect(self.logout)
         self.main_menu.camera_settings_requested.connect(self.show_camera_settings)
 
         self.login.continue_requested.connect(self.login_user)
@@ -103,11 +102,16 @@ class AppController:
         try:
             from backend import leaderboard_service
             for board in ("all_time", "weekly", "monthly"):
-                leaderboard_service.refresh_leaderboard_if_stale(board)   # only fetches if cache is stale (> 5 min)
+                leaderboard_service.refresh_leaderboard(board)   # already runs on a worker
 
             def _background_pull():
                 try:
                     auth_service.sync_user_info(user["user_id"])
+                except Exception:
+                    pass
+                try:
+                    from backend import progress_sync
+                    progress_sync.pull_user_progress()
                 except Exception as err:
                     logging.getLogger(__name__).warning("Post-login progress pull failed: %s", err)
 
@@ -202,10 +206,14 @@ class AppController:
         dialog.exec()
 
     def _clear_passwords(self):
-        self.login.password_input.clear()
-        self.register.password_input.clear()
-        if hasattr(self.register, 'confirm_password_input'):
-            self.register.confirm_password_input.clear()
+        for field in (self.login.password_input, self.register.password_input,
+                      getattr(self.register, 'confirm_password_input', None)):
+            if field is None:
+                continue
+            toggle = getattr(field, "visibility_toggle", None)
+            if toggle is not None:
+                toggle.setChecked(False)
+            field.clear()
 
     def login_user(self):
         screen = self.login
@@ -225,7 +233,6 @@ class AppController:
 
         # In distributed mode: Try FastAPI first, fall back to direct Supabase
         # In direct mode: Use direct Supabase
-        # In fastapi mode (development): Use FastAPI with service role
         if CLIENT_MODE == "direct":
             # Direct Supabase authentication
             screen.loading.run(
@@ -233,23 +240,6 @@ class AppController:
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
                 message="Signing you in…", controls=(screen._ui,))
         elif CLIENT_MODE == "distributed":
-            # Try FastAPI first (production with anon key)
-            def try_fastapi_auth():
-                try:
-                    return auth_service.authenticate_user(identifier, password, establish_session=False)
-                except auth_service.AuthError:
-                    raise
-                except Exception as e:
-                    # FastAPI unavailable, fall back to direct Supabase
-                    logger = logging.getLogger(__name__)
-                    logger.warning("FastAPI authentication failed, falling back to direct Supabase: %s", e)
-                    return auth_service.authenticate_with_supabase(identifier, password, establish_session=False)
-            
-            screen.loading.run(
-                try_fastapi_auth,
-                signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
-                message="Signing you in…", controls=(screen._ui,))
-        else:  # fastapi mode (development)
             screen.loading.run(
                 lambda: auth_service.authenticate_user(identifier, password, establish_session=False),
                 signed_in, lambda error: self._auth_failed(screen, error, "sign you in"),
@@ -329,7 +319,7 @@ class AppController:
             self.show_login()
         finally:
             self._logging_out = False
-
+            
     def show_login(self):
         self._clear_passwords()
         self.login.error_label.clear()
@@ -369,7 +359,6 @@ class AppController:
             from screens.minigames.minigame_select import MinigameSelect
             self.minigames = MinigameSelect()
             self.minigames.back_requested.connect(self.back_from_minigames)
-            self.minigames.logout_requested.connect(self.logout)
         return self.minigames
 
     def show_module_map(self):
@@ -384,12 +373,6 @@ class AppController:
         self._show_screen(self.module_map)
 
     def open_module(self, code):
-        if code and code.lower() in ("number", "family", "communication", "days", "calendar", "actions", "months"):
-            from screens.dialogs import ComingSoonDialog
-            parent = getattr(self, "module_map", None) or getattr(self, "window", None)
-            dlg = ComingSoonDialog(parent)
-            dlg.exec()
-            return
         self.show_module_choices(code)
 
     def show_module_choices(self, code=None):
@@ -443,6 +426,10 @@ class AppController:
             screen.layout_comp.results_widget.next_lesson_requested.connect(
                 lambda next_number=number + 1: self._open_next_lesson(next_number)
             )
+        # if self.selected_module == "alphabet":
+        #     screen.layout_comp.results_widget.next_lesson_requested.connect(
+        #         lambda next_number=number + 1: self._open_next_lesson(next_number)
+        #     )
         self._show_screen(screen)
 
     def _open_next_lesson(self, number):
@@ -510,11 +497,11 @@ class AppController:
         self._show_screen(self.quiz)
 
     def shutdown(self):
-        try:
-            from backend import camera_ownership
-            camera_ownership.release_all()
-        except Exception:
-            pass
+        # try:
+        #     from backend import camera_ownership
+        #     camera_ownership.release_all()
+        # except Exception:
+        #     pass
         self.login.loading.cancel()
         self.register.loading.cancel()
         if hasattr(self, "dashboard") and self.dashboard is not None:
@@ -538,20 +525,46 @@ class AppController:
         if auth_service.get_current_user() is None:
             self.show_login()
             return
+
         if self.camera_settings is not None:
             self.camera_settings.raise_()
             self.camera_settings.activateWindow()
             return
-        from screens.camera_setup import CameraSetupDialog
-        from backend.camera_service import get_camera_service
-        self.camera_settings = CameraSetupDialog(self.main_menu, onboarding=not get_camera_service().configured)
 
-        def finished(result):
-            dialog, self.camera_settings = self.camera_settings, None
-            if dialog is not None:
-                dialog.deleteLater()
-        self.camera_settings.finished.connect(finished)
-        self.camera_settings.open()
+        def permission_resolved(granted):
+            if not granted:
+                from PySide6.QtWidgets import QMessageBox
+
+                QMessageBox.warning(
+                    self,
+                    "Camera Permission Required",
+                    "SenyaSabi needs camera access to configure your camera. "
+                    "Please enable camera access in macOS System Settings "
+                    "under Privacy & Security > Camera."
+                )
+                return
+
+            # Check again in case the settings window was opened meanwhile.
+            if self.camera_settings is not None:
+                self.camera_settings.raise_()
+                self.camera_settings.activateWindow()
+                return
+
+            from screens.camera_setup import CameraSetupDialog
+            from backend.camera_service import get_camera_service
+
+            self.camera_settings = CameraSetupDialog(
+                self.main_menu,
+                onboarding=not get_camera_service().configured
+            )
+
+            self.camera_settings.destroyed.connect(
+                lambda: setattr(self, "camera_settings", None)
+            )
+
+            self.camera_settings.show()
+
+        ensure_camera_permission(permission_resolved)
 
     def open_module_game(self, kind):
         if auth_service.get_current_user() is None:

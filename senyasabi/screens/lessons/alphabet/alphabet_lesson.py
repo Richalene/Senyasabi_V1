@@ -181,6 +181,7 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
             try:
                 from backend.media_service import fetch_lesson_images
                 paths = fetch_lesson_images(lesson_id)
+                print(paths)
             except Exception as error:
                 log.warning("Lesson images unavailable: %s", error)
                 return

@@ -85,12 +85,13 @@ class UatFlowTests(unittest.TestCase):
         self.only(c.module_map)
         days = next(button for button in c.module_map.buttons if button.property("module_code").casefold() == "basic_communication")
         c.module_map.hover_node(days, True)
-        self.assertTrue(c.module_map.popup.isVisible())
+        self.assertFalse(days.toolTip())
+        self.assertFalse(hasattr(c.module_map, "popup"))
         self.assertTrue(days.graphicsEffect().isEnabled())
         days.click()
         self.only(c.module_lessons)
         self.assertEqual(c.selected_module, "basic_communication")
-        self.assertFalse(c.module_map.popup.isVisible())
+        self.assertFalse(days.graphicsEffect().isEnabled())
         from backend.model_service import ModelState
         with patch("screens.lessons.words.word_lesson._registry.status", return_value=ModelState("survival", False, "Recognition model not installed")),              patch("screens.media_player.resolve_sign_video", return_value=SimpleNamespace(available=False, local_cached_path=None, video_path=None, local_path=None)):
             c.module_lessons.lesson_buttons[0].click()
@@ -392,6 +393,12 @@ c.module_map.fit()
 canvas = c.module_map._ui
 assert abs(canvas.width()/canvas.height() - 1920/1080) < .01
 assert c.module_map.rect().contains(canvas.geometry())
+c.show_main_menu()
+app.processEvents()
+assert c.main_menu.isFullScreen()
+c.show_module_map()
+app.processEvents()
+assert c.module_map.isFullScreen()
 c.shutdown()
 app.processEvents()
 import os
