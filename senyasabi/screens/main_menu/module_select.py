@@ -248,17 +248,14 @@ class ModuleSelectWidget(QWidget):
             self.back_button.setEnabled(False)
             self.back_button = None
 
-        # Add top-left BackButton matching lesson_select and dashboard
-        self.btn_top_back = BackButton(self._ui)
-        self.btn_top_back.setGeometry(QRect(40, 36, 52, 52))
-        self.btn_top_back.clicked.connect(self.go_back)
-
         self._fixed = [(child, child.geometry(), child.styleSheet())
                        for child in self._ui.findChildren(QWidget)
                        if child is not self.background]
         self._base_style = self._ui.styleSheet()
-        self.header = SenyaSabiHeader(self._ui, show_back=False, show_help=True)
+        self.header = SenyaSabiHeader(self._ui, show_back=True, show_help=True)
         self.header.anchor_to_canvas(QSize(1920, 1080))
+        if self.header.back_button is not None:
+            self.header.back_button.clicked.connect(self.go_back)
         self.header.help_requested.connect(self._show_help)
         install_page_menu(self, header=self.header)
         firefly_pixmap = QPixmap(str(ROOT / "resources/img/ui/firefly.png"))
