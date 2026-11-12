@@ -382,3 +382,12 @@ Traceback (most recent call last):
 KeyboardInterrupt
 
 ================================================
+
+================ CRITICAL CRASH ================
+Traceback (most recent call last):
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 163, in notify
+    def notify(self, receiver, event):
+    
+KeyboardInterrupt
+
+================================================

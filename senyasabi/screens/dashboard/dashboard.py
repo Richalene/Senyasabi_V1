@@ -91,7 +91,33 @@ class StatisticsDashboardWindow(QWidget):
                 f"#{selector} {{ background: transparent; border: none; "
                 f"border-image: url('{img_path}') 0 0 0 0 stretch stretch; }}"
             )
+        
+        # Hide titlePanel since "My Statistics" is already baked into the background image
         self.ui.titlePanel.hide()
+
+        if hasattr(self.ui, "imgStatsChart"):
+            self.ui.imgStatsChart.setGeometry(85, 325, 520, 520)
+            self.ui.imgStatsChart.setScaledContents(True)
+
+        self.ui.cardLessons.setGeometry(780, 270, 280, 272)
+        self.ui.lblLessonsCompleted.setGeometry(25, 88, 230, 80)
+
+        self.ui.badgeCard.setGeometry(785, 595, 270, 266)
+        self.ui.badgeShieldImg.setGeometry(75, 73, 120, 120)
+
+        self.ui.cardQuiz.setGeometry(1100, 135, 276, 272)
+        self.ui.lblTotalQuizScore.setGeometry(25, 95, 226, 75)
+
+        self.ui.cardModule.setGeometry(1095, 430, 286, 282)
+        self.ui.lblModuleCount.setGeometry(30, 95, 226, 95)
+
+        self.ui.cardMinigames.setGeometry(1110, 735, 256, 258)
+        self.ui.lblMinigamesCompleted.setGeometry(25, 95, 206, 70)
+
+        self.ui.btnLeaderboard.setGeometry(1440, 315, 340, 430)
+        self.ui.lblLeaderboardRank.setGeometry(60, 275, 220, 60)
+
+        self.ui.btnBack.setGeometry(1795, 140, 72, 72)
         self.ui.btnBack = BackButton.replace(self.ui.btnBack)
         self.ui.streakPanel.hide()
         self.ui.lblCurrentStreak.setObjectName("replacedCurrentStreak")
@@ -111,9 +137,6 @@ class StatisticsDashboardWindow(QWidget):
         self.ui.lblCurrentStreak.setObjectName("lblCurrentStreak")
         self.ui.btnMenu.setObjectName("btnMenu")
         self.ui.lblLatestBadge.setWordWrap(True)
-        if hasattr(self.ui, "imgStatsChart"):
-            self.ui.imgStatsChart.setGeometry(150, 310, 450, 450)
-            self.ui.imgStatsChart.setScaledContents(True)
         self._menu = None
         self._leaderboard = None
         self.ui.btnBack.clicked.connect(self._open_menu)
@@ -174,7 +197,7 @@ class StatisticsDashboardWindow(QWidget):
 
     def _draw_spider_chart(self, module_perf_list, lesson_progress_list=None):
         """Draw 7-axis performance spider chart across the lesson menu lineup."""
-        width, height = 450, 450
+        width, height = 520, 520
         pixmap = QPixmap(width, height)
         pixmap.fill(Qt.GlobalColor.transparent)
         painter = QPainter(pixmap)
@@ -183,7 +206,7 @@ class StatisticsDashboardWindow(QWidget):
 
         cx = width / 2.0
         cy = height / 2.0
-        max_radius = min(cx, cy) - 58.0
+        max_radius = min(cx, cy) - 68.0
 
         # Clockwise 7 lesson menu entries starting from 12 o'clock
         CORE_MODULES = [

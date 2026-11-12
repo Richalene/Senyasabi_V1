@@ -327,7 +327,7 @@ class ExitButton(QPushButton):
         p.setRenderHints(QPainter.RenderHint.Antialiasing)
 
         p.setBrush(QColor("#FFF4E8"))
-        p.setPen(QPen(QColor("#D5BCA9"), 1.5))
+        p.setPen(Qt.PenStyle.NoPen)
         p.drawRoundedRect(QRectF(1, 1, 34, 34), 8, 8)
 
         color = QColor("#8B251E") if self.underMouse() else QColor("#702A24")
@@ -358,7 +358,7 @@ class TutorialIconWidget(QWidget):
         p.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
 
         p.setBrush(QColor("#F4F7E6"))
-        p.setPen(QPen(QColor("#C4CE9B"), 1.5))
+        p.setPen(Qt.PenStyle.NoPen)
         p.drawRoundedRect(QRectF(1, 1, 34, 34), 8, 8)
 
         p.setPen(QColor("#4F3222"))
@@ -381,7 +381,7 @@ class CameraButton(QPushButton):
         p.setRenderHints(QPainter.RenderHint.Antialiasing)
 
         p.setBrush(QColor("#F4F7E6"))
-        p.setPen(QPen(QColor("#C4CE9B"), 1.5))
+        p.setPen(Qt.PenStyle.NoPen)
         p.drawRoundedRect(QRectF(1, 1, 34, 34), 8, 8)
 
         color = QColor("#3C4E1E") if self.underMouse() else QColor("#4F3222")
@@ -588,7 +588,7 @@ class MenuCalloutPopup(QWidget):
 
         # Main bubble body
         p.setBrush(QColor("#FFFDF0"))
-        p.setPen(QPen(QColor("#D6DFA0"), 2.5))
+        p.setPen(Qt.PenStyle.NoPen)
         p.drawPath(path)
 
     def _sync_audio_state(self):
