@@ -75,8 +75,10 @@ class CameraSetupDialog(QDialog):
         controls.setSpacing(16)
         self.test_button = QPushButton('Test Camera')
         self.test_button.setProperty('class', 'primaryButton')
+        self.test_button.setToolTip("Start live preview test for the selected camera")
         self.test_button.clicked.connect(self.test_camera)
         self.retry_button = QPushButton('Refresh Cameras')
+        self.retry_button.setToolTip("Rescan connected webcam devices")
         self.retry_button.clicked.connect(self.refresh)
         controls.addWidget(self.test_button)
         controls.addWidget(self.retry_button)
@@ -87,16 +89,31 @@ class CameraSetupDialog(QDialog):
         self.preview.setWordWrap(True)
         self.preview.setMinimumHeight(280)
         choices.addWidget(self.preview, 1)
+
+        # Persistent Lighting & Distance Guidance (Phase 3)
+        self.camera_hint = QLabel(
+            "Tip: Position your camera at eye level, sit 1.5–2.5 feet away, and ensure your hands are clearly lit without strong backlighting."
+        )
+        self.camera_hint.setWordWrap(True)
+        self.camera_hint.setStyleSheet(
+            "background-color: #FAFFDC; color: #526021; border: 1.5px solid #D6DFA0; "
+            "border-radius: 12px; padding: 10px 14px; font-size: 13px; font-weight: 500;"
+        )
+        choices.addWidget(self.camera_hint)
+
         self.manual_button = QPushButton('Choose by device number')
         self.manual_button.setProperty('class', 'quietButton')
+        self.manual_button.setToolTip("Manually specify an OpenCV device index (0, 1, etc.)")
         self.manual_button.clicked.connect(self.choose_numeric)
         choices.addWidget(self.manual_button)
         self.save_button = QPushButton('Save / Use Camera')
         self.save_button.setProperty('class', 'primaryButton')
+        self.save_button.setToolTip("Save selected device as primary camera")
         self.save_button.setEnabled(False)
         self.save_button.clicked.connect(self.save)
         choices.addWidget(self.save_button)
         self.without_button = QPushButton('Continue Without Camera')
+        self.without_button.setToolTip("Proceed without configuring camera")
         self.without_button.clicked.connect(self.reject)
         choices.addWidget(self.without_button)
         self.pages.addWidget(self.selection)

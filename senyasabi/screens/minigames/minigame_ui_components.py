@@ -323,6 +323,7 @@ class MinigameHeader(QWidget):
     Call set_scale(s) to resize it relative to its 1920x1080 design size.
     """
     close_requested = Signal()
+    help_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -341,10 +342,41 @@ class MinigameHeader(QWidget):
 
         self._layout.addStretch()
 
+        # Help button '?'
+        self.btn_help = QPushButton(self)
+        self.btn_help.setFixedSize(48, 48)
+        self.btn_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_help.setText("?")
+        self.btn_help.setToolTip("Help & Rules")
+        self.btn_help.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFDF0;
+                color: #4F3222;
+                border: 2.5px solid #D6DFA0;
+                border-radius: 24px;
+                font-family: 'Cherry Bomb One', cursive, sans-serif;
+                font-size: 24px;
+                padding-bottom: 2px;
+            }
+            QPushButton:hover {
+                background-color: #FAFFDC;
+                border-color: #8C9F3E;
+                color: #2F1E14;
+            }
+            QPushButton:pressed {
+                background-color: #E8EFC0;
+            }
+        """)
+        self.btn_help.clicked.connect(self.help_requested.emit)
+        self._layout.addWidget(self.btn_help, alignment=Qt.AlignmentFlag.AlignRight | Qt.AlignmentFlag.AlignVCenter)
+
+        self._layout.addSpacing(12)
+
         # Close button
         self.btn_close = QPushButton(self)
         self.btn_close.setFixedSize(48, 48)
         self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_close.setToolTip("Exit activity")
         close_icon_path = str(ROOT / "resources/img/ui/close_btn.png").replace("\\", "/")
         self.btn_close.setStyleSheet(
             f"QPushButton {{ background: transparent; border: none; border-image: url({close_icon_path}) 0 0 0 0 stretch stretch; }} "
@@ -357,6 +389,7 @@ class MinigameHeader(QWidget):
         self.setFixedHeight(max(1, int(90 * s)))
         self._layout.setContentsMargins(int(40 * s), int(20 * s), int(40 * s), int(10 * s))
         self.logo.setFixedSize(max(1, int(176 * s)), max(1, int(60 * s)))
+        self.btn_help.setFixedSize(max(1, int(48 * s)), max(1, int(48 * s)))
         self.btn_close.setFixedSize(max(1, int(48 * s)), max(1, int(48 * s)))
 
 

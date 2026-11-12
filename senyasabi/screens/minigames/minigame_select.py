@@ -4,6 +4,7 @@ from PySide6.QtGui import QFontDatabase, QPixmap
 from PySide6.QtWidgets import QWidget, QStackedWidget, QVBoxLayout
 from backend.minigame_service import ROOT, CONFIG, MinigameContext
 from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
+from screens.dialogs import HelpCalloutDialog
 from screens.startup import FittedForm
 from ui.generated.minigame_select_ui import Ui_MinigameSelect
 from .common import GameCanvas
@@ -49,6 +50,9 @@ class MinigameMenuWidget(QWidget):
         self.ui.btnSprint.setText(f"{CONFIG['sprint'][0]}\n{CONFIG['sprint'][1]}")
         self.ui.btnQuest.setText(f"{CONFIG['quest'][0]}\n{CONFIG['quest'][1]}")
         self.ui.btnDetective.setText(f"{CONFIG['detective'][0]}\n{CONFIG['detective'][1]}")
+        self.ui.btnSprint.setToolTip("Sign Sprint: Fast-paced live camera sign recognition game")
+        self.ui.btnQuest.setToolTip("FingerSpell Quest: Decode and fingerspell words with your camera")
+        self.ui.btnDetective.setToolTip("Sign Detective: Guess mystery words from demonstration clues")
 
         self.ui.lblSprintText.setText(
             f"<b>{CONFIG['sprint'][0]}</b><br><span style='font-size:18px; color:#8F8C78; font-weight:normal;'>{CONFIG['sprint'][1]}</span>"
@@ -78,8 +82,9 @@ class MinigameMenuWidget(QWidget):
         self.back_button.clicked.connect(self.back_requested.emit)
 
         # Header with streak and menu
-        self.header = SenyaSabiHeader(self)
+        self.header = SenyaSabiHeader(self, show_help=True)
         self.header.anchor_to_canvas(QSize(1920, 1080))
+        self.header.help_requested.connect(self._show_help)
         install_page_menu(self, header=self.header)
         if self.header.menu_button is not None and hasattr(self.header.menu_button, "menu"):
             menu = self.header.menu_button.menu()
@@ -93,6 +98,19 @@ class MinigameMenuWidget(QWidget):
         self.ui.btnSprint.clicked.connect(self.sprint_requested.emit)
         self.ui.btnQuest.clicked.connect(self.quest_requested.emit)
         self.ui.btnDetective.clicked.connect(self.detective_requested.emit)
+
+    def _show_help(self):
+        HelpCalloutDialog.show_help(
+            self,
+            title="Minigames Guide",
+            bullets=[
+                "Sign Sprint: A fast-paced time-attack game! Form the requested signs as quickly as you can before the clock expires.",
+                "Fingerspell Quest: An RPG-style spelling adventure! Spell the letters of given target words using hand signs to defeat obstacles.",
+                "Sign Detective: Solve sign mysteries! Watch clues and deduce the secret word.",
+                "Stars: Score points to earn up to 3 stars per minigame and climb the leaderboard.",
+                "Lighting & Camera: Ensure your hand is clearly visible and well-lit for optimal sign recognition."
+            ]
+        )
 
 
 class MinigameSelect(GameCanvas):

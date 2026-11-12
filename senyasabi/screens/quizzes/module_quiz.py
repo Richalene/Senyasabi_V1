@@ -21,6 +21,7 @@ from screens.minigames.common import GameCanvas, ROOT
 from screens.media_player import SignVideoPlayer
 from screens.navigation import BackButton, install_page_menu
 from screens.minigames.minigame_ui_components import MinigameHeader, MinigameScoreWidget
+from screens.dialogs import HelpCalloutDialog
 from screens.startup import FittedForm
 from backend.media_service import warm_alphabet_stills, alphabet_still, _cached_path
 
@@ -176,9 +177,11 @@ class ModuleQuiz(GameCanvas):
         self.header = MinigameHeader(self)
         self.header.setGeometry(0, 0, 1920, 90)
         self.header.close_requested.connect(self.back_requested.emit)
+        self.header.help_requested.connect(self._show_help)
 
         self.back_button = BackButton(self)
         self.back_button.setGeometry(40, 20, 50, 50)
+        self.back_button.setToolTip("Return to lesson selection")
         self.back_button.clicked.connect(self.back_requested.emit)
 
         # Main Cream Container Card
@@ -189,18 +192,19 @@ class ModuleQuiz(GameCanvas):
 
         # Top Info inside Card
         self.title_lbl = QLabel(self.card)
-        self.title_lbl.setGeometry(80, 30, 950, 48)
+        self.title_lbl.setGeometry(80, 25, 950, 44)
         self.title_lbl.setStyleSheet(
             "font-family: 'Segoe UI', sans-serif; font-size: 32px; font-weight: 800; color: #5C3B28; background: transparent;"
         )
         self.title_lbl.setText(self.session.definition.title.upper())
 
+        # Persistent Quiz Subtitle with Passing Criteria
         self.notice = QLabel(self.card)
-        self.notice.setGeometry(80, 80, 950, 35)
+        self.notice.setGeometry(80, 72, 950, 35)
         self.notice.setStyleSheet(
-            "font-family: 'Segoe UI', sans-serif; font-size: 18px; font-style: italic; color: #8F8C78; background: transparent;"
+            "font-family: 'Segoe UI', sans-serif; font-size: 16px; font-weight: 600; color: #704833; background: transparent;"
         )
-        self.notice.setText("Watch the sign and identify the correct word or phrase.")
+        self.notice.setText("Watch the demonstration sign carefully. Identify the matching sign or word (Passing score: 75%).")
         self.notice.setWordWrap(True)
 
         self.progress = QLabel(self.card)
@@ -660,6 +664,19 @@ class ModuleQuiz(GameCanvas):
                 self.video.play()
         except Exception:
             pass
+
+    def _show_help(self):
+        HelpCalloutDialog.show_help(
+            self,
+            title="Quiz Instructions",
+            bullets=[
+                "Demonstration: Observe the sign demonstrated in the video or illustration on the left card.",
+                "Choose Answer: Select the matching word or type/spell the corresponding letter for fingerspelling questions.",
+                "Passing Score: You need 75% or higher to pass the module quiz and earn full stars.",
+                "Review & Retry: If your score is below 75%, you can review the lessons and retake the quiz anytime.",
+                "Pause/Exit: Click the top-right '✕' or top-left back button to return to the lesson menu."
+            ]
+        )
 
     def hideEvent(self, event):
         if hasattr(self, "video") and self.video is not None:

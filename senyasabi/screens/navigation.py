@@ -2,7 +2,7 @@
 from functools import lru_cache
 from pathlib import Path
 
-from PySide6.QtCore import QEvent, QRectF, QSize, Qt
+from PySide6.QtCore import QEvent, QRectF, QSize, Qt, Signal
 from PySide6.QtGui import QBitmap, QPainter, QPixmap, QRegion
 from PySide6.QtWidgets import QLabel, QMenu, QPushButton, QWidget
 
@@ -136,6 +136,36 @@ class AssetButton(QPushButton):
         super().leaveEvent(event)
 
 
+class HelpButton(QPushButton):
+    """Circle question mark help button matching SenyaSabi styling."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(52, 52)
+        self.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.setAccessibleName("Help & Instructions")
+        self.setToolTip("Help & Instructions")
+        self.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFDF0;
+                color: #4F3222;
+                border: 3px solid #D6DFA0;
+                border-radius: 26px;
+                font-family: 'Cherry Bomb One', cursive, sans-serif;
+                font-size: 26px;
+                padding-bottom: 2px;
+            }
+            QPushButton:hover {
+                background-color: #FAFFDC;
+                border-color: #8C9F3E;
+                color: #2F1E14;
+            }
+            QPushButton:pressed {
+                background-color: #E8EFC0;
+            }
+        """)
+        self.setText("?")
+
+
 class BackButton(AssetButton):
     def __init__(self, parent=None):
         super().__init__("back-button.png", parent, accessible_name="Back")
@@ -207,8 +237,9 @@ class StreakDisplay(QWidget):
 
 class SenyaSabiHeader(QWidget):
     """Optional shared controls anchored to the fitted Figma canvas, never the desktop."""
+    help_requested = Signal()
 
-    def __init__(self, parent=None, *, show_back=False, show_streak=True, show_menu=True, show_connection_status=False):
+    def __init__(self, parent=None, *, show_back=False, show_streak=True, show_menu=True, show_help=False, show_connection_status=False):
         super().__init__(parent)
         self.setProperty("ownsGeometry", True)
         self.setObjectName("senyasabiHeader")
@@ -216,6 +247,9 @@ class SenyaSabiHeader(QWidget):
         self.back_button = BackButton(self) if show_back else None
         self.streak = StreakDisplay(self) if show_streak else None
         self.streak_label = self.streak.value_label if self.streak is not None else None
+        self.help_button = HelpButton(self) if show_help else None
+        if self.help_button is not None:
+            self.help_button.clicked.connect(self.help_requested.emit)
         self.menu_button = AssetButton(parent=self) if show_menu else None
         if self.menu_button is not None:
             self.menu_button.setObjectName('menuBtn')
@@ -228,12 +262,15 @@ class SenyaSabiHeader(QWidget):
         if self.streak is not None:
             self._positions.append((self.streak, QRectF(cursor, 8, 406, 122)))
             cursor += 406
+        if self.help_button is not None:
+            self._positions.append((self.help_button, QRectF(cursor + 8, 38, 52, 52)))
+            cursor += 70
         if self.connection_indicator is not None:
             # Place connection indicator in the top-right corner of the header
             self._positions.append((self.connection_indicator, QRectF(cursor - 20, 8, 16, 16)))
         if self.menu_button is not None:
             # Account for the PNGs' transparent export margins when spacing their art.
-            cursor -= 6 if self.streak is not None else 0
+            cursor -= 6 if self.streak is not None and self.help_button is None else 0
             self._positions.append((self.menu_button, QRectF(cursor, 0, 111, 130)))
             cursor += 111
         self._native_size = QSize(max(1, cursor), 130)
@@ -283,7 +320,14 @@ class SenyaSabiHeader(QWidget):
 def install_page_menu(widget, *, header=None, canvas_size=None):
     """Attach the shared header/menu with Camera Settings and Sign Out actions."""
     if header is None:
-        return None
+        if canvas_size is not None and hasattr(widget, "_ui") and widget._ui is not None:
+            header = SenyaSabiHeader(widget._ui, show_help=True)
+            header.anchor_to_canvas(canvas_size)
+            setattr(widget, "header", header)
+            if hasattr(widget, "_show_help"):
+                header.help_requested.connect(widget._show_help)
+        else:
+            return None
     if header.menu_button is not None:
         popup = None
         if hasattr(widget, "menu_requested"):

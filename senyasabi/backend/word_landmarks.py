@@ -104,15 +104,17 @@ def make_landmarkers(hand_model_path=HAND_MODEL_PATH, pose_model_path=POSE_MODEL
     HandLandmarkerOptions = mp.tasks.vision.HandLandmarkerOptions
     PoseLandmarker = mp.tasks.vision.PoseLandmarker
     PoseLandmarkerOptions = mp.tasks.vision.PoseLandmarkerOptions
+    hand_model_bytes = Path(hand_model_path).read_bytes()
+    pose_model_bytes = Path(pose_model_path).read_bytes()
     hand_options = HandLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=str(hand_model_path)),
+        base_options=BaseOptions(model_asset_buffer=hand_model_bytes),
         running_mode=RunningMode.IMAGE,
         num_hands=2,
         min_hand_detection_confidence=0.35,
         min_hand_presence_confidence=0.35,
     )
     pose_options = PoseLandmarkerOptions(
-        base_options=BaseOptions(model_asset_path=str(pose_model_path)),
+        base_options=BaseOptions(model_asset_buffer=pose_model_bytes),
         running_mode=RunningMode.IMAGE,
         num_poses=1,
         min_pose_detection_confidence=0.35,

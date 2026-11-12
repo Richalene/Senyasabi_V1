@@ -107,3 +107,15 @@ QComboBox QAbstractItemView {
     border-radius: 12px;
     padding: 6px;
 }
+
+/* Global Tooltip Styling */
+QToolTip {
+    background-color: #2F4858;
+    color: #FFFDF0;
+    border: 1.5px solid #FFDE59;
+    border-radius: 8px;
+    padding: 6px 12px;
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 14px;
+    font-weight: 600;
+}

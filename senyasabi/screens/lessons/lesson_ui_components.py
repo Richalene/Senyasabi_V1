@@ -255,6 +255,7 @@ class LessonHeader(QWidget):
     """
     back_requested = Signal()
     close_requested = Signal()
+    help_requested = Signal()
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -275,10 +276,41 @@ class LessonHeader(QWidget):
 
         layout.addStretch()
 
+        # Help Button '?'
+        self.btn_help = QPushButton(self)
+        self.btn_help.setFixedSize(48, 48)
+        self.btn_help.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_help.setText("?")
+        self.btn_help.setToolTip("Lesson & Camera Instructions")
+        self.btn_help.setStyleSheet("""
+            QPushButton {
+                background-color: #FFFDF0;
+                color: #4F3222;
+                border: 2.5px solid #D6DFA0;
+                border-radius: 24px;
+                font-family: 'Cherry Bomb One', cursive, sans-serif;
+                font-size: 24px;
+                padding-bottom: 2px;
+            }
+            QPushButton:hover {
+                background-color: #FAFFDC;
+                border-color: #8C9F3E;
+                color: #2F1E14;
+            }
+            QPushButton:pressed {
+                background-color: #E8EFC0;
+            }
+        """)
+        self.btn_help.clicked.connect(self._show_help)
+        layout.addWidget(self.btn_help)
+
+        layout.addSpacing(12)
+
         # Circular Back Button
         self.btn_back = QPushButton(self)
         self.btn_back.setFixedSize(48, 48)
         self.btn_back.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_back.setToolTip("Return to lesson list")
         back_icon_path = str(ROOT / "resources/img/ui/lesson_back_btn.png").replace("\\", "/")
         self.btn_back.setStyleSheet(
             f"QPushButton {{ background: transparent; border: none; border-image: url({back_icon_path}) 0 0 0 0 stretch stretch; }} "
@@ -293,6 +325,7 @@ class LessonHeader(QWidget):
         self.btn_close = QPushButton(self)
         self.btn_close.setFixedSize(48, 48)
         self.btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_close.setToolTip("Exit lesson")
         close_icon_path = str(ROOT / "resources/img/ui/close_btn.png").replace("\\", "/")
         self.btn_close.setStyleSheet(
             f"QPushButton {{ background: transparent; border: none; border-image: url({close_icon_path}) 0 0 0 0 stretch stretch; }} "
@@ -300,6 +333,20 @@ class LessonHeader(QWidget):
         )
         self.btn_close.clicked.connect(self.close_requested.emit)
         layout.addWidget(self.btn_close)
+
+    def _show_help(self):
+        from screens.dialogs import HelpCalloutDialog
+        HelpCalloutDialog.show_help(
+            self.window() if self.window() else self,
+            title="Lesson Instructions",
+            bullets=[
+                "Watch Demonstration: Watch the reference video clip on the left card to learn the exact handshape and motion.",
+                "Frame Your Hand: Position your hand inside the camera frame on the right. Keep it 1.5 to 2.5 feet from the camera in good lighting.",
+                "Hold the Sign: When the feedback bar indicates recognition, hold the hand sign steady for 1-2 seconds to confirm.",
+                "Controls Bar: Use Play/Pause to freeze the video, Replay to loop it again, or Next to move forward.",
+                "Exit Anytime: Tap Back or Close to return safely to the lesson selection menu."
+            ]
+        )
 
 
 class LessonAvatarCard(QWidget):
@@ -583,21 +630,25 @@ class ModernLessonLayout(QWidget):
 
         # 1. Next button
         self.btn_next = CircularActionButton("next", self.controls_col)
+        self.btn_next.setToolTip("Skip to next sign")
         self.btn_next.clicked.connect(self.next_clicked.emit)
         c_layout.addWidget(self.btn_next)
 
         # 2. Play / Pause button
         self.btn_pause = CircularActionButton("pause", self.controls_col)
+        self.btn_pause.setToolTip("Pause or resume reference video")
         self.btn_pause.clicked.connect(self.play_pause_clicked.emit)
         c_layout.addWidget(self.btn_pause)
 
         # 3. Replay button
         self.btn_replay = CircularActionButton("replay", self.controls_col)
+        self.btn_replay.setToolTip("Replay demonstration video")
         self.btn_replay.clicked.connect(self.replay_clicked.emit)
         c_layout.addWidget(self.btn_replay)
 
         # 4. Camera toggle button
         self.btn_cam = QPushButton(self.controls_col)
+        self.btn_cam.setToolTip("Turn your camera on or off")
         self.btn_cam.setFixedSize(70, 70)
         self.btn_cam.setCursor(Qt.CursorShape.PointingHandCursor)
         self.set_camera_active(True)
@@ -620,7 +671,24 @@ class ModernLessonLayout(QWidget):
         # Camera feed (fill_crop=True for edge-to-edge video inside rounded corners)
         self.camera = RoundedCameraPreview("Opening camera...", self.camera_container, radius=35, fill_crop=True)
         self.camera.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        cam_layout.addWidget(self.camera)
+        cam_layout.addWidget(self.camera, 1)
+
+        # Persistent Camera Zone Instruction Banner (Phase 3)
+        self.lbl_camera_hint = QLabel("Frame your hand clearly inside the view • Hold steady to recognize", self.camera_container)
+        self.lbl_camera_hint.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.lbl_camera_hint.setFixedHeight(30)
+        self.lbl_camera_hint.setStyleSheet(
+            "QLabel {"
+            "  color: #FAFFDC;"
+            "  background-color: rgba(20, 32, 40, 0.75);"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 13px;"
+            "  font-weight: 600;"
+            "  border-radius: 15px;"
+            "  padding: 0 16px;"
+            "}"
+        )
+        cam_layout.addWidget(self.lbl_camera_hint, alignment=Qt.AlignmentFlag.AlignCenter)
 
         # Success Overlay
         self.feedback_overlay = LessonFeedbackOverlay(self.camera_container)

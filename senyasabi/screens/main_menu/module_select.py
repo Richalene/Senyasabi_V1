@@ -13,7 +13,8 @@ from PySide6.QtWidgets import (QWidget, QPushButton, QLabel, QFrame, QVBoxLayout
 from backend.content_service import get_words_for_module
 from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.main_menu.word_menu import _load_categories
-from screens.navigation import BackButton, install_page_menu
+from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
+from screens.dialogs import HelpCalloutDialog
 from backend.content_service import ALPHABET, get_modules
 
 try:
@@ -243,13 +244,23 @@ class ModuleSelectWidget(QWidget):
 
         self.back_button = self._ui.findChild(QPushButton, "backBtn")
         if self.back_button is not None:
-            self.back_button.setIcon(QIcon(str(ROOT / "resources/img/ui/mod_back_btn.png")))
-            self.back_button.clicked.connect(self.go_back)
+            self.back_button.hide()
+            self.back_button.setEnabled(False)
+            self.back_button = None
+
+        # Add top-left BackButton matching lesson_select and dashboard
+        self.btn_top_back = BackButton(self._ui)
+        self.btn_top_back.setGeometry(QRect(40, 36, 52, 52))
+        self.btn_top_back.clicked.connect(self.go_back)
+
         self._fixed = [(child, child.geometry(), child.styleSheet())
                        for child in self._ui.findChildren(QWidget)
                        if child is not self.background]
         self._base_style = self._ui.styleSheet()
-        install_page_menu(self, canvas_size=QSize(1920, 1080))
+        self.header = SenyaSabiHeader(self._ui, show_back=False, show_help=True)
+        self.header.anchor_to_canvas(QSize(1920, 1080))
+        self.header.help_requested.connect(self._show_help)
+        install_page_menu(self, header=self.header)
         firefly_pixmap = QPixmap(str(ROOT / "resources/img/ui/firefly.png"))
         self.buttons = []
         self.firefly_visuals = []
@@ -307,6 +318,18 @@ class ModuleSelectWidget(QWidget):
         self.popup.hide()
         self.active_node = None
         self.fit()
+
+    def _show_help(self):
+        HelpCalloutDialog.show_help(
+            self,
+            title="Module Map Guide",
+            bullets=[
+                "Tree of Modules: Follow the firefly path along the branches to explore Filipino Sign Language (FSL) modules.",
+                "Hover & Click: Hover over any glowing firefly node to preview its title and sign count. Click to open its lessons and activities.",
+                "Progress Trail: Complete modules from left to right, advancing from Level 1 up towards the golden cache.",
+                "Back Button: Use the back arrow at the top-left to return to the Dashboard at any time."
+            ]
+        )
 
     def choose(self, code):
         self.clear_hover()
@@ -397,6 +420,13 @@ class ModuleSelectWidget(QWidget):
             visual.graphicsEffect().setBlurRadius(max(12, 36 * scale))
             button.raise_()
         if hasattr(self, "level_badge"):
+            bw, bh = max(100, round(210 * scale)), max(24, round(46 * scale))
+            self.level_badge.setGeometry((width - bw) // 2, round(height * 0.90), bw, bh)
+            self.level_badge.setStyleSheet(
+                "background-color: #FFFDF0; color: #555555; border: 2px solid #D6DFA0; "
+                f"border-radius: {bh // 2}px; font-family: 'Segoe UI', sans-serif; "
+                f"font-size: {max(11, round(18 * scale))}px; font-style: italic; font-weight: 500;"
+            )
             self.level_badge.raise_()
         self.popup.raise_()
         self.position_popup()

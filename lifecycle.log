@@ -6872,3 +6872,39 @@ Thread 0x000026ec (most recent call first):
 [01:14:39] inference worker started
 
 [01:18:43] inference worker started
+
+[11:50:59] *** UI THREAD HUNG FOR 14.5s ***
+
+--- Thread 8524 ---
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "C:\Users\Mary\AppData\Local\Programs\Python\Python312\Lib\threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8804 ---
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 257, in <module>
+    sys.exit(main())
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 253, in main
+    return app.exec()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\hover_bounce.py", line 39, in draw
+    pixmap = self.sourcePixmap(Qt.CoordinateSystem.LogicalCoordinates, offset)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\startup.py", line 60, in eventFilter
+    self.fit()
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\screens\startup.py", line 100, in fit
+    self.window.setStyleSheet(scaled_style(self.base_style))
+  File "c:\Users\Mary\Documents\GitHub\Senyasabi_V1\senyasabi\main.py", line 193, in notify
+    return result
+
+[11:54:00] inference worker started
+
+[11:55:23] inference worker started
+
+[11:57:02] inference worker started

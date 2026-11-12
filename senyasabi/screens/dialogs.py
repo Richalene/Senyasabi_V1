@@ -9,7 +9,7 @@ from PySide6.QtCore import Qt, Signal, QRectF, QPointF
 from PySide6.QtGui import QFontDatabase, QColor, QPainter, QPen, QBrush, QPainterPath
 from PySide6.QtWidgets import (
     QApplication, QDialog, QWidget, QLabel, QPushButton, QVBoxLayout, QHBoxLayout,
-    QGraphicsDropShadowEffect, QTextEdit
+    QGraphicsDropShadowEffect, QTextEdit, QScrollArea, QStackedWidget
 )
 
 ROOT = Path(__file__).resolve().parents[2]
@@ -347,6 +347,28 @@ class ExitButton(QPushButton):
         p.drawLine(21, 23, 26, 18)
 
 
+class TutorialIconWidget(QWidget):
+    """Vector-rendered question mark / tutorial icon badge."""
+    def __init__(self, parent=None):
+        super().__init__(parent)
+        self.setFixedSize(36, 36)
+
+    def paintEvent(self, event):
+        p = QPainter(self)
+        p.setRenderHints(QPainter.RenderHint.Antialiasing | QPainter.RenderHint.TextAntialiasing)
+
+        p.setBrush(QColor("#F4F7E6"))
+        p.setPen(QPen(QColor("#C4CE9B"), 1.5))
+        p.drawRoundedRect(QRectF(1, 1, 34, 34), 8, 8)
+
+        p.setPen(QColor("#4F3222"))
+        font = p.font()
+        font.setFamily("Cherry Bomb One")
+        font.setPixelSize(20)
+        p.setFont(font)
+        p.drawText(QRectF(0, 0, 36, 36), Qt.AlignmentFlag.AlignCenter, "?")
+
+
 class CameraButton(QPushButton):
     """Vector-rendered camera icon button."""
     def __init__(self, parent=None):
@@ -468,14 +490,14 @@ class MenuCalloutPopup(QWidget):
         super().__init__(parent or anchor_widget.window(), Qt.WindowType.Popup | Qt.WindowType.FramelessWindowHint)
         self.anchor = anchor_widget
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
-        self.setFixedSize(290, 250)
+        self.setFixedSize(290, 290)
 
         from backend.audio_service import get_audio_service
         self.audio = get_audio_service()
 
         # Inner container for layout
         inner = QWidget(self)
-        inner.setGeometry(25, 28, 240, 195)
+        inner.setGeometry(25, 28, 240, 235)
         inner.setStyleSheet("background: transparent;")
         layout = QVBoxLayout(inner)
         layout.setContentsMargins(4, 4, 4, 4)
@@ -514,7 +536,19 @@ class MenuCalloutPopup(QWidget):
         d2.setStyleSheet("background-color: #E8E4D0; border: none;")
         layout.addWidget(d2)
 
-        # 3. Bottom Sign Out Row
+        # 3. Help & Tutorial Row
+        self.btn_tutorial_icon = TutorialIconWidget(inner)
+        self.row_tutorial = MenuRowButton("Help & Tutorial", self.btn_tutorial_icon, inner)
+        self.row_tutorial.clicked.connect(self._on_tutorial)
+        layout.addWidget(self.row_tutorial)
+
+        # Divider 3
+        d3 = QWidget(inner)
+        d3.setFixedHeight(1)
+        d3.setStyleSheet("background-color: #E8E4D0; border: none;")
+        layout.addWidget(d3)
+
+        # 4. Bottom Sign Out Row
         self.btn_exit = ExitButton(inner)
         self.row_sign_out = MenuRowButton("Sign Out", self.btn_exit, inner, is_danger=True)
         self.row_sign_out.clicked.connect(self._on_sign_out)
@@ -528,7 +562,7 @@ class MenuCalloutPopup(QWidget):
         p.setRenderHints(QPainter.RenderHint.Antialiasing)
 
         ox, oy = 15, 18
-        bw, bh = 260, 215
+        bw, bh = 260, 255
         beak_x = 205
 
         path = QPainterPath()
@@ -583,6 +617,12 @@ class MenuCalloutPopup(QWidget):
             win.camera_settings_requested.emit()
         elif hasattr(win, "show_camera_settings"):
             win.show_camera_settings()
+
+    def _on_tutorial(self):
+        self.close()
+        win = self.anchor.window()
+        dialog = OnboardingDialog(win)
+        dialog.exec()
 
     def _on_sign_out(self):
         self.close()
@@ -758,3 +798,313 @@ def show_error_dialog(title: str, message: str, details: str = "", parent: QWidg
     """Convenience function to show an error dialog."""
     dialog = ErrorDialog(title, message, details, parent)
     dialog.exec()
+
+
+class HelpCalloutDialog(QDialog):
+    """
+    Contextual In-App Help modal dialog with SenyaSabi styling.
+    Provides bulleted, user-friendly screen instructions and tips.
+    """
+    def __init__(self, title: str, bullets: list[str], parent: QWidget | None = None):
+        super().__init__(parent)
+        _ensure_font()
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.resize(760, 520)
+
+        container = QWidget(self)
+        container.setObjectName("helpCalloutContainer")
+        container.setGeometry(0, 0, 760, 520)
+        container.setStyleSheet(
+            "QWidget#helpCalloutContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #D6DFA0; "
+            "  border-radius: 36px;"
+            "}"
+        )
+
+        shadow = QGraphicsDropShadowEffect(container)
+        shadow.setColor(QColor(0, 0, 0, 60))
+        shadow.setBlurRadius(28)
+        shadow.setOffset(0, 8)
+        container.setGraphicsEffect(shadow)
+
+        layout = QVBoxLayout(container)
+        layout.setContentsMargins(40, 30, 40, 30)
+        layout.setSpacing(16)
+        layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        # Header Pill
+        header_pill = QWidget(container)
+        header_pill.setFixedHeight(75)
+        header_pill.setStyleSheet(
+            "background-color: #FFDE59; border-radius: 28px; border: none;"
+        )
+        pill_layout = QHBoxLayout(header_pill)
+        pill_layout.setContentsMargins(20, 0, 20, 0)
+        pill_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+        lbl_title = QLabel(title, header_pill)
+        lbl_title.setStyleSheet(
+            "font-family: 'Cherry Bomb One', cursive, sans-serif; "
+            "font-size: 38px; color: #4F3222; background: transparent;"
+        )
+        pill_layout.addWidget(lbl_title)
+        layout.addWidget(header_pill)
+
+        # Bullet Items Scroll Area
+        scroll = QScrollArea(container)
+        scroll.setWidgetResizable(True)
+        scroll.setFrameShape(QScrollArea.Shape.NoFrame)
+        scroll.setStyleSheet("background: transparent; border: none;")
+
+        content_widget = QWidget()
+        content_widget.setStyleSheet("background: transparent;")
+        content_layout = QVBoxLayout(content_widget)
+        content_layout.setContentsMargins(10, 10, 10, 10)
+        content_layout.setSpacing(12)
+
+        for bullet in bullets:
+            row = QHBoxLayout()
+            row.setSpacing(12)
+            row.setAlignment(Qt.AlignmentFlag.AlignTop)
+
+            dot = QLabel("•", content_widget)
+            dot.setStyleSheet("color: #8C9F3E; font-size: 26px; font-weight: bold; background: transparent;")
+            dot.setFixedWidth(16)
+
+            text_lbl = QLabel(bullet, content_widget)
+            text_lbl.setWordWrap(True)
+            text_lbl.setStyleSheet(
+                "color: #4F3222; font-family: 'Segoe UI', sans-serif; "
+                "font-size: 17px; font-weight: 500; line-height: 1.4; background: transparent;"
+            )
+            row.addWidget(dot)
+            row.addWidget(text_lbl, 1)
+            content_layout.addLayout(row)
+
+        scroll.setWidget(content_widget)
+        layout.addWidget(scroll, 1)
+
+        # Close / Got It button
+        btn_close = QPushButton("Got It!", container)
+        btn_close.setFixedSize(220, 56)
+        btn_close.setCursor(Qt.CursorShape.PointingHandCursor)
+        btn_close.setStyleSheet(
+            "QPushButton {"
+            "  font-family: 'Segoe UI', sans-serif;"
+            "  font-size: 20px;"
+            "  font-weight: 700;"
+            "  color: #FFFFFF;"
+            "  background-color: #8C9F3E;"
+            "  border-radius: 28px;"
+            "  border: none;"
+            "}"
+            "QPushButton:hover { background-color: #9DB446; }"
+            "QPushButton:pressed { background-color: #788934; }"
+        )
+        btn_close.clicked.connect(self.accept)
+        layout.addWidget(btn_close, alignment=Qt.AlignmentFlag.AlignCenter)
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        parent = self.parentWidget()
+        if parent:
+            top = parent.window()
+            if top:
+                self.move(top.geometry().center() - self.rect().center())
+
+    @classmethod
+    def show_help(cls, parent: QWidget | None, title: str, bullets: list[str]):
+        """Convenience helper to construct and execute the dialog."""
+        dialog = cls(title=title, bullets=bullets, parent=parent)
+        dialog.exec()
+
+
+class OnboardingDialog(QDialog):
+    """
+    3-Slide Interactive Welcome Tutorial for first-time SenyaSabi learners.
+    """
+    def __init__(self, parent: QWidget | None = None):
+        super().__init__(parent)
+        _ensure_font()
+        self.setWindowFlags(Qt.WindowType.FramelessWindowHint | Qt.WindowType.Dialog)
+        self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground, True)
+        self.resize(840, 600)
+        self.current_slide = 0
+
+        container = QWidget(self)
+        container.setObjectName("onboardingContainer")
+        container.setGeometry(0, 0, 840, 600)
+        container.setStyleSheet(
+            "QWidget#onboardingContainer {"
+            "  background-color: #FFFDF0; "
+            "  border: 4px solid #D6DFA0; "
+            "  border-radius: 40px;"
+            "}"
+        )
+
+        shadow = QGraphicsDropShadowEffect(container)
+        shadow.setColor(QColor(0, 0, 0, 65))
+        shadow.setBlurRadius(32)
+        shadow.setOffset(0, 8)
+        container.setGraphicsEffect(shadow)
+
+        self.root_layout = QVBoxLayout(container)
+        self.root_layout.setContentsMargins(40, 35, 40, 30)
+        self.root_layout.setSpacing(18)
+
+        # Slide stack
+        from PySide6.QtWidgets import QStackedWidget
+        self.slides = QStackedWidget(container)
+
+        self.slides_data = [
+            {
+                "title": "Welcome to SenyaSabi!",
+                "tagline": "Learn Filipino Sign Language (FSL) with AI Feedback",
+                "body": "SenyaSabi guides you from your very first signs to conversational fluency through interactive lessons, real-time camera recognition, and fun minigames.",
+                "tips": [
+                    "Practice everyday signs across alphabet, numbers, family, and more.",
+                    "Track your progress, build daily streaks, and climb the leaderboard."
+                ]
+            },
+            {
+                "title": "Interactive Lessons & Camera",
+                "tagline": "Watch, Practice, and Get Instant Feedback",
+                "body": "Each lesson demonstrates authentic signs through reference videos while using your camera to recognize your hand gestures right on your device.",
+                "tips": [
+                    "Sit 1.5–2.5 feet from your camera in a well-lit room.",
+                    "Hold your sign steady for 1-2 seconds inside the frame until verified."
+                ]
+            },
+            {
+                "title": "Quizzes & Minigames",
+                "tagline": "Test Your Skills and Have Fun!",
+                "body": "Reinforce what you learn with module quizzes and high-energy minigames designed to build your signing reflexes and memory.",
+                "tips": [
+                    "Module Quizzes require a 75% score to earn mastery stars.",
+                    "Play Sign Sprint, Fingerspell Quest, and Detective anytime!"
+                ]
+            }
+        ]
+
+        for sdata in self.slides_data:
+            slide_widget = QWidget()
+            s_layout = QVBoxLayout(slide_widget)
+            s_layout.setContentsMargins(10, 10, 10, 10)
+            s_layout.setSpacing(14)
+            s_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+
+            title_lbl = QLabel(sdata["title"], slide_widget)
+            title_lbl.setStyleSheet(
+                "font-family: 'Cherry Bomb One', cursive, sans-serif; font-size: 42px; color: #4F3222; background: transparent;"
+            )
+            title_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            s_layout.addWidget(title_lbl)
+
+            tag_lbl = QLabel(sdata["tagline"], slide_widget)
+            tag_lbl.setStyleSheet(
+                "font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700; color: #8C9F3E; background: transparent;"
+            )
+            tag_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            s_layout.addWidget(tag_lbl)
+
+            body_lbl = QLabel(sdata["body"], slide_widget)
+            body_lbl.setWordWrap(True)
+            body_lbl.setAlignment(Qt.AlignmentFlag.AlignCenter)
+            body_lbl.setStyleSheet(
+                "font-family: 'Segoe UI', sans-serif; font-size: 16px; color: #55331B; line-height: 1.4; background: transparent;"
+            )
+            s_layout.addWidget(body_lbl)
+
+            tips_box = QWidget(slide_widget)
+            tips_box.setStyleSheet(
+                "background-color: #FAFFDC; border: 2px solid #D6DFA0; border-radius: 18px; padding: 10px;"
+            )
+            tips_layout = QVBoxLayout(tips_box)
+            tips_layout.setContentsMargins(18, 12, 18, 12)
+            tips_layout.setSpacing(8)
+
+            for tip in sdata["tips"]:
+                tip_lbl = QLabel(f"• {tip}", tips_box)
+                tip_lbl.setWordWrap(True)
+                tip_lbl.setStyleSheet(
+                    "font-family: 'Segoe UI', sans-serif; font-size: 15px; font-weight: 500; color: #4F3222; background: transparent; border: none;"
+                )
+                tips_layout.addWidget(tip_lbl)
+
+            s_layout.addWidget(tips_box)
+            self.slides.addWidget(slide_widget)
+
+        self.root_layout.addWidget(self.slides, 1)
+
+        # Dot indicators
+        self.dots_layout = QHBoxLayout()
+        self.dots_layout.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.dots_layout.setSpacing(10)
+        self.dot_labels = []
+        for i in range(len(self.slides_data)):
+            dot = QLabel("●", container)
+            dot.setStyleSheet("color: #8C9F3E; font-size: 18px; background: transparent;" if i == 0 else "color: #D5C9A9; font-size: 18px; background: transparent;")
+            self.dot_labels.append(dot)
+            self.dots_layout.addWidget(dot)
+        self.root_layout.addLayout(self.dots_layout)
+
+        # Bottom Buttons Row
+        btn_row = QHBoxLayout()
+        btn_row.setContentsMargins(10, 10, 10, 0)
+
+        self.btn_skip = QPushButton("Skip", container)
+        self.btn_skip.setFixedSize(140, 52)
+        self.btn_skip.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_skip.setStyleSheet(
+            "QPushButton { background: transparent; border: none; color: #704833; "
+            "font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 600; text-decoration: underline; }"
+            "QPushButton:hover { color: #3D2515; }"
+        )
+        self.btn_skip.clicked.connect(self.accept)
+        btn_row.addWidget(self.btn_skip)
+
+        btn_row.addStretch()
+
+        self.btn_action = QPushButton("Next", container)
+        self.btn_action.setFixedSize(180, 52)
+        self.btn_action.setCursor(Qt.CursorShape.PointingHandCursor)
+        self.btn_action.setStyleSheet(
+            "QPushButton {"
+            "  font-family: 'Segoe UI', sans-serif; font-size: 18px; font-weight: 700;"
+            "  color: #FFFFFF; background-color: #8C9F3E; border-radius: 26px; border: none;"
+            "}"
+            "QPushButton:hover { background-color: #9DB446; }"
+            "QPushButton:pressed { background-color: #788934; }"
+        )
+        self.btn_action.clicked.connect(self._on_action_clicked)
+        btn_row.addWidget(self.btn_action)
+
+        self.root_layout.addLayout(btn_row)
+
+    def _update_dots(self):
+        for idx, dot in enumerate(self.dot_labels):
+            if idx == self.current_slide:
+                dot.setStyleSheet("color: #8C9F3E; font-size: 18px; background: transparent;")
+            else:
+                dot.setStyleSheet("color: #D5C9A9; font-size: 18px; background: transparent;")
+
+    def _on_action_clicked(self):
+        if self.current_slide < len(self.slides_data) - 1:
+            self.current_slide += 1
+            self.slides.setCurrentIndex(self.current_slide)
+            self._update_dots()
+            if self.current_slide == len(self.slides_data) - 1:
+                self.btn_action.setText("Get Started!")
+                self.btn_skip.hide()
+        else:
+            self.accept()
+
+    def showEvent(self, event):
+        super().showEvent(event)
+        parent = self.parentWidget()
+        if parent:
+            top = parent.window()
+            if top:
+                self.move(top.geometry().center() - self.rect().center())
