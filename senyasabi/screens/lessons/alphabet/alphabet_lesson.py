@@ -292,9 +292,6 @@ class AlphabetLessonWidget(LessonCameraMixin, QWidget):
 
         self._camera_misses = 0
         display_bgr = result.annotated_bgr if result.annotated_bgr is not None else result.frame_bgr
-        if display_bgr is not None:
-            import cv2
-            display_bgr = cv2.flip(display_bgr, 1)
         self._camera_lbl.set_bgr_frame(display_bgr)
 
         # Recognition evaluation

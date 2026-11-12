@@ -287,18 +287,24 @@ def get_sign(module_code, sign_code):
 def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
     """Resolve (module_code, lesson_order) to lesson_id from local SQLite cache."""
     code = module_code.casefold()
-    if code in ("basic_communication", "communication"):
-        if lesson_order <= 3:
-            code = "greeting"
-        else:
-            code = "survival"
-            lesson_order = lesson_order - 3
     try:
         from .database.session import SessionLocal
         from .database.models import Lesson, Module
         with SessionLocal() as db:
-            mod = db.query(Module).filter(Module.module_code == code).first()
+            # First try direct module_code
+            mod = db.query(Module).filter(Module.module_code == code, Module.is_deleted.is_(False)).first()
+            if not mod and code in ("basic_communication", "communication"):
+                mod = db.query(Module).filter(Module.module_code == "communication", Module.is_deleted.is_(False)).first()
             if not mod:
+                # Legacy fallback to greeting/survival if separate
+                sub_code = "greeting" if lesson_order <= 3 else "survival"
+                sub_order = lesson_order if lesson_order <= 3 else (lesson_order - 3)
+                mod = db.query(Module).filter(Module.module_code == sub_code, Module.is_deleted.is_(False)).first()
+                if mod:
+                    lesson = db.query(Lesson).filter(Lesson.parent_module == mod.module_id,
+                                                     Lesson.lesson_order == sub_order,
+                                                     Lesson.is_deleted.is_(False)).first()
+                    return lesson.lesson_id if lesson else None
                 return None
             lesson = db.query(Lesson).filter(Lesson.parent_module == mod.module_id,
                                              Lesson.lesson_order == lesson_order,
@@ -306,6 +312,8 @@ def get_lesson_id(module_code: str, lesson_order: int = 1) -> int | None:
             return lesson.lesson_id if lesson else None
     except Exception:
         # Static fallback if database is not available
+        if code in ("basic_communication", "communication"):
+            return 183 + lesson_order
         offset = {"alphabet": 72, "greeting": 76, "survival": 79, "number": 82,
                   "calendar": 85, "days": 88, "family": 91, "relationships": 94,
                   "color": 97, "food": 100, "drink": 103}.get(code)

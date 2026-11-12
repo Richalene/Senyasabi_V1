@@ -796,6 +796,11 @@ def get_sync_status(user_id: uuid.UUID) -> dict:
     return _sync_service.get_sync_status(user_id)
 
 
+def get_sync_service():
+    """Return the singleton SyncService instance."""
+    return _sync_service
+
+
 def sync_content_from_server(since_version: int | None = None) -> dict:
     """Sync content from server to local cache (blocking; use a worker thread)."""
     return _sync_service.sync_content_from_server(since_version)

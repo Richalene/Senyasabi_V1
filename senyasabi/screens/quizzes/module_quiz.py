@@ -221,7 +221,7 @@ class ModuleQuiz(GameCanvas):
         left_layout.setSpacing(15)
 
         # Visual Media: Video Player
-        self.video = SignVideoPlayer(self.left_card, muted=True)
+        self.video = SignVideoPlayer(self.left_card, muted=True, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding)
         self.video.setMinimumHeight(300)
         left_layout.addWidget(self.video, 1)
 

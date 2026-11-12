@@ -63,7 +63,6 @@ class RoundedCameraPreview(QLabel):
         self.setPixmap(QPixmap.fromImage(image))
 
     def setPixmap(self, pixmap):
-        super().clear()
         self._source = QPixmap(pixmap)
         self.update()
 
