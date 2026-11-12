@@ -262,10 +262,17 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
             from backend import auth_service, sync_service, content_service
             user = auth_service.get_current_user()
             if user:
+                import uuid
+                uid = user.get("user_id")
+                if isinstance(uid, str):
+                    try:
+                        uid = uuid.UUID(uid)
+                    except ValueError:
+                        uid = None
                 lesson_id = content_service.get_lesson_id(self.module_code)
-                if lesson_id is not None:
-                    sync_service.get_sync_service().queue_lesson_progress(
-                        user_id=user["user_id"],
+                if uid is not None and lesson_id is not None:
+                    sync_service.queue_lesson_progress(
+                        user_id=uid,
                         lesson_id=lesson_id,
                         completion_percentage=float(pct),
                         status="Completed",
@@ -297,9 +304,6 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
                 return
 
             display_frame = latest.annotated_bgr if latest.annotated_bgr is not None else latest.frame_bgr
-            if display_frame is not None:
-                import cv2
-                display_frame = cv2.flip(display_frame, 1)
             self._camera_lbl.set_bgr_frame(display_frame)
 
             if pred is None or self._feedback_action is not None:
@@ -315,8 +319,13 @@ class WordLessonWidget(LessonCameraMixin, QWidget):
                 return
 
             import re
+            NUMBER_WORD_MAP = {
+                "1": "ONE", "2": "TWO", "3": "THREE", "4": "FOUR", "5": "FIVE",
+                "6": "SIX", "7": "SEVEN", "8": "EIGHT", "9": "NINE", "10": "TEN",
+            }
             def _clean(s):
-                return re.sub(r"[^A-Z0-9]", "", str(s).upper())
+                c = re.sub(r"[^A-Z0-9]", "", str(s).upper())
+                return NUMBER_WORD_MAP.get(c, c)
 
             target_clean = _clean(target)
             probs = getattr(result.prediction, "probabilities", None) or {}

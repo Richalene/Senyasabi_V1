@@ -32,6 +32,8 @@ datas = [
     (str(senyasabi_root / "resources" / "models" / "word_categories" / "number"), "resources/models/word_categories/number"),
     (str(senyasabi_root / "resources" / "models" / "word_categories" / "greeting"), "resources/models/word_categories/greeting"),
     (str(senyasabi_root / "resources" / "models" / "word_categories" / "survival"), "resources/models/word_categories/survival"),
+    (str(senyasabi_root / "resources" / "models" / "word_categories" / "family"), "resources/models/word_categories/family"),
+    (str(senyasabi_root / "resources" / "models" / "word_categories" / "days"), "resources/models/word_categories/days"),
     (str(senyasabi_root / "resources" / "models" / "training_configs"), "resources/models/training_configs"),
     
     # Video demonstration clips for Numbers and Basic Communication (Greeting & Survival)

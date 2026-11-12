@@ -140,7 +140,7 @@ class Ui_LessonSelect(object):
 "    ")
         self.btnSprint = QPushButton(LessonSelect)
         self.btnSprint.setObjectName(u"btnSprint")
-        self.btnSprint.setGeometry(QRect(1220, 280, 440, 135))
+        self.btnSprint.setGeometry(QRect(1220, 300, 440, 155))
         self.btnSprint.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnSprint.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -164,7 +164,7 @@ class Ui_LessonSelect(object):
         self.starSprint.setScaledContents(True)
         self.btnQuest = QPushButton(LessonSelect)
         self.btnQuest.setObjectName(u"btnQuest")
-        self.btnQuest.setGeometry(QRect(1220, 445, 440, 135))
+        self.btnQuest.setGeometry(QRect(1220, 500, 440, 155))
         self.btnQuest.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnQuest.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -191,38 +191,9 @@ class Ui_LessonSelect(object):
         self.starQuest2.setGeometry(QRect(45, 78, 40, 40))
         self.starQuest2.setPixmap(QPixmap(u"../../resources/img/ui/star.png"))
         self.starQuest2.setScaledContents(True)
-        self.btnExpression = QPushButton(LessonSelect)
-        self.btnExpression.setObjectName(u"btnExpression")
-        self.btnExpression.setGeometry(QRect(1220, 775, 440, 135))
-        self.btnExpression.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
-        self.btnExpression.setStyleSheet(u"\n"
-"QPushButton {\n"
-"  background-color: #FFFDF0;\n"
-"  border: 4px solid #FFFFFF;\n"
-"  border-radius: 46px;\n"
-"  color: #4F3222;\n"
-"  font-family: 'Segoe UI', sans-serif;\n"
-"  font-size: 26px;\n"
-"  font-weight: 600;\n"
-"  padding-left: 50px;\n"
-"}\n"
-"QPushButton:hover {\n"
-"  background-color: #FFF3BD;\n"
-"}\n"
-"    ")
-        self.starExpr1 = QLabel(self.btnExpression)
-        self.starExpr1.setObjectName(u"starExpr1")
-        self.starExpr1.setGeometry(QRect(45, 34, 40, 40))
-        self.starExpr1.setPixmap(QPixmap(u"../../resources/img/ui/star.png"))
-        self.starExpr1.setScaledContents(True)
-        self.starExpr2 = QLabel(self.btnExpression)
-        self.starExpr2.setObjectName(u"starExpr2")
-        self.starExpr2.setGeometry(QRect(45, 78, 40, 40))
-        self.starExpr2.setPixmap(QPixmap(u"../../resources/img/ui/star.png"))
-        self.starExpr2.setScaledContents(True)
         self.btnDetective = QPushButton(LessonSelect)
         self.btnDetective.setObjectName(u"btnDetective")
-        self.btnDetective.setGeometry(QRect(1220, 610, 440, 135))
+        self.btnDetective.setGeometry(QRect(1220, 700, 440, 155))
         self.btnDetective.setCursor(QCursor(Qt.CursorShape.PointingHandCursor))
         self.btnDetective.setStyleSheet(u"\n"
 "QPushButton {\n"
@@ -293,8 +264,6 @@ class Ui_LessonSelect(object):
 "Sprint", None))
         self.btnQuest.setText(QCoreApplication.translate("LessonSelect", u"FingerSpell\n"
 "Quest", None))
-        self.btnExpression.setText(QCoreApplication.translate("LessonSelect", u"Expression\n"
-"in Motion", None))
         self.btnDetective.setText(QCoreApplication.translate("LessonSelect", u"Sign\n"
 "Detective", None))
         self.btnQuiz.setText(QCoreApplication.translate("LessonSelect", u"Module Quiz", None))

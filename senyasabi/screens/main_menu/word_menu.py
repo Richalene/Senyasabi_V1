@@ -57,9 +57,9 @@ def _menu_entries() -> list[dict]:
     return [
         {"number": 1, "code": "alphabet", "title": "FSL Alphabet", "words": alphabet_words, "coming_soon": False},
         {"number": 2, "code": "number", "title": "Numbers", "words": get_words_for_module("number"), "coming_soon": False},
-        {"number": 3, "code": "family", "title": "Family Members", "words": get_words_for_module("family"), "coming_soon": True},
+        {"number": 3, "code": "family", "title": "Family Members", "words": get_words_for_module("family"), "coming_soon": False},
         {"number": 4, "code": "greeting", "title": "Basic Communication", "words": get_words_for_module("basic_communication"), "coming_soon": False},
-        {"number": 5, "code": "days", "title": "Days of the Week", "words": get_words_for_module("days"), "coming_soon": True},
+        {"number": 5, "code": "days", "title": "Days of the Week", "words": get_words_for_module("days"), "coming_soon": False},
         {"number": 6, "code": "months", "title": "Months of the Year", "words": [], "coming_soon": True},
         {"number": 7, "code": "actions", "title": "Action Words", "words": [], "coming_soon": True},
     ]

@@ -359,11 +359,8 @@ class FingerSpellQuestGameView(QWidget):
         frame_res = self.engine.read_frame()
         if frame_res is None:
             return
-        # Render the live BGR camera frame into the preview (flipped for selfie view)
+        # Render the live BGR camera frame into the preview
         bgr = frame_res.annotated_bgr if frame_res.annotated_bgr is not None else frame_res.frame_bgr
-        if bgr is not None:
-            import cv2
-            bgr = cv2.flip(bgr, 1)
         self.camera.set_bgr_frame(bgr)
 
         # Process predicted label

@@ -1,6 +1,6 @@
 import logging
 from PySide6.QtWidgets import QLineEdit, QMainWindow, QStackedWidget
-from PySide6.QtCore import Qt, QSize, QTimer
+from PySide6.QtCore import Qt, QSize, QTimer, QSettings
 from PySide6.QtGui import QColor, QPalette
 
 from screens.auth.login import LoginScreen
@@ -11,7 +11,7 @@ from screens.loading import LoadingOverlay
 from backend import auth_service
 from backend.config import PRODUCTION, SUPABASE_URL, SUPABASE_ANON_KEY, CLIENT_MODE
 from backend.content_service import get_signs_for_module
-from screens.dialogs import ComingSoonDialog
+from screens.dialogs import ComingSoonDialog, OnboardingDialog
 import threading
 from PySide6.QtWidgets import QApplication
 from screens.camera_permission import ensure_camera_permission
@@ -330,6 +330,17 @@ class AppController:
         self.register.error_label.clear()
         self._show_screen(self.register)
 
+    def _check_onboarding(self):
+        """Show first-time onboarding tutorial if not previously completed."""
+        try:
+            settings = QSettings("SenyaSabi", "SenyaSabiApp")
+            if not settings.value("onboarding/completed", False, type=bool):
+                dialog = OnboardingDialog(self.shell)
+                dialog.exec()
+                settings.setValue("onboarding/completed", True)
+        except Exception as e:
+            logging.getLogger(__name__).warning("Onboarding error: %s", e)
+
     def show_dashboard(self):
         if auth_service.get_current_user() is None:
             self.show_login()
@@ -339,12 +350,14 @@ class AppController:
             self.dashboard.refresh_stats()
         except Exception:
             pass
+        QTimer.singleShot(200, self._check_onboarding)
 
     def show_main_menu(self):
         if auth_service.get_current_user() is None:
             self.show_login()
             return
         self._show_screen(self.main_menu)
+        QTimer.singleShot(200, self._check_onboarding)
 
     def show_minigames(self):
         if auth_service.get_current_user() is None:

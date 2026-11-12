@@ -260,7 +260,10 @@ class CategoryRecognitionEngine:
         self._missed_reads = 0
         if not predict:
             from .recognition_engine import FrameResult
-            return FrameResult(frame, frame, False, None)
+            annotated = self.preprocessor.draw(frame) if hasattr(self.preprocessor, 'draw') else frame
+            last_hands = getattr(self.preprocessor, 'last_hand_landmarks', None)
+            hand_detected = bool(last_hands)
+            return FrameResult(frame, annotated, hand_detected, None)
         try:
             started = perf_counter()
             features, pose_found, hands_found = self.preprocessor.process(frame)

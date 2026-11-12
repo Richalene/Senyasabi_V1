@@ -7,6 +7,7 @@ from PySide6.QtWidgets import QWidget, QPushButton, QLabel
 from screens.main_menu.alphabet_menu import LESSON_LETTERS
 from screens.main_menu.word_menu import _load_categories
 from screens.navigation import BackButton, SenyaSabiHeader, install_page_menu
+from screens.dialogs import HelpCalloutDialog
 from screens.startup import FittedForm
 
 try:
@@ -15,7 +16,7 @@ try:
 except ImportError:
     ROOT = Path(__file__).resolve().parents[2]
 _UI_FILE = ROOT / "ui/designer/lesson_select.ui"
-_COMING_SOON_MODULES = {"family", "days", "calendar", "months", "actions"}
+_COMING_SOON_MODULES = {"calendar", "months", "actions"}
 
 
 class LessonSelectWidget(QWidget):
@@ -40,8 +41,9 @@ class LessonSelectWidget(QWidget):
             raise RuntimeError(f"Unable to load {_UI_FILE}")
 
         # Header with streak and hamburger menu
-        self.header = SenyaSabiHeader(self._ui)
+        self.header = SenyaSabiHeader(self._ui, show_help=True)
         self.header.anchor_to_canvas(QSize(1920, 1080))
+        self.header.help_requested.connect(self._show_help)
         install_page_menu(self, header=self.header)
 
         # Connect Back Button
@@ -55,20 +57,24 @@ class LessonSelectWidget(QWidget):
         self.btn_quiz = self._ui.findChild(QPushButton, "btnQuiz")
         if self.btn_quiz is not None:
             self.btn_quiz.clicked.connect(self.quiz_requested.emit)
+            self.btn_quiz.setToolTip("Take the Module Quiz to test your sign mastery")
         self.quiz_button = self.btn_quiz
 
         # Connect Minigame Buttons
         self.btn_sprint = self._ui.findChild(QPushButton, "btnSprint")
         if self.btn_sprint is not None:
             self.btn_sprint.clicked.connect(lambda: self.game_chosen.emit("sprint"))
+            self.btn_sprint.setToolTip("Sign Sprint minigame")
 
         self.btn_quest = self._ui.findChild(QPushButton, "btnQuest")
         if self.btn_quest is not None:
             self.btn_quest.clicked.connect(lambda: self.game_chosen.emit("quest"))
+            self.btn_quest.setToolTip("FingerSpell Quest minigame")
 
         self.btn_detective = self._ui.findChild(QPushButton, "btnDetective")
         if self.btn_detective is not None:
             self.btn_detective.clicked.connect(lambda: self.game_chosen.emit("detective"))
+            self.btn_detective.setToolTip("Sign Detective minigame")
 
         self.btn_expression = self._ui.findChild(QPushButton, "btnExpression")
         self.game_buttons = {
@@ -145,6 +151,19 @@ class LessonSelectWidget(QWidget):
                 btn.setVisible(is_visible)
                 if is_visible and idx < len(lessons):
                     btn.setToolTip(lessons[idx].title)
+
+    def _show_help(self):
+        HelpCalloutDialog.show_help(
+            self,
+            title="Lesson & Activities Help",
+            bullets=[
+                "Sequential Lessons: Tap a numbered lesson to study signs with reference video and live camera feedback.",
+                "Module Quiz: Test your overall knowledge of this module's signs. 75% or higher is required to pass!",
+                "Minigames: Play Sign Sprint, Fingerspell Quest, or Sign Detective for timed practice and star ratings.",
+                "Stars: Earn up to 3 stars per activity based on your performance.",
+                "Back Button: Return to the Module Selection map at any time."
+            ]
+        )
 
     def set_streak(self, text):
         self.header.set_streak_text(text)

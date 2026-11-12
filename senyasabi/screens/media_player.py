@@ -41,10 +41,11 @@ class _VideoPauseOverlay(QWidget):
 
 
 class SignVideoPlayer(QWidget):
-    def __init__(self, parent=None, *, show_play_button=False, muted=False):
+    def __init__(self, parent=None, *, show_play_button=False, muted=False, aspect_ratio_mode=Qt.AspectRatioMode.KeepAspectRatioByExpanding):
         super().__init__(parent)
         self.show_play_button = show_play_button
         self.is_muted = muted
+        self.aspect_ratio_mode = aspect_ratio_mode
         self.player = None
         self.video = None
         self.audio = None
@@ -145,6 +146,8 @@ class SignVideoPlayer(QWidget):
                 else:
                     get_audio_service().register_output(self.audio)
                 self.video = QVideoWidget(self)
+                if self.aspect_ratio_mode is not None:
+                    self.video.setAspectRatioMode(self.aspect_ratio_mode)
                 self.video.setMinimumHeight(120)
                 self.body.insertWidget(0, self.video, 1)
                 self.player.setAudioOutput(self.audio)

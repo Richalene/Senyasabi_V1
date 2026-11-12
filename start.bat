@@ -59,8 +59,12 @@ if exist "senyasabi\.env.example" (
 )
 
 REM Run launcher.py (or your test wrapper script)
-echo Starting SenyaSabi...
-python launcher.py
+echo Starting SenyaSabi with Backend...
+if exist ".venv\Scripts\python.exe" (
+    .venv\Scripts\python.exe launcher.py
+) else (
+    python launcher.py
+)
 if %errorlevel% neq 0 (
     echo Failed to start SenyaSabi.
     pause

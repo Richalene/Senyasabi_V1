@@ -179,7 +179,7 @@ class SpellLessonWidget(LessonCameraMixin, QWidget):
             if user:
                 lesson_id = content_service.get_lesson_id("spelling")
                 if lesson_id is not None:
-                    sync_service.get_sync_service().queue_lesson_progress(
+                    sync_service.queue_lesson_progress(
                         user_id=user["user_id"],
                         lesson_id=lesson_id,
                         completion_percentage=float(pct),
