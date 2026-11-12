@@ -6872,3 +6872,500 @@ Thread 0x000026ec (most recent call first):
 [01:14:39] inference worker started
 
 [01:18:43] inference worker started
+
+[13:57:48] *** UI THREAD HUNG FOR 5.6s ***
+
+--- Thread 6157905920 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 66, in __init__
+    self.main_menu = DashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 124, in __init__
+    self.loading = LoadingOverlay(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 99, in __init__
+    self.hide()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[13:58:13] inference worker started
+
+[14:54:01] *** UI THREAD HUNG FOR 5.8s ***
+
+--- Thread 6181613568 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 65, in __init__
+    self.dashboard = StatisticsDashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 67, in __init__
+    self.ui.setupUi(self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/ui/generated/dashboard_ui.py", line 94, in setupUi
+    self.lblModuleCount = QLabel(self.cardModule)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[10:04:14] *** UI THREAD HUNG FOR 18.2s ***
+
+--- Thread 6113587200 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 22, in __init__
+    self._ui = QUiLoader().load(str(_UI_FILE), self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[10:04:52] *** UI THREAD HUNG FOR 8.4s ***
+
+--- Thread 6415429632 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/loading.py", line 27, in run
+    self.result = self.operation()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/camera_access.py", line 188, in prepare
+    engine = self._engine_factory()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/camera_access.py", line 69, in alphabet_engine
+    return SignRecognitionEngine(mode='alphabet')
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/recognition_engine.py", line 163, in __init__
+    self.predictor = self._build_predictor(mode)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/recognition_engine.py", line 173, in _build_predictor
+    return SignPredictor(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/recognition_engine.py", line 105, in __init__
+    import tensorflow as tf
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/tensorflow/__init__.py", line 40, in <module>
+    from tensorflow.python import pywrap_tensorflow as _pywrap_tensorflow  # pylint: disable=unused-import
+  File "<frozen importlib._bootstrap>", line 1415, in _handle_fromlist
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "<frozen importlib._bootstrap>", line 1360, in _find_and_load
+  File "<frozen importlib._bootstrap>", line 1331, in _find_and_load_unlocked
+  File "<frozen importlib._bootstrap>", line 935, in _load_unlocked
+  File "<frozen importlib._bootstrap_external>", line 995, in exec_module
+  File "<frozen importlib._bootstrap>", line 488, in _call_with_frames_removed
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/.venv/lib/python3.12/site-packages/tensorflow/python/pywrap_tensorflow.py", line 41, in <module>
+    from tensorflow.python import pywrap_dlopen_global_flags
+  File "shibokensupport/signature/loader.py", line 72, in feature_imported
+  File "shibokensupport/feature.py", line 148, in feature_imported
+  File "shibokensupport/feature.py", line 159, in _mod_uses_pyside
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/inspect.py", line 1285, in getsource
+    lines, lnum = getsourcelines(object)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/inspect.py", line 1267, in getsourcelines
+    lines, lnum = findsource(object)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/inspect.py", line 1092, in findsource
+    lines = linecache.getlines(file, module.__dict__)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/linecache.py", line 46, in getlines
+    return updatecache(filename, module_globals)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/linecache.py", line 138, in updatecache
+    with tokenize.open(fullname) as fp:
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/tokenize.py", line 455, in open
+    return text
+
+--- Thread 6414856192 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6398029824 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6381203456 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6364377088 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6113587200 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+
+[10:08:38] *** UI THREAD HUNG FOR 4.9s ***
+
+--- Thread 6154874880 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 22, in __init__
+    self._ui = QUiLoader().load(str(_UI_FILE), self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[10:56:41] *** UI THREAD HUNG FOR 6.7s ***
+
+--- Thread 6146961408 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 22, in __init__
+    self._ui = QUiLoader().load(str(_UI_FILE), self)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[11:04:41] *** UI THREAD HUNG FOR 5.8s ***
+
+--- Thread 6155415552 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 66, in __init__
+    self.main_menu = DashboardWindow()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 412, in __init__
+    _ensure_cherry_bomb_font()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/dashboard/dashboard.py", line 24, in _ensure_cherry_bomb_font
+    font_path = str(get_base_dir() / "resources" / "font" / "CherryBombOne-Regular.ttf")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/paths.py", line 25, in get_base_dir
+    return Path(__file__).resolve().parent.parent
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/pathlib.py", line 1240, in resolve
+    s = self._flavour.realpath(self, strict=strict)
+  File "<frozen posixpath>", line 427, in realpath
+  File "<frozen posixpath>", line 462, in _joinrealpath
+
+[11:05:05] *** UI THREAD HUNG FOR 4.6s ***
+
+--- Thread 12901707776 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6439858176 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6423031808 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 6406205440 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6155415552 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 588, in start_game
+    self.game_view.start_game()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 223, in start_game
+    self.open_camera()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/minigames/fingerspell_quest.py", line 237, in open_camera
+    camera_access.request_camera(
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/camera_access.py", line 64, in request_camera
+    ensure_camera_permission(permission_resolved)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/camera_permission.py", line 22, in ensure_camera_permission
+    callback(True)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/camera_access.py", line 36, in permission_resolved
+    if not force and service.selected_device() is not None:
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/camera_service.py", line 282, in selected_device
+    return next((device for device in self.discover() if device.device_id == device_id), None)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/backend/camera_service.py", line 245, in discover
+    for device in QMediaDevices.videoInputs():
+
+[11:12:12] *** UI THREAD HUNG FOR 6.8s ***
+
+--- Thread 6147928064 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 63, in __init__
+    self.login = LoginScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/login.py", line 35, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[12:09:34] *** UI THREAD HUNG FOR 4.8s ***
+
+--- Thread 6111195136 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 64, in __init__
+    self.register = RegisterScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/register.py", line 36, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 182, in notify
+    result = super().notify(receiver, event)
+
+[12:22:16] *** UI THREAD HUNG FOR 6.1s ***
+
+--- Thread 6194704384 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 64, in __init__
+    self.register = RegisterScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/register.py", line 36, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result
+
+[12:28:12] *** UI THREAD HUNG FOR 4.5s ***
+
+--- Thread 12952186880 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 12935360512 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 12918534144 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/concurrent/futures/thread.py", line 89, in _worker
+    work_item = work_queue.get(block=True)
+
+--- Thread 12901707776 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1431, in run
+    self.finished.wait(self.interval)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 655, in wait
+    signaled = self._cond.wait(timeout)
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 359, in wait
+    gotit = waiter.acquire(True, timeout)
+
+--- Thread 6194704384 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 253, in main
+    return app.exec()
+
+[13:16:59] *** UI THREAD HUNG FOR 10.5s ***
+
+--- Thread 6155923456 ---
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1032, in _bootstrap
+    self._bootstrap_inner()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1075, in _bootstrap_inner
+    self.run()
+  File "/Users/louezetheianilicirsaldua/.pyenv/versions/3.12.6/lib/python3.12/threading.py", line 1012, in run
+    self._target(*self._args, **self._kwargs)
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 49, in _watchdog_loop
+    traceback.print_stack(frame, file=lf)
+
+--- Thread 8426839680 ---
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 257, in <module>
+    sys.exit(main())
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 249, in main
+    controller = AppController()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/app_controller.py", line 64, in __init__
+    self.register = RegisterScreen()
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/screens/auth/register.py", line 36, in __init__
+    self._auth_form.scroll.setStyleSheet("background: transparent; border: none;")
+  File "/Users/louezetheianilicirsaldua/Documents/GitHub/Senyasabi_V1/senyasabi/main.py", line 193, in notify
+    return result

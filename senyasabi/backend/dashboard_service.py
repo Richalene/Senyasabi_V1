@@ -101,7 +101,12 @@ class SQLiteDashboardRepository(DefaultDashboardRepository):
                     "total_time_spent_seconds": stats.total_time_spent_seconds,
                 }
 
-            # Get streaks
+            # Get streaks (recalculate provisional value from local activity first)
+            try:
+                from . import streak_service
+                streak_service.recalculate(db, uid)
+            except Exception:
+                pass
             streak = get_streak(db, uid)
             if streak is None:
                 streaks_data = {

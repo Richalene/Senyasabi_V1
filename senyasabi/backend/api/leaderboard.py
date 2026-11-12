@@ -42,7 +42,6 @@ SELECT user_id::text AS user_id, display_name, total_score, current_streak, badg
        RANK() OVER (ORDER BY total_score DESC)::INT AS rank_position
   FROM scores
  WHERE total_score > 0
- WHERE total_score >= 0
  ORDER BY rank_position, lower(display_name), user_id
  LIMIT :limit
 """

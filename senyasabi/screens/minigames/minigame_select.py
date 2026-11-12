@@ -166,13 +166,31 @@ class MinigameSelect(GameCanvas):
         if self.scope == "module":
             self.back_requested.emit()
 
+    def _refresh_streak(self):
+        """Recalculate and show the same streak value the dashboard/home header displays."""
+        try:
+            from backend import auth_service, streak_service
+            user = auth_service.get_current_user()
+            if not user or not user.get("user_id"):
+                return
+            streak = streak_service.refresh_for_display(user["user_id"])
+            if streak is not None:
+                self.menu.header.set_streak_text(f"{streak} Days")
+        except Exception:
+            pass
+
     def return_menu(self):
+        self._refresh_streak()
         if self.game is not None:
             self.game.stop()
             self.stack.removeWidget(self.game)
             self.game.deleteLater()
             self.game = None
         self.stack.setCurrentWidget(self.menu)
+
+    def showEvent(self, event):
+        self._refresh_streak()
+        super().showEvent(event)
 
     def hideEvent(self, event):
         self.return_menu()

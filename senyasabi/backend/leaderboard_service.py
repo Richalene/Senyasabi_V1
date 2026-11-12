@@ -112,8 +112,14 @@ class SyncedLeaderboardRepository:
 
     @staticmethod
     def _load_local_attempts(board_code):
-        from backend.database.models import MinigameAttempt, QuizAttempt, User
+        from backend.database.models import MinigameAttempt, QuizAttempt, Streak, User
         from backend.database.session import session_scope
+
+        current = auth_service.get_current_user() or {}
+        try:
+            current_id = str(uuid.UUID(str(current.get("user_id")))) if current.get("user_id") else ""
+        except (ValueError, AttributeError, TypeError):
+            current_id = ""   # non-UUID sessions (e.g. mock users) match nobody
 
         cutoff = BOARD_PERIODS[board_code]
         completed_after = datetime.now(timezone.utc) - cutoff if cutoff is not None else None
@@ -136,9 +142,13 @@ class SyncedLeaderboardRepository:
                 for user in users:
                     if user.username and user.username.startswith("lb-"):
                         continue
+                    # Only the signed-in learner's streak is provisional/local.
+                    # Other learners' streaks come from the synced cache, which
+                    # the server fills from public.streaks (0 when absent).
                     streak = 0
-                    if hasattr(user, "streak") and user.streak:
-                        streak = user.streak.current_streak or 0
+                    if current_id and str(user.user_id) == current_id:
+                        local_streak = db.get(Streak, user.user_id)
+                        streak = local_streak.current_streak if local_streak else 0
                     badges = len(user.badges) if hasattr(user, "badges") and user.badges else 0
                     entries.append(
                         _entry(
@@ -159,7 +169,7 @@ class SyncedLeaderboardRepository:
     def _fetch(board_code):
         from backend.api_client import get_api_client
         try:
-            payload = get_api_client().get_leaderboard(board_code)
+            payload = get_api_client().get_leaderboard(board_code, limit=500)
         except requests.exceptions.Timeout:
             _log.warning("Leaderboard fetch timed out for %s", board_code)
             return None

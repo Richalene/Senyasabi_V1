@@ -183,6 +183,13 @@ class LeaderboardWindow(QWidget):
     def refresh(self):
         user = auth_service.get_current_user() or {}
         user_id = user.get("user_id")
+        try:
+            from backend import streak_service
+            streak = streak_service.refresh_for_display(user_id)
+            if streak is not None and getattr(self.ui, "lblCurrentStreak", None):
+                self.ui.lblCurrentStreak.setText(f"{streak} Days")
+        except Exception:
+            pass
         if self.loading.busy:
             if self._loading_user_id == user_id:
                 return False

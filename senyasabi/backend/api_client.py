@@ -33,6 +33,16 @@ def _current_client_mode() -> str:
 OFFLINE_TIMEOUT = 4            # one quick probe while offline
 OFFLINE_PROBE_INTERVAL = 15    # seconds between probes while offline
 
+def _distributed_supabase_available() -> bool:
+    """True when distributed mode can fall back to Supabase-direct calls."""
+    if _current_client_mode() != "distributed":
+        return False
+    try:
+        from .supabase_client import is_supabase_available
+        return is_supabase_available()
+    except Exception:
+        return False
+
 @dataclass
 class APIConfig:
     """API client configuration."""
@@ -123,7 +133,10 @@ class APIClient:
             except (requests.exceptions.ConnectionError, requests.exceptions.Timeout,
                     requests.exceptions.TooManyRedirects) as error:
                 log.warning("API unreachable (%s %s): %s", method, endpoint, error)
-                _set_online(False)
+                # In distributed mode a dead FastAPI does not mean offline:
+                # Supabase-direct calls (sync, snapshots, content) still work.
+                if not _distributed_supabase_available():
+                    _set_online(False)
                 return None
             except requests.exceptions.RequestException as error:
                 log.warning("API request failed (%s %s): %s", method, endpoint, error)

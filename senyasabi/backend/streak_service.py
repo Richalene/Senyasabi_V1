@@ -109,6 +109,51 @@ def apply_activity(db, user_id):
     return row, tz_name
 
 
+# ── display-time recalc ─────────────────────────────────────────────────
+def recalculate(db, user_id):
+    """Recompute the provisional streak from local activity; persist on change.
+
+    Safe to call whenever a streak is about to be displayed. Unlike apply_activity
+    it never moves the streak backwards for activity the server already knows about:
+    a newer stored last_activity_date or a higher reconciled current_streak wins.
+    """
+    tz_name = resolve_timezone(db, user_id)
+    current, longest, last = compute_streak(local_activity_dates(db, user_id, tz_name))
+    if last is None:
+        return None
+    row = _streak_row(db, user_id)
+    stored_last = row.last_activity_date
+    if stored_last is not None and stored_last > last:
+        return row                                   # server saw newer activity elsewhere
+    if stored_last == last and (row.current_streak or 0) > current:
+        current = row.current_streak                 # reconciled value is higher; keep it
+    longest = max(row.longest_streak or 0, longest)
+    if ((row.current_streak or 0, row.longest_streak or 0, stored_last)
+            == (current, longest, last)):
+        return row
+    row.current_streak = current
+    row.longest_streak = longest
+    row.last_activity_date = last
+    db.flush()
+    refresh_local_leaderboard(db, user_id)
+    return row
+
+
+def refresh_for_display(user_id):
+    """Recalculate and return the current streak int, or None for invalid/no user."""
+    try:
+        uid = uuid.UUID(str(user_id))
+    except (ValueError, TypeError, AttributeError):
+        return None
+    from .database.repository import get_streak       # lazy: avoids an import cycle
+    from .database.session import session_scope
+    with session_scope() as db:
+        row = recalculate(db, uid)
+        if row is None:
+            row = get_streak(db, uid)                 # keep stored/server value
+        return row.current_streak if row is not None else 0
+
+
 # ── server result arrives (step 7) ───────────────────────────────────────
 def _as_date(value):
     if isinstance(value, datetime):

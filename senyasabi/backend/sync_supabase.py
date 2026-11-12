@@ -227,8 +227,13 @@ def upload_sync(user_id: str, sync_items: list) -> Optional[Dict]:
         # In distributed mode with Supabase direct, attach participant's JWT for RLS
         from . import auth_service
         token = auth_service.get_access_token()
+        if not token:
+            # Without a user JWT every write is rejected by RLS; skip instead
+            # of burning attempts as anon. Items stay queued for next flush.
+            logger.debug("Skipping Supabase sync upload: no access token")
+            return None
         orig_key = getattr(supabase, "supabase_key", None)
-        if token and hasattr(supabase, "postgrest"):
+        if hasattr(supabase, "postgrest"):
             try:
                 supabase.postgrest.auth(token)
             except Exception:

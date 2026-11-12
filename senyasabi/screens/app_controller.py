@@ -394,7 +394,14 @@ class AppController:
             self.module_lessons.quiz_requested.connect(self.open_module_quiz)
         else:
             self.module_lessons.set_module(self.selected_module)
-        self.module_lessons.set_streak(self.main_menu.ui.streakValue.text())
+        try:
+            from backend import streak_service
+            _uid = (auth_service.get_current_user() or {}).get("user_id")
+            _streak = streak_service.refresh_for_display(_uid)
+            _streak_text = f"{_streak} Days" if _streak is not None else self.main_menu.ui.streakValue.text()
+        except Exception:
+            _streak_text = self.main_menu.ui.streakValue.text()
+        self.module_lessons.set_streak(_streak_text)
         self._show_screen(self.module_lessons)
 
     def open_module_lesson(self, number):
